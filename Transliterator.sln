@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Transliterator.Domain", "Tr
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Transliterator.Cli", "Transliterator.Cli\Transliterator.Cli.csproj", "{6CDA3E62-5CBF-4CE3-9CF2-F5988B85DB05}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Transliterator.Tests", "Transliterator.Tests\Transliterator.Tests.csproj", "{EBF5DB39-4B03-4410-88D0-F965C916D3C8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{6CDA3E62-5CBF-4CE3-9CF2-F5988B85DB05}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6CDA3E62-5CBF-4CE3-9CF2-F5988B85DB05}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6CDA3E62-5CBF-4CE3-9CF2-F5988B85DB05}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EBF5DB39-4B03-4410-88D0-F965C916D3C8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EBF5DB39-4B03-4410-88D0-F965C916D3C8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EBF5DB39-4B03-4410-88D0-F965C916D3C8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EBF5DB39-4B03-4410-88D0-F965C916D3C8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

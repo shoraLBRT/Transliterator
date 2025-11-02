@@ -2,6 +2,6 @@
 {
     public class StorageSettings
     {
-        public string ProfilesPath { get; set; } = "Profiles";
+        public string ProfilesPath { get; set; } = "Resources/Profiles";
     }
 }
