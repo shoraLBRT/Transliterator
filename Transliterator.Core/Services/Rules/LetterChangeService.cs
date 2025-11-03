@@ -5,6 +5,16 @@ namespace Transliterator.Core.Services.Rules
 {
     public class LetterChangeService
     {
+        private const string _fatha = "َ";
+        private const string _damma = "ُ";
+        private const string _kasra = "ِ";
+        private const string _sukun = "ْ";
+
+        private const char _shadda = '\u0651';
+        private const char _maddaAlif = 'ٰ';
+        private const string _maddaStandalone = "ـٰ";
+        private const string _maddaToken = "_MADDA_";
+
         public string TransliterateLetters(string arabicText, TransliterationProfile profile)
         {
             string normalizedText = arabicText.Normalize();
@@ -16,66 +26,91 @@ namespace Transliterator.Core.Services.Rules
             while (textElements.MoveNext())
             {
                 string grapheme = textElements.GetTextElement();
-                string transliteratedGrapheme = ProcessGrapheme(grapheme, profile.Rules);
+                string transliteratedGrapheme = ProcessGrapheme(grapheme, profile);
                 result.Append(transliteratedGrapheme);
             }
 
-            return result.ToString();
+            // Post-process _MADDA_ tokens to elongate previous vowel
+            return ProcessMaddaTokens(result.ToString(), profile);
         }
 
-        private string ProcessGrapheme(string grapheme, Dictionary<string, string> rules)
+        private string ProcessGrapheme(string grapheme, TransliterationProfile profile)
         {
             if (string.IsNullOrEmpty(grapheme))
                 return string.Empty;
+            if (string.IsNullOrWhiteSpace(grapheme))
+                return " ";
 
             char baseChar = grapheme[0];
+            if (!profile.Rules.TryGetValue(baseChar.ToString(), out string baseTranslit))
+                baseTranslit = "";
 
-            if (HasLittleAlif(grapheme))
-                baseChar = grapheme[1];
+            // Check if grapheme is a standalone madda (big or small)
+            if (IsStandaloneMadda(grapheme))
+                return _maddaToken;
 
-            bool hasShadda = HasShadda(grapheme);
-            string vowel = GetVowel(grapheme);
+            bool hasMaddahAlif = grapheme.Contains(_maddaAlif);
+            bool hasShadda = grapheme.Contains(_shadda);
+            string vowel = GetVowel(grapheme, profile);
 
-            if (!rules.TryGetValue(baseChar.ToString(), out string baseTranslit))
-            {
-                baseTranslit = baseChar.ToString();
-            }
+            if (UaException(baseChar, vowel))
+                baseTranslit = profile.Rules[_kasra];
+
             StringBuilder result = new StringBuilder();
-
-            if (hasShadda)
-            {
-                result.Append(baseTranslit);
-            }
-
             result.Append(baseTranslit);
+            if (hasShadda)
+                result.Append(baseTranslit);
 
-            result.Append(vowel);
-
+            result.Append(vowel);            
             return result.ToString();
         }
 
-        private string GetVowel(string grapheme)
+        private string ProcessMaddaTokens(string text, TransliterationProfile profile)
         {
-            if (grapheme.Contains('\u064E')) return "а"; // Фатха
-            if (grapheme.Contains('\u064F')) return "у"; // Дамма
-            if (grapheme.Contains('\u0650')) return "и"; // Касра
-            if (grapheme.Contains('\u0652')) return "";  // Сукун
-            return ""; // Нет огласовки
+            foreach (var vowel in new[] { _fatha, _damma, _kasra })
+            {
+                var translit = profile.Rules.ContainsKey(vowel) ? profile.Rules[vowel] : "";
+                if (!string.IsNullOrEmpty(translit))
+                {
+                    string doubleVowel = translit + translit;
+                    text = text.Replace(translit + _maddaToken, doubleVowel);
+                }
+            }
+
+            return text.Replace(_maddaToken, "");
         }
 
-        private bool HasLittleAlif(string grapheme)
+        private bool IsStandaloneMadda(string grapheme)
         {
-            if (grapheme.Contains("ـٰ"))
-                return true;
-            else return false;
+            return grapheme == _maddaStandalone;
         }
 
-        // Shadda - doubling a consonant
-        private bool HasShadda(string grapheme)
+        private string GetVowel(string grapheme, TransliterationProfile profile)
         {
-            if (grapheme.Contains('\u0651'))
-                return true;
-            else return false;
+            if (AlifException(grapheme))
+                return string.Empty;
+            string result = "";
+            if (grapheme.Contains(_fatha))
+            {
+                result = profile.Rules[_fatha];
+                if (grapheme.Contains(_maddaAlif))
+                    result += profile.Rules[_fatha];
+            }
+            if (grapheme.Contains(_damma)) result = profile.Rules[_damma];
+            if (grapheme.Contains(_kasra)) result = profile.Rules[_kasra];
+            if (grapheme.Contains(_sukun)) result = profile.Rules[_sukun];
+
+            return result;
+        }
+
+        private bool AlifException(string grapheme)
+        {
+            return grapheme.Contains('إ') || grapheme.Contains('أ');
+        }
+
+        private bool UaException(char baseChar, string vowel)
+        {
+            return baseChar == 'ي' && string.IsNullOrEmpty(vowel);
         }
     }
 }
