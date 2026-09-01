@@ -16,9 +16,21 @@ namespace Transliterator.Core.Repositories
         public JsonProfileRepository(IOptions<StorageSettings> options, ILogger<JsonProfileRepository> logger)
         {
             _logger = logger;
-            _storagePath = options.Value.ProfilesPath;
+            _storagePath = ResolveStoragePath(options.Value.ProfilesPath);
             EnsureStorageDirectoryExists();
             LoadProfilesInCache();
+        }
+
+        /// <summary>
+        /// Профили копируются рядом со сборкой, а рабочая папка при запуске через
+        /// "dotnet run" — папка проекта. Относительный путь считаем от сборки.
+        /// </summary>
+        private static string ResolveStoragePath(string configuredPath)
+        {
+            if (Path.IsPathRooted(configuredPath))
+                return configuredPath;
+
+            return Path.Combine(AppContext.BaseDirectory, configuredPath);
         }
 
         private void EnsureStorageDirectoryExists()
@@ -59,7 +71,7 @@ namespace Transliterator.Core.Repositories
             if (_cache.TryGetValue(profileName, out var profile))
                 return profile;
 
-            var filePath = Path.Combine(_storagePath, profileName);
+            var filePath = Path.Combine(_storagePath, profileName + ".json");
 
             if (!File.Exists(filePath))
                 return null;

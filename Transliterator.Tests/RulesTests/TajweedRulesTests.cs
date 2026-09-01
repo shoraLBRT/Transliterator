@@ -1,0 +1,98 @@
+using Xunit;
+
+namespace Transliterator.Tests.RulesTests
+{
+    public class WaslRuleTests
+    {
+        [Theory]
+        [InlineData("بِسْمِ ٱللَّهِ", "бисми-лляhи")]
+        [InlineData("بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ", "бисми-лляhи-ррохIмаани")]
+        public void ConnectedWasl_MergesWordsWithHyphen(string arabic, string expected) =>
+            Assert.Equal(expected, TransliterationPipeline.Transliterate(arabic));
+
+        [Fact]
+        public void VerseNumber_StartsNewUtterance() =>
+            // После номера аята чтение начинается заново, поэтому васля озвучивается.
+            Assert.Equal("2 аль-хIамду", TransliterationPipeline.Transliterate("٢ ٱلْحَمْدُ"));
+
+        [Theory]
+        [InlineData("ٱهْدِنَا", "иhдинаа")]   // третья буква с касрой
+        [InlineData("ٱدْخُلُوا", "удхъулуу")] // третья буква с даммой
+        [InlineData("ٱنظُرْ", "унзIур")]      // третья буква с даммой
+        public void InitialWasl_TakesVowelFromThirdLetter(string arabic, string expected) =>
+            Assert.Equal(expected, TransliterationPipeline.Transliterate(arabic));
+    }
+
+    public class ArticleRuleTests
+    {
+        [Theory]
+        [InlineData("ٱلْحَمْدُ", "аль-хIамду")]
+        [InlineData("ٱلْفَجْرِ", "аль-фаджри")]
+        public void MoonLetter_KeepsLam(string arabic, string expected) =>
+            Assert.Equal(expected, TransliterationPipeline.Transliterate(arabic));
+
+        [Theory]
+        [InlineData("ٱلرَّحْمَـٰنِ", "ар-рохIмаани")]
+        [InlineData("ٱلسَّمَآءِ", "ас-самаааъи")]
+        [InlineData("ٱلَّذِينَ", "аллязъиина")]
+        public void SunLetter_AssimilatesLam(string arabic, string expected) =>
+            Assert.Equal(expected, TransliterationPipeline.Transliterate(arabic));
+
+        [Fact]
+        public void MoonLam_SurvivesWaslMerge() =>
+            // Прежде стадия васли съедала лям артикля целиком: "робби-'аалямиина".
+            Assert.Equal("робби-ль-'аалямиина",
+                TransliterationPipeline.Transliterate("رَبِّ ٱلْعَـٰلَمِينَ"));
+
+        [Fact]
+        public void MoonLam_ProducesSingleSoftSign() =>
+            // Прежде правило мягкого знака шло после артикля и давало "альь-".
+            Assert.DoesNotContain("ьь", TransliterationPipeline.Transliterate("ٱلْحَمْدُ"));
+    }
+
+    public class EmphasisRuleTests
+    {
+        [Theory]
+        [InlineData("رِزْقِ", "ризqи")]        // касра — таркик
+        [InlineData("ٱلْفَجْرِ", "аль-фаджри")] // касра — таркик
+        [InlineData("رَبِّ", "робби")]          // фатха — тафхим
+        public void Ra_EmphasisFollowsItsHarakah(string arabic, string expected) =>
+            Assert.Equal(expected, TransliterationPipeline.Transliterate(arabic));
+
+        [Fact]
+        public void SakinEmphatic_ColoursPrecedingVowel() =>
+            // Эмфаза распространяется и назад: прежде правило смотрело только вперёд.
+            Assert.Equal("бор", TransliterationPipeline.Transliterate("بَر"));
+
+        [Fact]
+        public void LamOfAllah_IsLightAfterKasra() =>
+            // "лилляhи", а не "лиллаhи". Прежний хак искал в кириллице "Аллах"
+            // и не срабатывал никогда, потому что ه отображается в "h".
+            Assert.Equal("лилляhи", TransliterationPipeline.Transliterate("لِلَّهِ"));
+    }
+
+    public class LetterCoverageTests
+    {
+        [Fact]
+        public void Hamza_IsNotDropped() =>
+            Assert.Equal("qуръаани", TransliterationPipeline.Transliterate("قُرْءَانِ"));
+
+        [Fact]
+        public void TaMarbutaAndTanwin_AreNotDropped() =>
+            Assert.Equal("рохIматун", TransliterationPipeline.Transliterate("رَحْمَةٌ"));
+
+        [Fact]
+        public void HamzaCarrier_KeepsItsOwnHarakah() =>
+            // Прежде огласовка носителя гасилась и أُ читалось как "а".
+            Assert.Equal("унзиля", TransliterationPipeline.Transliterate("أُنزِلَ"));
+
+        [Fact]
+        public void EmphaticAtEndOfText_DoesNotThrow()
+        {
+            // Прежде выход за границы массива ронял приложение на любом тексте,
+            // заканчивающемся эмфатической буквой.
+            foreach (var word in new[] { "بَر", "قَط", "نَارٌ", "ٱنظُرْ" })
+                Assert.False(string.IsNullOrEmpty(TransliterationPipeline.Transliterate(word)));
+        }
+    }
+}

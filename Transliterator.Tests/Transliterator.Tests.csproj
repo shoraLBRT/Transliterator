@@ -19,4 +19,11 @@
     <ProjectReference Include="..\Transliterator.Core\Transliterator.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- Тесты гоняют настоящий профиль, а не его копию: копия уже успела разойтись с оригиналом. -->
+    <Content Include="..\Transliterator.Core\Resources\Profiles\Standard.json"
+             Link="Profiles\Standard.json"
+             CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>

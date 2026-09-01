@@ -1,47 +1,61 @@
-﻿using Transliterator.Domain.Interfaces;
+using Transliterator.Domain.Phonology;
 
 namespace Transliterator.Core.Services.Rules
 {
+    /// <summary>
+    /// Порядок применения правил таджвида. Порядок здесь — не оформление, а содержание:
+    /// каждая стадия опирается на решения предыдущих.
+    /// <list type="number">
+    ///   <item>Нормализация орфографии — <c>ArabicNormalizer</c>.</item>
+    ///   <item>Разбор в поток сегментов — <c>ArabicParser</c>.</item>
+    ///   <item>Разметка пауз (вакф) — <b>не реализовано</b>. Решает, какие слова соединяются.</item>
+    ///   <item>Хамзат аль-васль.</item>
+    ///   <item>Лям артикля.</item>
+    ///   <item>Нун сакина, танвин, мим сакина, идгамы — <b>не реализовано</b>.</item>
+    ///   <item>Тафхим и таркик.</item>
+    ///   <item>Длительность мадда.</item>
+    ///   <item>Кальканя — <b>не реализовано</b>.</item>
+    ///   <item>Рендеринг по профилю — <c>CyrillicRenderer</c>.</item>
+    /// </list>
+    /// </summary>
     public class RulesService
     {
-        private readonly IProfileRepository _profileRepository;
+        private readonly WaslRule _waslRule;
+        private readonly ArticleRule _articleRule;
+        private readonly EmphasisRule _emphasisRule;
+        private readonly MaddRule _maddRule;
 
-        private readonly ArticleRules _articleRule;
-        private readonly VowelRules _vowelRuleServies;
-        private readonly WaslaRules _waslaRules;
-        private readonly PostEmphaticVowelReplacer _postEmphaticVowelReplacer;
-        private readonly LamRule _lamRule;
-        private readonly AlifMaqsuraRule _alifMaqsuraRule;
-        public RulesService(IProfileRepository profileRepository, ArticleRules articleRule, 
-            VowelRules vowelRulesService, WaslaRules waslaRules,
-            PostEmphaticVowelReplacer postEmphaticVowelReplacer, LamRule lamRule,
-            AlifMaqsuraRule alifMaqsuraRule)
+        public RulesService(
+            WaslRule waslRule,
+            ArticleRule articleRule,
+            EmphasisRule emphasisRule,
+            MaddRule maddRule)
         {
-            _profileRepository = profileRepository;
+            _waslRule = waslRule;
             _articleRule = articleRule;
-            _vowelRuleServies = vowelRulesService;
-            _waslaRules = waslaRules;
-            _postEmphaticVowelReplacer = postEmphaticVowelReplacer;
-            _lamRule = lamRule;
-            _alifMaqsuraRule = alifMaqsuraRule;
+            _emphasisRule = emphasisRule;
+            _maddRule = maddRule;
         }
 
-        public async Task<string> ApplyTajweedRulesAsync(string cyrillicText, string profileName = "Standard")
+        public void ApplyTajweedRules(IList<Segment> segments)
         {
-            if (string.IsNullOrEmpty(cyrillicText))
-                return cyrillicText;
-            string result = cyrillicText;
+            if (segments.Count == 0)
+                return;
 
-            var profile = await _profileRepository.GetProfileAsync(profileName);
-            if (profile == null)
-                throw new Exception($"Profile {profileName} not found");
-            
-            result = _alifMaqsuraRule.ApplyAlifMaqsuraRule(result, profile);
-            result = _waslaRules.ProcessWaslaAlif(result, profile);
-            result = _articleRule.ApplySunMoonLettersRule(result, profile);
-            result = _postEmphaticVowelReplacer.ApplyPostEmphaticVowelRule(result, profile);
-            result = _lamRule.ApplyLamRule(result, profile);
-            return result;
+            // Стадия 3: вакф. Должна идти здесь — до всякого межсловного стыка.
+            // TODO(P2): снятие конечной огласовки и танвина, ة → h, мадд арид.
+
+            _waslRule.Apply(segments);
+            _articleRule.Apply(segments);
+
+            // Стадия 6: нун сакина, танвин, мим сакина, идгамы.
+            // TODO(P3): изхар, идгам ±гунна, икляб, ихфа.
+
+            _emphasisRule.Apply(segments);
+            _maddRule.Apply(segments);
+
+            // Стадия 9: кальканя.
+            // TODO(P4).
         }
     }
 }
