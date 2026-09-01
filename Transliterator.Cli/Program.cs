@@ -1,6 +1,7 @@
 ﻿// Transliterator.Cli/Program.cs
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Transliterator.Core.Models;
 using Transliterator.Core.Repositories;
 using Transliterator.Core.Services.Rules;
 using Transliterator.Domain.Interfaces;
@@ -12,6 +13,8 @@ Console.InputEncoding = Encoding.UTF8;
 using IHost host = Host.CreateDefaultBuilder(args)
     .ConfigureServices((context, services) =>
     {
+        services.Configure<StorageSettings>(context.Configuration.GetSection("StorageSettings"));
+
         services.AddTransient<LetterChangeService>();
         services.AddTransient<IProfileRepository, JsonProfileRepository>();
         services.AddTransient<ITransliterationService, TransliterationService>();
