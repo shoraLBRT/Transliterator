@@ -1,70 +1,29 @@
-﻿using Transliterator.Domain.Entities;
+using System.Text.Json;
+using Transliterator.Domain.Entities;
 
 namespace Transliterator.Tests
 {
+    /// <summary>
+    /// Профили для тестов берутся из настоящего ресурса, а не из копии в коде:
+    /// прежняя хардкодированная копия успела разойтись с Standard.json,
+    /// и тесты проверяли поведение, которого в приложении уже не было.
+    /// </summary>
     public static class TestProfiles
     {
-        public static TransliterationProfile StandardProfile => new TransliterationProfile
+        private static readonly Lazy<TransliterationProfile> _standard = new(() => Load("Standard"));
+
+        public static TransliterationProfile Standard => _standard.Value;
+
+        private static TransliterationProfile Load(string name)
         {
-            Name = "Standard",
-            Description = "Хардкодированный профиль для юнит-тестов",
-            Rules = new Dictionary<string, string>
-            {
-                { "ا", "а" },
-                { "أ", "а" },
-                { "إ", "и" },
-                { "آ", "а̄" },
-                { "ٱ", "á" },
-                { "ى", "а" },
-                { "ٰ", "а" },
-                { "ۤ", "" },
-                { "ٲ", "а" },
-                { "ٳ", "а" },
-                { "ب", "б" },
-                { "ت", "т" },
-                { "ث", "с́" },
-                { "ج", "дж" },
-                { "ح", "хI" },
-                { "خ", "хъ" },
-                { "د", "д" },
-                { "ذ", "зъ" },
-                { "ر", "р" },
-                { "ز", "з" },
-                { "س", "с" },
-                { "ش", "щ" },
-                { "ص", "сI" },
-                { "ض", "дI" },
-                { "ط", "тI" },
-                { "ظ", "зI" },
-                { "ع", "'" },
-                { "غ", "гъ" },
-                { "ف", "ф" },
-                { "ق", "q" },
-                { "ك", "к" },
-                { "ل", "л" },
-                { "م", "м" },
-                { "ن", "н" },
-                { "ه", "h" },
-                { "و", "у" },
-                { "ي", "й" },
-                { "َ", "а" },
-                { "ُ", "у" },
-                { "ِ", "и" },
-                { "ٌ", "ун" },
-                { "ٍ", "ин" },
-                { "ً", "ан" },
-                { "ـٰ", "а" },
-                { "٠", "0" },
-                { "١", "1" },
-                { "٢", "2" },
-                { "٣", "3" },
-                { "٤", "4" },
-                { "٥", "5" },
-                { "٦", "6" },
-                { "٧", "7" },
-                { "٨", "8" },
-                { "٩", "9" }
-            }
-        };
+            var path = Path.Combine(AppContext.BaseDirectory, "Profiles", $"{name}.json");
+
+            if (!File.Exists(path))
+                throw new FileNotFoundException($"Профиль для тестов не найден: {path}", path);
+
+            var profile = JsonSerializer.Deserialize<TransliterationProfile>(File.ReadAllText(path));
+
+            return profile ?? throw new InvalidOperationException($"Не удалось разобрать профиль {name}");
+        }
     }
 }
