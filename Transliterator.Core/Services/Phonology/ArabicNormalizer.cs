@@ -1,0 +1,81 @@
+using System.Text;
+
+namespace Transliterator.Core.Services.Phonology
+{
+    /// <summary>
+    /// Стадия 1 конвейера: нормализация орфографии.
+    /// <para>
+    /// Приводит текст к одному представлению до того, как его начнут разбирать:
+    /// NFC, снятие татвиля, сведение вариантов сукуна, разворачивание малых
+    /// восстановительных букв и удаление знаков, не несущих звука.
+    /// </para>
+    /// </summary>
+    public class ArabicNormalizer
+    {
+        public string Normalize(string text)
+        {
+            if (string.IsNullOrEmpty(text))
+                return string.Empty;
+
+            var source = text.Normalize(NormalizationForm.FormC);
+            var result = new StringBuilder(source.Length);
+
+            foreach (var c in source)
+            {
+                switch (c)
+                {
+                    // Татвиль — только соединительная черта. Диакритика, которую он нёс
+                    // (например в "ـٰ"), после его снятия переходит на предыдущую букву.
+                    case ArabicScript.Tatweel:
+                        continue;
+
+                    case ArabicScript.QuranicSukun:
+                        result.Append(ArabicScript.Sukun);
+                        continue;
+
+                    // Малые восстановительные буквы обозначают долготу, которую
+                    // орфография не пишет: دَاوُۥدَ. Разворачиваем в обычные буквы.
+                    case ArabicScript.SmallWaw:
+                        result.Append(ArabicScript.Waw);
+                        continue;
+
+                    case ArabicScript.SmallYa:
+                        result.Append(ArabicScript.Yeh);
+                        continue;
+                }
+
+                if (ArabicScript.IsRecitationMark(c))
+                    continue;
+
+                if (char.IsControl(c) && !char.IsWhiteSpace(c))
+                    continue;
+
+                result.Append(c);
+            }
+
+            return CollapseWhitespace(result.ToString());
+        }
+
+        private static string CollapseWhitespace(string text)
+        {
+            var result = new StringBuilder(text.Length);
+            bool inWhitespace = false;
+
+            foreach (var c in text)
+            {
+                if (char.IsWhiteSpace(c))
+                {
+                    if (!inWhitespace && result.Length > 0)
+                        result.Append(' ');
+                    inWhitespace = true;
+                    continue;
+                }
+
+                inWhitespace = false;
+                result.Append(c);
+            }
+
+            return result.ToString().TrimEnd();
+        }
+    }
+}
