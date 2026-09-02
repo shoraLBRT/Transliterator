@@ -5,15 +5,15 @@ namespace Transliterator.Tests.RulesTests
     public class WaslRuleTests
     {
         [Theory]
-        [InlineData("بِسْمِ ٱللَّهِ", "бисми-лляhи")]
-        [InlineData("بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ", "бисми-лляhи-ррохIмаани")]
+        [InlineData("بِسْمِ ٱللَّهِ", "бисми-лляh")]
+        [InlineData("بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ", "бисми-лляhи-ррохIмааан")]
         public void ConnectedWasl_MergesWordsWithHyphen(string arabic, string expected) =>
             Assert.Equal(expected, TransliterationPipeline.Transliterate(arabic));
 
         [Fact]
         public void VerseNumber_StartsNewUtterance() =>
             // После номера аята чтение начинается заново, поэтому васля озвучивается.
-            Assert.Equal("2 аль-хIамду", TransliterationPipeline.Transliterate("٢ ٱلْحَمْدُ"));
+            Assert.Equal("2 аль-хIамд", TransliterationPipeline.Transliterate("٢ ٱلْحَمْدُ"));
 
         [Theory]
         [InlineData("ٱهْدِنَا", "иhдинаа")]   // третья буква с касрой
@@ -26,22 +26,22 @@ namespace Transliterator.Tests.RulesTests
     public class ArticleRuleTests
     {
         [Theory]
-        [InlineData("ٱلْحَمْدُ", "аль-хIамду")]
-        [InlineData("ٱلْفَجْرِ", "аль-фаджри")]
+        [InlineData("ٱلْحَمْدُ", "аль-хIамд")]
+        [InlineData("ٱلْفَجْرِ", "аль-фаджр")]
         public void MoonLetter_KeepsLam(string arabic, string expected) =>
             Assert.Equal(expected, TransliterationPipeline.Transliterate(arabic));
 
         [Theory]
-        [InlineData("ٱلرَّحْمَـٰنِ", "ар-рохIмаани")]
-        [InlineData("ٱلسَّمَآءِ", "ас-самаааъи")]
-        [InlineData("ٱلَّذِينَ", "аллязъиина")]
+        [InlineData("ٱلرَّحْمَـٰنِ", "ар-рохIмааан")]
+        [InlineData("ٱلسَّمَآءِ", "ас-самаааъ")]
+        [InlineData("ٱلَّذِينَ", "аллязъииин")]
         public void SunLetter_AssimilatesLam(string arabic, string expected) =>
             Assert.Equal(expected, TransliterationPipeline.Transliterate(arabic));
 
         [Fact]
         public void MoonLam_SurvivesWaslMerge() =>
             // Прежде стадия васли съедала лям артикля целиком: "робби-'аалямиина".
-            Assert.Equal("робби-ль-'аалямиина",
+            Assert.Equal("робби-ль-'аалямииин",
                 TransliterationPipeline.Transliterate("رَبِّ ٱلْعَـٰلَمِينَ"));
 
         [Fact]
@@ -53,9 +53,9 @@ namespace Transliterator.Tests.RulesTests
     public class EmphasisRuleTests
     {
         [Theory]
-        [InlineData("رِزْقِ", "ризqи")]        // касра — таркик
-        [InlineData("ٱلْفَجْرِ", "аль-фаджри")] // касра — таркик
-        [InlineData("رَبِّ", "робби")]          // фатха — тафхим
+        [InlineData("رِزْقِ", "ризq")]        // касра — таркик
+        [InlineData("ٱلْفَجْرِ", "аль-фаджр")] // касра — таркик
+        [InlineData("رَبِّ", "робб")]          // фатха — тафхим
         public void Ra_EmphasisFollowsItsHarakah(string arabic, string expected) =>
             Assert.Equal(expected, TransliterationPipeline.Transliterate(arabic));
 
@@ -66,25 +66,28 @@ namespace Transliterator.Tests.RulesTests
 
         [Fact]
         public void LamOfAllah_IsLightAfterKasra() =>
-            // "лилляhи", а не "лиллаhи". Прежний хак искал в кириллице "Аллах"
+            // "лилляh", а не "лиллаhи". Прежний хак искал в кириллице "Аллах"
             // и не срабатывал никогда, потому что ه отображается в "h".
-            Assert.Equal("лилляhи", TransliterationPipeline.Transliterate("لِلَّهِ"));
+            Assert.Equal("лилляh", TransliterationPipeline.Transliterate("لِلَّهِ"));
     }
 
     public class LetterCoverageTests
     {
         [Fact]
         public void Hamza_IsNotDropped() =>
-            Assert.Equal("qуръаани", TransliterationPipeline.Transliterate("قُرْءَانِ"));
+            Assert.Equal("qуръааан", TransliterationPipeline.Transliterate("قُرْءَانِ"));
 
         [Fact]
         public void TaMarbutaAndTanwin_AreNotDropped() =>
-            Assert.Equal("рохIматун", TransliterationPipeline.Transliterate("رَحْمَةٌ"));
+            // В соединении ة звучит как /t/, а танвин — как настоящий нун.
+            // На паузе обе буквы читаются иначе, поэтому проверка идёт на слитном стыке.
+            Assert.Equal("рохIматан уахIукмаа",
+                TransliterationPipeline.Transliterate("رَحْمَةً وَحُكْمًا"));
 
         [Fact]
         public void HamzaCarrier_KeepsItsOwnHarakah() =>
             // Прежде огласовка носителя гасилась и أُ читалось как "а".
-            Assert.Equal("унзиля", TransliterationPipeline.Transliterate("أُنزِلَ"));
+            Assert.Equal("унзиль", TransliterationPipeline.Transliterate("أُنزِلَ"));
 
         [Fact]
         public void EmphaticAtEndOfText_DoesNotThrow()
