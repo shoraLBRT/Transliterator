@@ -1,4 +1,5 @@
 using Transliterator.Domain.Phonology;
+using static Transliterator.Domain.Phonology.WaqfType;
 
 namespace Transliterator.Core.Services.Phonology
 {
@@ -31,8 +32,17 @@ namespace Transliterator.Core.Services.Phonology
             if (string.IsNullOrEmpty(normalizedText))
                 return segments;
 
+            WaqfType pendingWaqf = WaqfType.None;
+
             foreach (var cluster in BuildClusters(normalizedText))
             {
+                // Знаки вакфа — не полноценный символ, запоминаем для следующего согласного.
+                if (cluster.Base >= ArabicScript.WaqfStart && cluster.Base <= ArabicScript.WaqfEnd)
+                {
+                    pendingWaqf = DecodeWaqfMark(cluster.Base);
+                    continue;
+                }
+
                 if (char.IsWhiteSpace(cluster.Base))
                 {
                     segments.Add(Segment.Break());
@@ -41,11 +51,16 @@ namespace Transliterator.Core.Services.Phonology
 
                 if (ArabicScript.IsArabicDigit(cluster.Base) || char.IsDigit(cluster.Base))
                 {
+                    // Номер аята — тоже граница паузы для предыдущего согласного.
+                    if (pendingWaqf == WaqfType.None && segments.Count > 0)
+                        AssignWaqfToLastConsonant(segments, WaqfType.Optional);
+
                     segments.Add(new Segment
                     {
                         Kind = SegmentKind.Digit,
                         Literal = cluster.Base.ToString()
                     });
+                    pendingWaqf = WaqfType.None;
                     continue;
                 }
 
@@ -62,12 +77,51 @@ namespace Transliterator.Core.Services.Phonology
                 if (TryFoldLongVowel(cluster, segments))
                     continue;
 
+                int consonantIndex = segments.Count;
                 AppendConsonant(cluster, segments);
+
+                // Проставляем вакф на созданный согласный (не на нун для танвина).
+                if (pendingWaqf != WaqfType.None && consonantIndex < segments.Count)
+                {
+                    if (segments[consonantIndex].Kind == SegmentKind.Consonant)
+                        segments[consonantIndex].WaqfAfter = pendingWaqf;
+                    pendingWaqf = WaqfType.None;
+                }
             }
+
+            // Вакф в конце текста — проставляем только если был явный знак вакфа.
+            if (pendingWaqf != WaqfType.None)
+                AssignWaqfToLastConsonant(segments, pendingWaqf);
 
             MarkWordStarts(segments);
             DetectImlaiWasl(segments);
             return segments;
+        }
+
+        /// <summary>Опознаём тип вакфа по символу.</summary>
+        private static WaqfType DecodeWaqfMark(char mark) =>
+            mark switch
+            {
+                'ۖ' => WaqfType.Optional,     // ۖ — можно продолжить
+                'ۗ' => WaqfType.Preferred,    // ۗ — предпочтительна остановка
+                'ۘ' => WaqfType.Obligatory,   // ۘ — обязательная остановка
+                'ۙ' => WaqfType.Forbidden,    // ۙ — не останавливаться
+                'ۚ' => WaqfType.Dual,         // ۚ — остановка в одном из двух мест
+                'ۛ' or 'ۜ' => WaqfType.Optional,  // ۛ, ۜ — прочие варианты
+                _ => WaqfType.None
+            };
+
+        /// <summary>Проставляет вакф на последний согласный в потоке.</summary>
+        private static void AssignWaqfToLastConsonant(List<Segment> segments, WaqfType waqf)
+        {
+            for (int i = segments.Count - 1; i >= 0; i--)
+            {
+                if (segments[i].Kind == SegmentKind.Consonant)
+                {
+                    segments[i].WaqfAfter = waqf;
+                    return;
+                }
+            }
         }
 
         // ------------------------------------------------------------------

@@ -27,6 +27,10 @@ namespace Transliterator.Core.Services.Phonology
         public const char SmallYa = 'ۦ';               // ۦ  восстановленная долгая ī
         public const char EndOfAyah = '۝';             // ۝
 
+        // --- знаки вакфа (пауз) ---
+        public const char WaqfStart = 'ۖ';  // ۖ (U+06D6) — начало диапазона знаков вакфа
+        public const char WaqfEnd = 'ۜ';    // ۜ (U+06DC) — конец диапазона знаков вакфа
+
         // --- буквы ---
         public const char Hamza = 'ء';           // ء
         public const char AlefMadda = 'آ';       // آ

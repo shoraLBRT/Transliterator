@@ -1,5 +1,6 @@
 using Transliterator.Core.Services.Phonology;
 using Transliterator.Domain.Phonology;
+using static Transliterator.Domain.Phonology.WaqfType;
 
 namespace Transliterator.Core.Services.Rules
 {
@@ -46,6 +47,15 @@ namespace Transliterator.Core.Services.Rules
                 if (next.Letter == ArabicScript.HamzaStr && !next.Silent
                                                          && segment.VowelLength < Obligatory)
                     segment.VowelLength = Obligatory;
+
+                // Мадд арид лис-сукун: естественный мадд (2 харката) перед ставшим
+                // безгласным конечным согласным на паузе удлиняется.
+                // Это возникает после стадии вакфа, когда конечная огласовка снята.
+                if (segment.VowelLength == Natural && next.Vowel is Harakah.None or Harakah.Sukun
+                    && next.WaqfAfter != WaqfType.None && next.WaqfAfter != WaqfType.Forbidden)
+                {
+                    segment.VowelLength = Obligatory;
+                }
             }
         }
     }

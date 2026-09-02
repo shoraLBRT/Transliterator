@@ -52,6 +52,16 @@ namespace Transliterator.Domain.Phonology
         /// </summary>
         public bool IsGeminateFirstHalf { get; set; }
 
+        /// <summary>
+        /// Исходная огласовка для сегментов, у которых её снимет стадия вакфа.
+        /// Нужна для EmphasisRule: р без огласовки, но со скрытой касрой,
+        /// остаётся мягкой по исходной огласовке.
+        /// </summary>
+        public Harakah OriginalVowel { get; set; } = Harakah.None;
+
+        /// <summary>Тип паузы после этого сегмента (если не <see cref="WaqfType.None"/>).</summary>
+        public WaqfType WaqfAfter { get; set; } = WaqfType.None;
+
         public bool StartsWord { get; set; }
 
         /// <summary>Дефис после сегмента при рендеринге: артикль.</summary>

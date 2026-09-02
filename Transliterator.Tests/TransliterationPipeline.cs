@@ -20,7 +20,7 @@ namespace Transliterator.Tests
             var normalized = new ArabicNormalizer().Normalize(arabicText);
             var segments = new ArabicParser().Parse(normalized);
 
-            new RulesService(new WaslRule(), new ArticleRule(), new EmphasisRule(), new MaddRule())
+            new RulesService(new WaqfRule(), new WaslRule(), new ArticleRule(), new EmphasisRule(), new MaddRule())
                 .ApplyTajweedRules(segments);
 
             return segments;

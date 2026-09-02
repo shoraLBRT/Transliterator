@@ -56,8 +56,9 @@ namespace Transliterator.Core.Services.Rules
         }
 
         /// <summary>
-        /// ر твёрдая при фатхе и дамме, мягкая при касре. Безгласная ر берёт
-        /// твёрдость у предыдущей огласовки, но твёрдеет, если дальше в слове
+        /// ر твёрдая при фатхе и дамме, мягкая при касре. Безгласная ร (на паузе)
+        /// берёт твёрдость у предыдущей огласовки, но мягчает, если была касра
+        /// в исходной огласовке (OriginalVowel). Также твёрдеет, если дальше в слове
         /// стоит буква истиля: قِرْطَاس, مِرْصَاد.
         /// </summary>
         private static Emphasis ResolveRa(IList<Segment> segments, int index)
@@ -72,6 +73,12 @@ namespace Transliterator.Core.Services.Rules
 
                 case Harakah.Kasra:
                     return Emphasis.Light;
+
+                case Harakah.Sukun:
+                    // На паузе: если была касра в исходной огласовке, ر остаётся мягкой.
+                    if (segment.OriginalVowel == Harakah.Kasra)
+                        return Emphasis.Light;
+                    break;
             }
 
             int previous = SegmentNavigator.PreviousConsonantInWord(segments, index);

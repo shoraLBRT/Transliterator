@@ -44,8 +44,14 @@ namespace Transliterator.Core.Services.Phonology
                         continue;
                 }
 
+                // Знаки вакфа сохраняем для стадии 3 (разметка пауз).
+                // Прочие разметки (разделители аятов и пометы чтеца) удаляем.
                 if (ArabicScript.IsRecitationMark(c))
+                {
+                    if (c >= ArabicScript.WaqfStart && c <= ArabicScript.WaqfEnd)
+                        result.Append(c);
                     continue;
+                }
 
                 if (char.IsControl(c) && !char.IsWhiteSpace(c))
                     continue;

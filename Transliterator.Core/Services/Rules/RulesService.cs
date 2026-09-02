@@ -20,17 +20,20 @@ namespace Transliterator.Core.Services.Rules
     /// </summary>
     public class RulesService
     {
+        private readonly WaqfRule _waqfRule;
         private readonly WaslRule _waslRule;
         private readonly ArticleRule _articleRule;
         private readonly EmphasisRule _emphasisRule;
         private readonly MaddRule _maddRule;
 
         public RulesService(
+            WaqfRule waqfRule,
             WaslRule waslRule,
             ArticleRule articleRule,
             EmphasisRule emphasisRule,
             MaddRule maddRule)
         {
+            _waqfRule = waqfRule;
             _waslRule = waslRule;
             _articleRule = articleRule;
             _emphasisRule = emphasisRule;
@@ -43,7 +46,7 @@ namespace Transliterator.Core.Services.Rules
                 return;
 
             // Стадия 3: вакф. Должна идти здесь — до всякого межсловного стыка.
-            // TODO(P2): снятие конечной огласовки и танвина, ة → h, мадд арид.
+            _waqfRule.Apply(segments);
 
             _waslRule.Apply(segments);
             _articleRule.Apply(segments);
