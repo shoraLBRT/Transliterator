@@ -56,8 +56,9 @@ namespace Transliterator.Core.Services.Rules
         }
 
         /// <summary>
-        /// ر твёрдая при фатхе и дамме, мягкая при касре. Безгласная ر берёт
-        /// твёрдость у предыдущей огласовки, но твёрдеет, если дальше в слове
+        /// ر твёрдая при фатхе и дамме, мягкая при касре — по своей огласовке,
+        /// в том числе по той, которую с неё уже сняла пауза. Настоящая безгласная ر
+        /// берёт твёрдость у предыдущей огласовки, но твёрдеет, если дальше в слове
         /// стоит буква истиля: قِرْطَاس, مِرْصَاد.
         /// </summary>
         private static Emphasis ResolveRa(IList<Segment> segments, int index)
@@ -65,6 +66,20 @@ namespace Transliterator.Core.Services.Rules
             var segment = segments[index];
 
             switch (segment.Vowel)
+            {
+                case Harakah.Fatha:
+                case Harakah.Damma:
+                    return Emphasis.Heavy;
+
+                case Harakah.Kasra:
+                    return Emphasis.Light;
+            }
+
+            // Огласовку могло снять правило вакфа. Звучать ей больше нечем,
+            // но качество согласного она задала ещё до паузы: ٱلْفَجْرِ на остановке
+            // читается с мягкой ر — по своей касре, а не по соседям, у которых
+            // на этом месте стоит сукун предыдущей буквы.
+            switch (segment.OriginalVowel)
             {
                 case Harakah.Fatha:
                 case Harakah.Damma:
