@@ -31,12 +31,30 @@ namespace Transliterator.Core.Services.Phonology
             if (string.IsNullOrEmpty(normalizedText))
                 return segments;
 
+            // Знак вакфа стоит на границе слов, а не при букве, и в мусхафе может
+            // оказаться как вплотную к слову, так и между пробелами. Поэтому он
+            // не порождает свой сегмент, а откладывается и садится на ту границу,
+            // которая отделит его от следующего слова.
+            var pendingWaqf = WaqfMark.None;
+
             foreach (var cluster in BuildClusters(normalizedText))
             {
+                if (ArabicScript.IsWaqfMark(cluster.Base))
+                {
+                    pendingWaqf = DecodeWaqfMark(cluster.Base);
+                    continue;
+                }
+
                 if (char.IsWhiteSpace(cluster.Base))
                 {
-                    segments.Add(Segment.Break());
+                    AppendBreak(segments);
                     continue;
+                }
+
+                if (pendingWaqf != WaqfMark.None)
+                {
+                    AppendBreak(segments).Waqf = pendingWaqf;
+                    pendingWaqf = WaqfMark.None;
                 }
 
                 if (ArabicScript.IsArabicDigit(cluster.Base) || char.IsDigit(cluster.Base))
@@ -65,9 +83,38 @@ namespace Transliterator.Core.Services.Phonology
                 AppendConsonant(cluster, segments);
             }
 
+            // Знак вакфа в самом конце текста разметки не добавляет:
+            // конец текста и так пауза.
+
             MarkWordStarts(segments);
             DetectImlaiWasl(segments);
             return segments;
+        }
+
+        private static WaqfMark DecodeWaqfMark(char mark) => mark switch
+        {
+            ArabicScript.WaqfContinuePreferred => WaqfMark.ContinuePreferred,
+            ArabicScript.WaqfStopPreferred => WaqfMark.StopPreferred,
+            ArabicScript.WaqfObligatory => WaqfMark.Obligatory,
+            ArabicScript.WaqfForbidden => WaqfMark.Forbidden,
+            ArabicScript.WaqfPermissible => WaqfMark.Permissible,
+            ArabicScript.WaqfEmbracing => WaqfMark.Embracing,
+            ArabicScript.WaqfSaktah => WaqfMark.Saktah,
+            _ => WaqfMark.None
+        };
+
+        /// <summary>
+        /// Граница слов. Двух подряд не бывает: пробел вокруг знака вакфа —
+        /// это одна и та же граница, и знак должен сесть именно на неё.
+        /// </summary>
+        private static Segment AppendBreak(List<Segment> segments)
+        {
+            if (segments.Count > 0 && segments[^1].Kind == SegmentKind.Break)
+                return segments[^1];
+
+            var boundary = Segment.Break();
+            segments.Add(boundary);
+            return boundary;
         }
 
         // ------------------------------------------------------------------
