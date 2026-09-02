@@ -26,6 +26,7 @@ using IHost host = Host.CreateDefaultBuilder(args)
 
         // Правила таджвида
         services.AddTransient<RulesService>();
+        services.AddTransient<WaqfRule>();
         services.AddTransient<WaslRule>();
         services.AddTransient<ArticleRule>();
         services.AddTransient<EmphasisRule>();

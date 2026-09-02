@@ -5,6 +5,11 @@ namespace Transliterator.Core.Services.Phonology
     /// <summary>
     /// Навигация по потоку сегментов. Все правила смотрят на соседей одинаково,
     /// и в частности одинаково понимают, где кончается слово.
+    /// <para>
+    /// Пауза — граница жёстче словесной: через неё не заглядывает никто, даже
+    /// правила, которым разрешено пересекать границу слов. Между разорванными
+    /// паузой словами нет соединения, а значит нет и повода их сопоставлять.
+    /// </para>
     /// </summary>
     public static class SegmentNavigator
     {
@@ -26,7 +31,7 @@ namespace Transliterator.Core.Services.Phonology
                         return i;
                     case SegmentKind.Other:
                         continue;
-                    case SegmentKind.Break when crossWordBoundary:
+                    case SegmentKind.Break when crossWordBoundary && !segments[i].IsPause:
                         continue;
                     default:
                         return -1;
@@ -46,7 +51,7 @@ namespace Transliterator.Core.Services.Phonology
                         return i;
                     case SegmentKind.Other:
                         continue;
-                    case SegmentKind.Break when crossWordBoundary:
+                    case SegmentKind.Break when crossWordBoundary && !segments[i].IsPause:
                         continue;
                     default:
                         return -1;

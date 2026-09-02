@@ -44,6 +44,15 @@ namespace Transliterator.Core.Services.Phonology
                         continue;
                 }
 
+                // Знак вакфа — единственная разметка, которую нормализация оставляет:
+                // из неё стадия 3 узнаёт, где чтец останавливается. Всё остальное
+                // (разделители аятов, пометы чтеца) звука не несёт и в разбор не идёт.
+                if (ArabicScript.IsWaqfMark(c))
+                {
+                    result.Append(c);
+                    continue;
+                }
+
                 if (ArabicScript.IsRecitationMark(c))
                     continue;
 

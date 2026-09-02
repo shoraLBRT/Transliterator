@@ -61,14 +61,18 @@ namespace Transliterator.Core.Services.Rules
 
         /// <summary>
         /// Васля стоит в начале высказывания, если до неё в текущем высказывании
-        /// ещё не было ни одного произносимого согласного. Номер аята считается
-        /// границей высказывания — после него чтение начинается заново.
+        /// ещё не было ни одного произносимого согласного. Границей высказывания
+        /// служит и номер аята, и всякая пауза: после остановки чтец набирает
+        /// дыхание и начинает заново, поэтому васля снова озвучивается.
         /// </summary>
         private static bool StartsUtterance(IList<Segment> segments, int index)
         {
             for (int i = index - 1; i >= 0; i--)
             {
                 var segment = segments[i];
+
+                if (segment.Kind == SegmentKind.Break && segment.IsPause)
+                    return true;
 
                 if (segment.Kind == SegmentKind.Digit)
                     return true;
@@ -173,6 +177,8 @@ namespace Transliterator.Core.Services.Rules
                 if (segments[i].Kind == SegmentKind.Consonant && !segments[i].Silent)
                     return i;
                 if (segments[i].Kind == SegmentKind.Digit)
+                    return -1;
+                if (segments[i].Kind == SegmentKind.Break && segments[i].IsPause)
                     return -1;
             }
 

@@ -52,7 +52,28 @@ namespace Transliterator.Domain.Phonology
         /// </summary>
         public bool IsGeminateFirstHalf { get; set; }
 
+        /// <summary>
+        /// Огласовка, которую с этого сегмента сняла пауза.
+        /// <para>
+        /// Пауза гасит звук огласовки, но не то, что эта огласовка сделала с согласным:
+        /// ر в ٱلْفَجْرِ на паузе безгласна и всё равно мягкая — по своей исходной касре.
+        /// Хранить исходную огласовку оказалось точнее, чем восстанавливать её потом
+        /// по соседям: у безгласной ر и у обеззвученной паузой ر соседи одинаковые,
+        /// а читаются они по-разному.
+        /// </para>
+        /// </summary>
+        public Harakah OriginalVowel { get; set; } = Harakah.None;
+
         public bool StartsWord { get; set; }
+
+        /// <summary>Знак вакфа, написанный на этой границе слов. Только для <see cref="SegmentKind.Break"/>.</summary>
+        public WaqfMark Waqf { get; set; } = WaqfMark.None;
+
+        /// <summary>
+        /// На этой границе чтение прерывается. Проставляется стадией вакфа и после неё
+        /// означает уже не совет мусхафа, а решение конвейера: правила сюда не заглядывают.
+        /// </summary>
+        public bool IsPause { get; set; }
 
         /// <summary>Дефис после сегмента при рендеринге: артикль.</summary>
         public bool HyphenAfter { get; set; }

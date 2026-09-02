@@ -24,7 +24,7 @@ namespace Transliterator.Tests.RulesTests
         {
             // Танвин должен стать настоящим нуном, иначе правила нун сакины
             // пришлось бы дублировать для него отдельно.
-            var segments = TransliterationPipeline.Consonants("نَارٌ");
+            var segments = TransliterationPipeline.ParseWithoutRules("نَارٌ");
 
             var nun = Assert.Single(segments, s => s.FromTanwin);
             Assert.Equal("ن", nun.Letter);
@@ -40,7 +40,7 @@ namespace Transliterator.Tests.RulesTests
 
         [Theory]
         [InlineData("مَـٰلِكِ", "م", 2)]   // надстрочный алиф — долгая ā
-        [InlineData("نَارٌ", "ن", 2)]      // голый алиф удлиняет фатху
+        [InlineData("قَالُوا", "ق", 2)]    // голый алиф удлиняет фатху
         [InlineData("ٱلسَّمَآءِ", "م", 4)] // мадд муттасиль перед хамзой
         public void LongVowels_FoldIntoCarrierWithLength(string word, string letter, int expectedLength)
         {

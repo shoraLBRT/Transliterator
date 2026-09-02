@@ -21,6 +21,13 @@ namespace Transliterator.Core.Services.Rules
         private const int Obligatory = 4;
         private const int Lazim = 6;
 
+        /// <summary>
+        /// Мадд арид тянут на 2, 4 или 6 харакатов — дозволены все три чтения.
+        /// Берём среднее: оно чаще всего и звучит в размеренном чтении, и при нём
+        /// мадд арид остаётся отличим от естественного мадда в 2 хараката.
+        /// </summary>
+        private const int Arid = 4;
+
         public void Apply(IList<Segment> segments)
         {
             for (int i = 0; i < segments.Count; i++)
@@ -46,6 +53,14 @@ namespace Transliterator.Core.Services.Rules
                 if (next.Letter == ArabicScript.HamzaStr && !next.Silent
                                                          && segment.VowelLength < Obligatory)
                     segment.VowelLength = Obligatory;
+
+                // Мадд арид лис-сукун: пауза обеззвучила конечный согласный, и долгота
+                // перед ним растягивается. Признаком служит снятая паузой огласовка,
+                // а не сам сукун: написанный сукун (عَلَيْهِمْ) удлинения не даёт — он
+                // не «случайный», слог закрыт им и в слитном чтении.
+                if (next.Vowel == Harakah.Sukun && next.OriginalVowel != Harakah.None
+                                                && segment.VowelLength < Arid)
+                    segment.VowelLength = Arid;
             }
         }
     }

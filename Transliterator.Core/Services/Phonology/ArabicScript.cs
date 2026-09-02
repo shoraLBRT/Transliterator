@@ -27,6 +27,17 @@ namespace Transliterator.Core.Services.Phonology
         public const char SmallYa = 'ۦ';               // ۦ  восстановленная долгая ī
         public const char EndOfAyah = '۝';             // ۝
 
+        // --- знаки вакфа (U+06D6..U+06DC) ---
+        // Не звук, а совет чтецу об уместности остановки. Стадия вакфа читает их,
+        // поэтому нормализация обязана их сохранить, а не выбросить как прочую разметку.
+        public const char WaqfContinuePreferred = 'ۖ'; // ۖ  صلے
+        public const char WaqfStopPreferred = 'ۗ';     // ۗ  قلے
+        public const char WaqfObligatory = 'ۘ';        // ۘ  مـ
+        public const char WaqfForbidden = 'ۙ';         // ۙ  لا
+        public const char WaqfPermissible = 'ۚ';       // ۚ  ج
+        public const char WaqfEmbracing = 'ۛ';         // ۛ  معانقة
+        public const char WaqfSaktah = 'ۜ';            // ۜ  س
+
         // --- буквы ---
         public const char Hamza = 'ء';           // ء
         public const char AlefMadda = 'آ';       // آ
@@ -135,12 +146,16 @@ namespace Transliterator.Core.Services.Phonology
 
         public static bool IsArabicDigit(char c) => c is >= '٠' and <= '٩';
 
+        /// <summary>Знак вакфа. Единственная разметка, которая доживает до слоя сегментов.</summary>
+        public static bool IsWaqfMark(char c) =>
+            c is >= WaqfContinuePreferred and <= WaqfSaktah;
+
         /// <summary>
-        /// Знаки паузы, разделители аятов и пометы чтеца. Звука не несут;
-        /// на стадии вакфа они понадобятся как подсказки, здесь просто опознаются.
+        /// Разметка, не несущая звука: знаки вакфа, разделители аятов и пометы чтеца.
+        /// Знаки вакфа опознаются и здесь, но нормализация их сохраняет — их читает стадия 3.
         /// </summary>
         public static bool IsRecitationMark(char c) =>
-            c is >= 'ۖ' and <= 'ۜ'   // знаки вакфа
+            IsWaqfMark(c)
             || c == EndOfAyah
             || c is >= 'ۢ' and <= 'ۤ'
             || c is >= 'ۧ' and <= 'ۭ'

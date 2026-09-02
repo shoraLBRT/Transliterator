@@ -20,11 +20,19 @@ namespace Transliterator.Tests
             var normalized = new ArabicNormalizer().Normalize(arabicText);
             var segments = new ArabicParser().Parse(normalized);
 
-            new RulesService(new WaslRule(), new ArticleRule(), new EmphasisRule(), new MaddRule())
+            new RulesService(new WaqfRule(), new WaslRule(), new ArticleRule(), new EmphasisRule(), new MaddRule())
                 .ApplyTajweedRules(segments);
 
             return segments;
         }
+
+        /// <summary>
+        /// Разбор без правил — для проверок самого парсера. Нужен там, где правила
+        /// потом убирают разобранное: танвин на паузе снимается вместе со своим нуном,
+        /// и через полный конвейер его уже не увидеть.
+        /// </summary>
+        public static List<Segment> ParseWithoutRules(string arabicText) =>
+            new ArabicParser().Parse(new ArabicNormalizer().Normalize(arabicText));
 
         public static List<Segment> Consonants(string arabicText) =>
             Parse(arabicText).Where(s => s.Kind == SegmentKind.Consonant).ToList();
