@@ -1,10 +1,11 @@
-using Transliterator.Domain.Phonology;
+﻿using Transliterator.Domain.Phonology;
 
 namespace Transliterator.Core.Services.Rules
 {
     /// <summary>
     /// Порядок применения правил таджвида. Порядок здесь — не оформление, а содержание:
     /// каждая стадия опирается на решения предыдущих.
+    /// <para>Что из этого сделано, а что нет — в <c>docs/ROADMAP.md</c>.</para>
     /// <list type="number">
     ///   <item>Нормализация орфографии — <c>ArabicNormalizer</c>.</item>
     ///   <item>Разбор в поток сегментов — <c>ArabicParser</c>.</item>
