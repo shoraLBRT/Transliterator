@@ -50,11 +50,28 @@ namespace Transliterator.Core.Services.Rules
 
                 // Мадд арид лис-сукун: естественный мадд (2 харката) перед ставшим
                 // безгласным конечным согласным на паузе удлиняется.
-                // Это возникает после стадии вакфа, когда конечная огласовка снята.
-                if (segment.VowelLength == Natural && next.Vowel is Harakah.None or Harakah.Sukun
-                    && next.WaqfAfter != WaqfType.None && next.WaqfAfter != WaqfType.Forbidden)
+                // Поиск: есть ли вакф где-то после этой гласной перед концом слова?
+                if (segment.VowelLength == Natural)
                 {
-                    segment.VowelLength = Obligatory;
+                    int lastIndex = SegmentNavigator.NextConsonant(segments, i, crossWordBoundary: true);
+                    while (lastIndex >= 0)
+                    {
+                        var candidate = segments[lastIndex];
+                        if (candidate.Vowel != Harakah.None && candidate.Vowel != Harakah.Sukun)
+                        {
+                            // Есть ещё гласная, мадд арид не применяется.
+                            break;
+                        }
+
+                        if (candidate.WaqfAfter != WaqfType.None && candidate.WaqfAfter != WaqfType.Forbidden)
+                        {
+                            // Нашли конечный согласный на паузе, удлиняем мадд.
+                            segment.VowelLength = Obligatory;
+                            break;
+                        }
+
+                        lastIndex = SegmentNavigator.NextConsonant(segments, lastIndex, crossWordBoundary: true);
+                    }
                 }
             }
         }

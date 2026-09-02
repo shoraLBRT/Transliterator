@@ -26,13 +26,33 @@ namespace Transliterator.Core.Services.Rules
                 if (segment.Kind != SegmentKind.Consonant || segment.WaqfAfter == WaqfType.None || segment.WaqfAfter == WaqfType.Forbidden)
                     continue;
 
-                // Политика применения вакфа:
-                // - Optional, Preferred, Obligatory, Dual → применяются правила паузы.
-                // - Forbidden → соединение, никаких правил.
-                // - None → соединение, никаких правил.
+                // Применяются правила паузы только при явных знаках вакфа (не при Optional перед цифрой).
+                // Проверяем, что это не просто граница перед номером аята.
+                if (segment.WaqfAfter != WaqfType.Optional)
+                {
+                    ApplyPausalRules(segments, i);
+                    continue;
+                }
 
-                ApplyPausalRules(segments, i);
+                // Для Optional вакфа: применяем только если это явный знак вакфа (не граница перед цифрой).
+                if (!IsFollowedByDigit(segments, i))
+                    ApplyPausalRules(segments, i);
             }
+        }
+
+        /// <summary>Проверяет, есть ли номер аята сразу после данного сегмента.</summary>
+        private static bool IsFollowedByDigit(IList<Segment> segments, int index)
+        {
+            for (int i = index + 1; i < segments.Count; i++)
+            {
+                if (segments[i].Kind == SegmentKind.Digit)
+                    return true;
+                if (segments[i].Kind == SegmentKind.Consonant)
+                    return false;
+                if (segments[i].Kind != SegmentKind.Break)
+                    return false;
+            }
+            return false;
         }
 
         /// <summary>
