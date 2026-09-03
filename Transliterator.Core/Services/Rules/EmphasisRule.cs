@@ -25,6 +25,21 @@ namespace Transliterator.Core.Services.Rules
                 segment.Emphasis = ResolveEmphasis(segments, i);
             }
 
+            // Удвоение — один звук, разложенный на два сегмента, и решение у них
+            // общее. Принимает его половина с огласовкой: безгласная первая иначе
+            // рассуждала бы по соседям и в "مِن رَّبِّهِمْ" осталась бы мягкой,
+            // хотя произносится та же твёрдая ر, что и во второй половине.
+            for (int i = 0; i < segments.Count; i++)
+            {
+                var segment = segments[i];
+                if (segment.Kind != SegmentKind.Consonant || !segment.IsGeminateFirstHalf)
+                    continue;
+
+                int second = SegmentNavigator.NextConsonant(segments, i, crossWordBoundary: true);
+                if (second >= 0)
+                    segment.Emphasis = segments[second].Emphasis;
+            }
+
             for (int i = 0; i < segments.Count; i++)
             {
                 var segment = segments[i];
@@ -111,7 +126,7 @@ namespace Transliterator.Core.Services.Rules
             if (!IsLamOfAllah(segments, index))
                 return Emphasis.Light;
 
-            int previous = SegmentNavigator.PreviousConsonant(segments, index, crossWordBoundary: true);
+            int previous = PrecedingVowelCarrier(segments, index);
             if (previous < 0)
                 return Emphasis.Heavy;
 
@@ -123,33 +138,44 @@ namespace Transliterator.Core.Services.Rules
         /// <summary>
         /// Имя Аллаха: удвоенный лям с долгой ā, за которым следует ه.
         /// Покрывает и ٱللَّه, и لِلَّه, и بِٱللَّه.
+        /// <para>
+        /// Смотрим на ту половину удвоения, что несёт огласовку: удвоение выражено
+        /// то шаддой (لِلَّه), то двумя сегментами — если лям артикля уже слился
+        /// со вторым лямом (ٱللَّه). Решение потом получат обе половины.
+        /// </para>
         /// </summary>
         private static bool IsLamOfAllah(IList<Segment> segments, int index)
         {
             var lam = segments[index];
-            bool doubled = lam.Shadda || lam.IsGeminateFirstHalf;
+            if (lam.Vowel != Harakah.Fatha || lam.VowelLength < 2)
+                return false;
+
+            int previous = SegmentNavigator.PreviousConsonant(segments, index, crossWordBoundary: true);
+            bool doubled = lam.Shadda
+                           || (previous >= 0
+                               && segments[previous].IsGeminateFirstHalf
+                               && segments[previous].Letter == ArabicScript.LamStr);
             if (!doubled)
                 return false;
 
             int next = SegmentNavigator.NextConsonantInWord(segments, index);
-            if (next < 0)
-                return false;
+            return next >= 0 && segments[next].Letter == "ه";
+        }
 
-            // При идгаме солнечного ляма удвоение выражено двумя сегментами.
-            if (lam.IsGeminateFirstHalf)
-            {
-                if (segments[next].Letter != ArabicScript.LamStr)
-                    return false;
-                if (segments[next].Vowel != Harakah.Fatha || segments[next].VowelLength < 2)
-                    return false;
+        /// <summary>
+        /// Согласный, чья огласовка решает судьбу ляма имени Аллаха. Немая васля
+        /// и первая половина удвоения пропускаются: своей огласовки у них нет,
+        /// а решает именно она — "qооля-ллаааh", но "бисми-лляяяh".
+        /// </summary>
+        private static int PrecedingVowelCarrier(IList<Segment> segments, int index)
+        {
+            int previous = SegmentNavigator.PreviousConsonant(segments, index, crossWordBoundary: true);
 
-                int afterSecondLam = SegmentNavigator.NextConsonantInWord(segments, next);
-                return afterSecondLam >= 0 && segments[afterSecondLam].Letter == "ه";
-            }
+            while (previous >= 0
+                   && (segments[previous].Silent || segments[previous].IsGeminateFirstHalf))
+                previous = SegmentNavigator.PreviousConsonant(segments, previous, crossWordBoundary: true);
 
-            return lam.Vowel == Harakah.Fatha
-                   && lam.VowelLength >= 2
-                   && segments[next].Letter == "ه";
+            return previous;
         }
 
         /// <summary>

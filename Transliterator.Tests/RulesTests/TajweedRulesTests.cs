@@ -1,3 +1,4 @@
+using Transliterator.Domain.Entities;
 using Transliterator.Domain.Phonology;
 using Xunit;
 
@@ -147,6 +148,116 @@ namespace Transliterator.Tests.RulesTests
             Assert.DoesNotContain("ьь", TransliterationPipeline.Transliterate("ٱلْحَمْدُ"));
     }
 
+    /// <summary>
+    /// Стадия 6: нун сакина, танвин и мим сакина. Танвин отдельных проверок не требует —
+    /// парсер развернул его в нун ещё до правил, и это тот же нун сакина.
+    /// </summary>
+    public class NasalRuleTests
+    {
+        [Fact]
+        public void ThroatLetter_KeepsNunClear()
+        {
+            // Изхар халькы: гортанной букве носовой призвук передать нечем.
+            var nun = Assert.Single(TransliterationPipeline.Consonants("مَنْ عَمِلَ"), s => s.Letter == "ن");
+
+            Assert.False(nun.Ghunna);
+            Assert.Equal("ман 'амиль", TransliterationPipeline.Transliterate("مَنْ عَمِلَ"));
+        }
+
+        [Fact]
+        public void Ihfa_NasalizesNunWithoutChangingIt()
+        {
+            // Ихфа: нун не сливается и не исчезает. Огласовки на нём в أُنزِلَ
+            // не написано вовсе — в мусхафе это и означает безгласность.
+            var nun = Assert.Single(TransliterationPipeline.Consonants("أُنزِلَ"), s => s.Letter == "ن");
+
+            Assert.True(nun.Ghunna);
+            Assert.False(nun.IsGeminateFirstHalf);
+            Assert.Equal("унзиль", TransliterationPipeline.Transliterate("أُنزِلَ"));
+        }
+
+        [Theory]
+        [InlineData("مِن رَّبِّهِمْ", "мир-роббиhим")]             // без гунны: ر
+        [InlineData("مِن نُّطْفَةٍ", "мин-нутIфаh")]               // с гунной: ن
+        [InlineData("رَحْمَةً وَحُكْمًا", "рохIматау-уахIукмаа")] // танвин сливается наравне с написанным нуном
+        public void Idgham_TurnsNunIntoTheNextLetter(string arabic, string expected) =>
+            // Нун не исчезает, а становится следующей буквой, и дефис приходится
+            // между двумя её копиями — как у солнечного ляма в "ар-рохIмаан".
+            Assert.Equal(expected, TransliterationPipeline.Transliterate(arabic));
+
+        [Fact]
+        public void IdghamIntoRa_LeavesNoGhunna()
+        {
+            var merged = Assert.Single(TransliterationPipeline.Consonants("مِن رَّبِّهِمْ"),
+                                       s => s.IsGeminateFirstHalf);
+
+            Assert.Equal("ر", merged.Letter);
+            Assert.False(merged.Ghunna);
+        }
+
+        [Fact]
+        public void Idgham_DecidesEmphasisOfBothHalves()
+        {
+            // Твёрдость ر определяется только после слияния: до него на этом месте
+            // стоит نْ, а у безгласной первой половины своей огласовки нет — решает
+            // вторая. Иначе первая половина взяла бы мягкость у касры مِن.
+            foreach (var half in TransliterationPipeline.Consonants("مِن رَّبِّهِمْ").Where(s => s.Letter == "ر"))
+                Assert.Equal(Emphasis.Heavy, half.Emphasis);
+        }
+
+        [Theory]
+        [InlineData("مِنۢ بَعْدِ")] // знак икляба стоит вместо сукуна
+        [InlineData("مِنْ بَعْدِ")] // сукун написан явно
+        public void Iqlab_TurnsNunIntoMeem(string arabic)
+        {
+            // Знак икляба несёт звук, а не совет чтецу: без него, если бы его
+            // выбросила нормализация, нун в مِنۢ был бы неотличим от неогласованного.
+            Assert.Equal("мим ба'д", TransliterationPipeline.Transliterate(arabic));
+            Assert.DoesNotContain(TransliterationPipeline.Consonants(arabic), s => s.Letter == "ن");
+        }
+
+        [Fact]
+        public void IdghamLetterInsideOneWord_DoesNotMerge()
+        {
+            // Изхар мутлак: внутри слова идгама не бывает — иначе دُنْيَا читалось бы
+            // с удвоением, и корень стал бы неузнаваем.
+            Assert.Equal("дунйаа", TransliterationPipeline.Transliterate("دُنْيَا"));
+            Assert.DoesNotContain(TransliterationPipeline.Consonants("دُنْيَا"), s => s.IsGeminateFirstHalf);
+        }
+
+        [Fact]
+        public void MeemSakina_MergesIntoMeem() =>
+            // Идгам мисляйн: два мима сливаются в один долгий носовой.
+            Assert.Equal("ляhум-могъфироh", TransliterationPipeline.Transliterate("لَهُم مَّغْفِرَةٌ"));
+
+        [Fact]
+        public void MeemSakina_IsNasalizedBeforeBaAndClearElsewhere()
+        {
+            // Ихфа шафави против изхара шафави. Кириллица этой разницы не пишет,
+            // но помета доходит до рендерера — графему выбирает профиль.
+            var beforeBa = Assert.Single(TransliterationPipeline.Consonants("وَمَا هُم بِمُؤْمِنِينَ"),
+                                         s => s.Letter == "م" && s.Vowel is Harakah.Sukun or Harakah.None);
+            var beforeDal = Assert.Single(TransliterationPipeline.Consonants("ٱلْحَمْدُ"), s => s.Letter == "م");
+
+            Assert.True(beforeBa.Ghunna);
+            Assert.False(beforeDal.Ghunna);
+        }
+
+        [Fact]
+        public void Ghunna_TakesItsGraphemeFromTheProfile()
+        {
+            // Standard пишет гунну обычными н и м — это выбор системы записи,
+            // а не решение конвейера: правило только помечает звук.
+            var profile = new TransliterationProfile
+            {
+                Name = "ghunna",
+                Rules = new Dictionary<string, string>(TestProfiles.Standard.Rules) { ["ن|ghunna"] = "н̃" }
+            };
+
+            Assert.Equal("ун̃зиль", TransliterationPipeline.Transliterate("أُنزِلَ", profile));
+        }
+    }
+
     public class EmphasisRuleTests
     {
         [Theory]
@@ -160,6 +271,13 @@ namespace Transliterator.Tests.RulesTests
         public void SakinEmphatic_ColoursPrecedingVowel() =>
             // Эмфаза распространяется и назад: прежде правило смотрело только вперёд.
             Assert.Equal("бор", TransliterationPipeline.Transliterate("بَر"));
+
+        [Fact]
+        public void LamOfAllah_IsHeavyAfterFatha() =>
+            // Удвоение здесь разложено на два сегмента: лям артикля слился со вторым
+            // лямом. Решает та половина, что несёт огласовку, — иначе безгласная
+            // первая половина отдала бы имени мягкий лям: "ал-ляяяh".
+            Assert.Equal("qооля-ллаааh", TransliterationPipeline.Transliterate("قَالَ ٱللَّٰهُ"));
 
         [Fact]
         public void LamOfAllah_IsLightAfterKasra() =>
@@ -177,9 +295,11 @@ namespace Transliterator.Tests.RulesTests
         [Fact]
         public void TaMarbutaAndTanwin_AreNotDropped() =>
             // В соединении ة звучит как /t/, а танвин — как настоящий нун.
-            // На паузе обе буквы читаются иначе, поэтому проверка идёт на слитном стыке.
-            Assert.Equal("рохIматан уахIукмаа",
-                TransliterationPipeline.Transliterate("رَحْمَةً وَحُكْمًا"));
+            // На паузе обе буквы читаются иначе, поэтому проверка идёт на слитном стыке,
+            // и следующее слово начинается с гортанной: перед ней нун остаётся нуном.
+            // В прежнем "رَحْمَةً وَحُكْمًا" он сливается с و — это уже идгам стадии 6.
+            Assert.Equal("рохIматин 'аляйhим",
+                TransliterationPipeline.Transliterate("رَحْمَةٍ عَلَيْهِمْ"));
 
         [Fact]
         public void HamzaCarrier_KeepsItsOwnHarakah() =>

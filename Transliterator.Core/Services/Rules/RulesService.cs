@@ -12,7 +12,7 @@ namespace Transliterator.Core.Services.Rules
     ///   <item>Разметка пауз (вакф) — <c>WaqfRule</c>. Решает, какие слова соединяются.</item>
     ///   <item>Хамзат аль-васль.</item>
     ///   <item>Лям артикля.</item>
-    ///   <item>Нун сакина, танвин, мим сакина, идгамы — <b>не реализовано</b>.</item>
+    ///   <item>Нун сакина, танвин, мим сакина, идгамы — <c>NasalRule</c>.</item>
     ///   <item>Тафхим и таркик.</item>
     ///   <item>Длительность мадда.</item>
     ///   <item>Кальканя — <b>не реализовано</b>.</item>
@@ -24,6 +24,7 @@ namespace Transliterator.Core.Services.Rules
         private readonly WaqfRule _waqfRule;
         private readonly WaslRule _waslRule;
         private readonly ArticleRule _articleRule;
+        private readonly NasalRule _nasalRule;
         private readonly EmphasisRule _emphasisRule;
         private readonly MaddRule _maddRule;
 
@@ -31,12 +32,14 @@ namespace Transliterator.Core.Services.Rules
             WaqfRule waqfRule,
             WaslRule waslRule,
             ArticleRule articleRule,
+            NasalRule nasalRule,
             EmphasisRule emphasisRule,
             MaddRule maddRule)
         {
             _waqfRule = waqfRule;
             _waslRule = waslRule;
             _articleRule = articleRule;
+            _nasalRule = nasalRule;
             _emphasisRule = emphasisRule;
             _maddRule = maddRule;
         }
@@ -53,8 +56,10 @@ namespace Transliterator.Core.Services.Rules
             _waslRule.Apply(segments);
             _articleRule.Apply(segments);
 
-            // Стадия 6: нун сакина, танвин, мим сакина, идгамы.
-            // TODO(P3): изхар, идгам ±гунна, икляб, ихфа.
+            // Стадия 6: нун сакина, танвин, мим сакина. Стоит после артикля —
+            // солнечный лям к этому моменту уже стал другой буквой — и до эмфазы,
+            // потому что идгам меняет её условия.
+            _nasalRule.Apply(segments);
 
             _emphasisRule.Apply(segments);
             _maddRule.Apply(segments);

@@ -25,6 +25,13 @@ namespace Transliterator.Core.Services.Phonology
         public const char SmallHighUprightZero = '۠';  // ۠  буква не читается
         public const char SmallWaw = 'ۥ';              // ۥ  восстановленная долгая ū
         public const char SmallYa = 'ۦ';               // ۦ  восстановленная долгая ī
+
+        /// <summary>
+        /// ۢ  Знак икляба: малая мим над нуном или танвином (مِنۢ بَعْدِ).
+        /// Стоит вместо сукуна и потому несёт звук, а не совет чтецу —
+        /// нормализация обязана его сохранить, а разбор прочесть как безгласность.
+        /// </summary>
+        public const char SmallHighMeemIsolated = 'ۢ';
         public const char EndOfAyah = '۝';             // ۝
 
         // --- знаки вакфа (U+06D6..U+06DC) ---
@@ -61,6 +68,7 @@ namespace Transliterator.Core.Services.Phonology
         public const char Ha = 'ه';              // ه
 
         public const string HamzaStr = "ء";
+        public const string MeemStr = "م";
         public const string LamStr = "ل";
         public const string NunStr = "ن";
         public const string TaMarbutaStr = "ة";
@@ -83,6 +91,32 @@ namespace Transliterator.Core.Services.Phonology
             'ظ', // ظ
             'ل', // ل
             'ن'  // ن
+        };
+
+        /// <summary>
+        /// Буквы изхара халькы: нун сакина перед ними произносится чисто, без назализации.
+        /// Все они гортанные — соединить с ними носовой призвук нечем.
+        /// </summary>
+        public static readonly HashSet<char> ThroatLetters = new()
+        {
+            Hamza,
+            'ه', // ه
+            'ع', // ع
+            'ح', // ح
+            'غ', // غ
+            'خ'  // خ
+        };
+
+        /// <summary>Буквы идгама с гунной (يرملون без ل и ر): нун сливается с ними, назализация остаётся.</summary>
+        public static readonly HashSet<char> IdghamWithGhunna = new()
+        {
+            Yeh, Nun, Meem, Waw
+        };
+
+        /// <summary>Буквы идгама без гунны: нун исчезает в них бесследно.</summary>
+        public static readonly HashSet<char> IdghamWithoutGhunna = new()
+        {
+            Lam, Ra
         };
 
         /// <summary>Буквы истиля — всегда произносятся твёрдо (тафхим).</summary>
@@ -142,7 +176,8 @@ namespace Transliterator.Core.Services.Phonology
             || c == SuperscriptAlef
             || c == QuranicSukun
             || c == SmallHighRoundedZero
-            || c == SmallHighUprightZero;
+            || c == SmallHighUprightZero
+            || c == SmallHighMeemIsolated;
 
         public static bool IsArabicDigit(char c) => c is >= '٠' and <= '٩';
 
@@ -150,9 +185,13 @@ namespace Transliterator.Core.Services.Phonology
         public static bool IsWaqfMark(char c) =>
             c is >= WaqfContinuePreferred and <= WaqfSaktah;
 
+        /// <summary>Знак икляба. Как и знак вакфа, переживает нормализацию: его читает стадия 6.</summary>
+        public static bool IsIqlabMark(char c) => c == SmallHighMeemIsolated;
+
         /// <summary>
         /// Разметка, не несущая звука: знаки вакфа, разделители аятов и пометы чтеца.
-        /// Знаки вакфа опознаются и здесь, но нормализация их сохраняет — их читает стадия 3.
+        /// Знаки вакфа и знак икляба опознаются и здесь, но нормализация их сохраняет —
+        /// их читают стадии 3 и 6.
         /// </summary>
         public static bool IsRecitationMark(char c) =>
             IsWaqfMark(c)
