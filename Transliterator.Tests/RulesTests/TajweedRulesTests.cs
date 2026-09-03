@@ -103,8 +103,10 @@ namespace Transliterator.Tests.RulesTests
     public class WaslRuleTests
     {
         [Theory]
-        [InlineData("بِسْمِ ٱللَّهِ", "бисми-лляh")]
-        [InlineData("بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ", "бисми-лляhи-ррохIмааан")]
+        // Имя Аллаха записано без надстрочного алифа, но читается с долгой ā и так:
+        // её восстанавливает нормализация, а на паузе её тянет ещё и мадд арид.
+        [InlineData("بِسْمِ ٱللَّهِ", "бисми-лляяяh")]
+        [InlineData("بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ", "бисми-лляяhи-ррохIмааан")]
         public void ConnectedWasl_MergesWordsWithHyphen(string arabic, string expected) =>
             Assert.Equal(expected, TransliterationPipeline.Transliterate(arabic));
 
@@ -303,9 +305,9 @@ namespace Transliterator.Tests.RulesTests
 
         [Fact]
         public void LamOfAllah_IsLightAfterKasra() =>
-            // "лилляh", а не "лиллаhи". Прежний хак искал в кириллице "Аллах"
+            // "лилляяяh", а не "лиллаааh". Прежний хак искал в кириллице "Аллах"
             // и не срабатывал никогда, потому что ه отображается в "h".
-            Assert.Equal("лилляh", TransliterationPipeline.Transliterate("لِلَّهِ"));
+            Assert.Equal("лилляяяh", TransliterationPipeline.Transliterate("لِلَّهِ"));
     }
 
     /// <summary>
@@ -394,6 +396,67 @@ namespace Transliterator.Tests.RulesTests
             // …а فِيهِ مُهَانًا — с силёй, хотя перед ه стоит долгая ī.
             var fihi = TransliterationPipeline.Consonants("فِيهِ مُهَانًا").First(s => s.Letter == "ه");
             Assert.Equal(2, fihi.VowelLength);
+        }
+    }
+
+    /// <summary>
+    /// Имя Аллаха в современной орфографии: «ٱللَّهُ» вместо «ٱللَّٰهُ».
+    /// Долготу в этом слове даёт только надстрочный алиф, и без него имя рассыпается
+    /// сразу по трём стадиям — оттого проверки собраны в один класс, а не разложены
+    /// по стадиям.
+    /// </summary>
+    public class NameOfAllahTests
+    {
+        [Theory]
+        [InlineData("ٱللَّهُ", "ٱللَّٰهُ")]
+        [InlineData("قَالَ ٱللَّهُ", "قَالَ ٱللَّٰهُ")]
+        [InlineData("بِسْمِ ٱللَّهِ", "بِسْمِ ٱللَّٰهِ")]
+        [InlineData("لِلَّهِ", "لِلَّٰهِ")]
+        [InlineData("ٱللَّهُمَّ", "ٱللَّٰهُمَّ")]
+        public void BothSpellings_ReadAlike(string modern, string uthmani) =>
+            // Нормализация сводит два написания к одному чтению. Иначе про орфографию
+            // пришлось бы знать каждой стадии, которая опирается на эту долготу.
+            Assert.Equal(TransliterationPipeline.Transliterate(uthmani),
+                TransliterationPipeline.Transliterate(modern));
+
+        [Fact]
+        public void ModernSpelling_KeepsTheLongVowel() =>
+            // Прежде выходило «qуль hууа-лляhууу ахIад»: слог لَّ оставался кратким,
+            // а конечная ه получала мадд силя, которого у коренной буквы не бывает.
+            Assert.Equal("qуль hууа-ллааhу ахIад",
+                TransliterationPipeline.Transliterate("قُلْ هُوَ ٱللَّهُ أَحَدٌ"));
+
+        [Fact]
+        public void Ha_OfTheName_IsNotAPronoun()
+        {
+            // Мадд силя живёт между двумя движениями голоса, а перед этой ه стоит
+            // долгая ā — значит, и без надстрочного алифа силе взяться неоткуда.
+            var ha = TransliterationPipeline.Consonants("ٱللَّهُ أَحَدٌ").First(s => s.Letter == "ه");
+
+            Assert.Equal(1, ha.VowelLength);
+        }
+
+        [Theory]
+        [InlineData("قَالَ ٱللَّهُ", Emphasis.Heavy)] // фатха перед лямом
+        [InlineData("لِلَّهِ", Emphasis.Light)] // касра перед лямом
+        public void Lam_KeepsItsEmphasisWithoutSuperscriptAlef(string arabic, Emphasis expected)
+        {
+            // Лям имени Аллаха стадия 7 узнаёт по долгой ā при нём. Без алифа это
+            // обычный лям, и твёрдым он не станет ни при какой огласовке.
+            var lam = TransliterationPipeline.Consonants(arabic).Last(s => s.Letter == "ل");
+
+            Assert.Equal(expected, lam.Emphasis);
+        }
+
+        [Fact]
+        public void DoubledLamBeforeHa_IsNotAlwaysTheName()
+        {
+            // «قُل لَّهُ مَا» — это «скажи ему»: то же لَّ, но долготы в нём нет,
+            // а ه здесь как раз местоименная и силю получает.
+            var segments = TransliterationPipeline.Consonants("قُل لَّهُ مَا");
+
+            Assert.Equal(1, segments.Last(s => s.Letter == "ل").VowelLength);
+            Assert.Equal(2, segments.First(s => s.Letter == "ه").VowelLength);
         }
     }
 

@@ -64,7 +64,121 @@ namespace Transliterator.Core.Services.Phonology
                 result.Append(c);
             }
 
-            return CollapseWhitespace(result.ToString());
+            return RestoreNameOfAllah(CollapseWhitespace(result.ToString()));
+        }
+
+        /// <summary>
+        /// Восстанавливает надстрочный алиф в имени Аллаха. В современной орфографии
+        /// его не пишут — «ٱللَّهُ» вместо «ٱللَّٰهُ», — а долготу в этом слове даёт
+        /// только он: своей буквы у неё нет.
+        /// <para>
+        /// Без алифа слог لَّ остаётся кратким, и дальше рушится всё, что на эту
+        /// долготу опирается: стадия 7 не узнаёт лям имени Аллаха, а стадия 8
+        /// видит перед конечной ه краткую огласовку и принимает коренную ه
+        /// за местоименную — со всем мадд силя впридачу.
+        /// </para>
+        /// <para>
+        /// Чиним здесь, а не в правилах, по той же причине, по которой разбор
+        /// восстанавливает артикль в «الحمد» (<c>ArabicParser.DetectImlaiWasl</c>):
+        /// дальше по конвейеру должно доехать одно написание, а не два.
+        /// </para>
+        /// </summary>
+        private static string RestoreNameOfAllah(string text)
+        {
+            var result = new StringBuilder(text.Length);
+
+            for (int i = 0; i < text.Length; i++)
+            {
+                result.Append(text[i]);
+
+                if (!IsNameOfAllahLam(text, i, out int marksEnd))
+                    continue;
+
+                result.Append(text, i + 1, marksEnd - i - 1);
+                result.Append(ArabicScript.SuperscriptAlef);
+                i = marksEnd - 1;
+            }
+
+            return result.ToString();
+        }
+
+        /// <summary>
+        /// Удвоенный лям имени Аллаха: «لَّ» с фатхой, за которым сразу идёт ه.
+        /// Возвращает через <paramref name="marksEnd"/> место сразу за диакритикой
+        /// ляма — туда и встанет алиф, чтобы порядок знаков остался каноническим
+        /// (фатха, шадда, надстрочный алиф).
+        /// </summary>
+        private static bool IsNameOfAllahLam(string text, int index, out int marksEnd)
+        {
+            marksEnd = index + 1;
+            if (text[index] != ArabicScript.Lam)
+                return false;
+
+            bool hasShadda = false;
+            bool hasFatha = false;
+
+            while (marksEnd < text.Length && ArabicScript.IsDiacritic(text[marksEnd]))
+            {
+                // Написание усмани: алиф уже на месте, восстанавливать нечего.
+                if (text[marksEnd] == ArabicScript.SuperscriptAlef)
+                    return false;
+
+                hasShadda |= text[marksEnd] == ArabicScript.Shadda;
+                hasFatha |= text[marksEnd] == ArabicScript.Fatha;
+                marksEnd++;
+            }
+
+            // Огласовки восстанавливать не берёмся: без шадды и фатхи это
+            // неогласованный текст, а его конвейер и так не читает.
+            if (!hasShadda || !hasFatha)
+                return false;
+
+            if (marksEnd >= text.Length || text[marksEnd] != ArabicScript.Ha)
+                return false;
+
+            return IsPrecededByArticleOrPrefixLam(text, index);
+        }
+
+        /// <summary>
+        /// Слева от удвоенного ляма должно стоять то, что и делает слово именем
+        /// Аллаха: лям артикля после алифа (ٱللَّه, بِٱللَّه, ٱللَّهُمَّ) или лям
+        /// предлога с касрой (لِلَّه).
+        /// <para>
+        /// Одного «لَّه» мало: в «قُل لَّهُ» тот же لَّهُ — это «ему», и никакой
+        /// долготы в нём нет.
+        /// </para>
+        /// </summary>
+        private static bool IsPrecededByArticleOrPrefixLam(string text, int index)
+        {
+            int lam = PreviousLetter(text, index);
+            if (lam < 0 || text[lam] != ArabicScript.Lam)
+                return false;
+
+            if (HasMark(text, lam, ArabicScript.Kasra))
+                return true;
+
+            int article = PreviousLetter(text, lam);
+            return article >= 0
+                   && text[article] is ArabicScript.Alef or ArabicScript.AlefWasla;
+        }
+
+        /// <summary>Предыдущий носитель: диакритика своей позицией в слове не считается.</summary>
+        private static int PreviousLetter(string text, int index)
+        {
+            int i = index - 1;
+            while (i >= 0 && ArabicScript.IsDiacritic(text[i]))
+                i--;
+
+            return i;
+        }
+
+        private static bool HasMark(string text, int letterIndex, char mark)
+        {
+            for (int i = letterIndex + 1; i < text.Length && ArabicScript.IsDiacritic(text[i]); i++)
+                if (text[i] == mark)
+                    return true;
+
+            return false;
         }
 
         private static string CollapseWhitespace(string text)
