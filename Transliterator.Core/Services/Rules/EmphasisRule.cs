@@ -108,6 +108,13 @@ namespace Transliterator.Core.Services.Rules
             if (previous < 0 || segments[previous].Vowel != Harakah.Kasra)
                 return Emphasis.Heavy;
 
+            // Размягчает р только коренная касра. Касра хамзат аль-васль — привнесённая:
+            // она звучит только в начале высказывания и пропадает при соединении, а р
+            // в رَبِّ ٱرْحَمْ твёрдая в обоих чтениях. С опорой на такую касру буква
+            // меняла бы качество от того, где чтец начал читать.
+            if (segments[previous].IsWaslHamza)
+                return Emphasis.Heavy;
+
             int next = SegmentNavigator.NextConsonantInWord(segments, index);
             if (next >= 0 && segments[next].Letter.Length > 0
                           && ArabicScript.AlwaysHeavy.Contains(segments[next].Letter[0]))
@@ -159,7 +166,7 @@ namespace Transliterator.Core.Services.Rules
                 return false;
 
             int next = SegmentNavigator.NextConsonantInWord(segments, index);
-            return next >= 0 && segments[next].Letter == "ه";
+            return next >= 0 && segments[next].Letter == ArabicScript.HaStr;
         }
 
         /// <summary>

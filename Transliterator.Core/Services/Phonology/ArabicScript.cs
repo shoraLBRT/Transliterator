@@ -71,6 +71,7 @@ namespace Transliterator.Core.Services.Phonology
         public const string MeemStr = "م";
         public const string LamStr = "ل";
         public const string NunStr = "ن";
+        public const string HaStr = "ه";
         public const string TaMarbutaStr = "ة";
         public const string AlefWaslaStr = "ٱ";
 

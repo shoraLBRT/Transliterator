@@ -279,6 +279,28 @@ namespace Transliterator.Tests.RulesTests
             // первая половина отдала бы имени мягкий лям: "ал-ляяяh".
             Assert.Equal("qооля-ллаааh", TransliterationPipeline.Transliterate("قَالَ ٱللَّٰهُ"));
 
+        [Theory]
+        [InlineData("ٱرْحَمْ")]        // в начале высказывания васля звучит
+        [InlineData("رَبِّ ٱرْحَمْ")] // в соединении она нема
+        [InlineData("ٱرْجِعِي")]
+        public void Ra_AfterWaslKasra_IsHeavy(string arabic)
+        {
+            // Касра хамзат аль-васль привнесена и р не смягчает: иначе одно и то же
+            // слово читалось бы по-разному в начале высказывания и в середине.
+            var ra = TransliterationPipeline.Consonants(arabic).First(s => s.Letter == "ر");
+
+            Assert.Equal(Emphasis.Heavy, ra.Emphasis);
+        }
+
+        [Fact]
+        public void Ra_AfterTrueKasra_StaysLight()
+        {
+            // Для контраста: в فِرْعَوْنَ касра коренная, и безгласная р остаётся мягкой.
+            var ra = TransliterationPipeline.Consonants("فِرْعَوْنَ").First(s => s.Letter == "ر");
+
+            Assert.Equal(Emphasis.Light, ra.Emphasis);
+        }
+
         [Fact]
         public void LamOfAllah_IsLightAfterKasra() =>
             // "лилляh", а не "лиллаhи". Прежний хак искал в кириллице "Аллах"
