@@ -58,7 +58,7 @@ namespace Transliterator.Core.Services.Phonology
                 if (!segment.Silent)
                 {
                     var consonant = RenderConsonant(segment, profile);
-                    result.Append(consonant);
+                    result.Append(Repeat(consonant, GlideCount(segment)));
                     if (segment.Shadda)
                         result.Append(consonant);
 
@@ -147,6 +147,14 @@ namespace Transliterator.Core.Services.Phonology
             return Lookup(profile, letter) ?? string.Empty;
         }
 
+        /// <summary>
+        /// Сколько раз повторить графему самого согласного. Больше одного — только
+        /// у безгласного глайда с маддом лин: там долгота лежит на و и ي, а не на
+        /// гласной при них, и повторять приходится их же графему.
+        /// </summary>
+        private static int GlideCount(Segment segment) =>
+            segment.Vowel == Harakah.Sukun ? GraphemeCount(segment.VowelLength) : 1;
+
         private string RenderVowel(Segment segment, TransliterationProfile profile)
         {
             if (segment.Vowel is Harakah.None or Harakah.Sukun)
@@ -163,8 +171,11 @@ namespace Transliterator.Core.Services.Phonology
             if (string.IsNullOrEmpty(grapheme))
                 return string.Empty;
 
-            return string.Concat(Enumerable.Repeat(grapheme, GraphemeCount(segment.VowelLength)));
+            return Repeat(grapheme, GraphemeCount(segment.VowelLength));
         }
+
+        private static string Repeat(string grapheme, int count) =>
+            count == 1 ? grapheme : string.Concat(Enumerable.Repeat(grapheme, count));
 
         private static string VowelKey(Harakah vowel) => vowel switch
         {

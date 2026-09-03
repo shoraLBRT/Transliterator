@@ -34,7 +34,7 @@ namespace Transliterator.Tests.RulesTests
 
         [Theory]
         [InlineData("رَحْمَةٌ", "рохIмаh")] // дамматан
-        [InlineData("شَيْءٍ", "щайъ")]      // касратан
+        [InlineData("شَيْءٍ", "щайййъ")]    // касратан; ي при этом получает мадд лин
         public void DammatanAndKasratan_AreDropped(string arabic, string expected) =>
             Assert.Equal(expected, TransliterationPipeline.Transliterate(arabic));
 
@@ -306,6 +306,95 @@ namespace Transliterator.Tests.RulesTests
             // "лилляh", а не "лиллаhи". Прежний хак искал в кириллице "Аллах"
             // и не срабатывал никогда, потому что ه отображается в "h".
             Assert.Equal("лилляh", TransliterationPipeline.Transliterate("لِلَّهِ"));
+    }
+
+    /// <summary>
+    /// Стадия 8: длительность мадда. Долгота живёт в харакатах, поэтому проверять
+    /// её честнее по сегментам — в кириллице все длительности выше двух
+    /// сливаются в «побольше букв».
+    /// </summary>
+    public class MaddRuleTests
+    {
+        [Theory]
+        [InlineData("ءَامَنَ")]
+        [InlineData("إِيمَان")]
+        [InlineData("أُوتِيَ")]
+        public void MaddBadal_StaysNatural(string arabic)
+        {
+            // Долгая гласная после хамзы тянется два хараката, а не четыре:
+            // муттасиль и мунфасиль требуют хамзы после гласной, а не перед ней.
+            var hamza = TransliterationPipeline.Consonants(arabic).First(s => s.Letter == "ء");
+
+            Assert.Equal(2, hamza.VowelLength);
+        }
+
+        [Theory]
+        [InlineData("خَوْفٌ", "و")]
+        [InlineData("قُرَيْشٍ", "ي")]
+        [InlineData("فِرْعَوْنَ", "و")]
+        public void MaddLin_LengthensGlideAtPause(string arabic, string glide)
+        {
+            // Пауза обеззвучивает последний согласный, слог закрывается внезапно —
+            // и голос отыгрывается на глайде, а не на фатхе перед ним.
+            var segment = TransliterationPipeline.Consonants(arabic).First(s => s.Letter == glide);
+
+            Assert.Equal(4, segment.VowelLength);
+        }
+
+        [Fact]
+        public void MaddLin_NeedsSukunFromPause()
+        {
+            // عَلَيْهِمْ: сукун написан, а не наведён паузой. Слог закрыт им и в слитном
+            // чтении, поэтому удлинять нечего — это простой дифтонг.
+            var ya = TransliterationPipeline.Consonants("عَلَيْهِمْ").First(s => s.Letter == "ي");
+
+            Assert.Equal(1, ya.VowelLength);
+        }
+
+        [Fact]
+        public void MaddLin_ReachesTheOutput() =>
+            // Долгота на глайде выражается повтором его же графемы: тянется و, а не фатха.
+            Assert.Equal("хъоуууф", TransliterationPipeline.Transliterate("خَوْفٌ"));
+
+        [Fact]
+        public void MaddSilaSughra_LengthensPronounHa() =>
+            // Местоименная ه между двумя огласованными буквами тянется два хараката,
+            // даже когда мусхаф не разметил её малым вавом.
+            Assert.Equal("ляhуу маа", TransliterationPipeline.Transliterate("لَهُ مَا"));
+
+        [Fact]
+        public void MaddSilaKubra_IsFourHarakat()
+        {
+            // Перед хамзой силя удлиняется до четырёх — тем же правилом мунфасиля,
+            // что удлиняет всякую долгую гласную перед хамзой соседнего слова.
+            var ha = TransliterationPipeline.Consonants("لَهُ أَخْلَدَ").First(s => s.Letter == "ه");
+
+            Assert.Equal(4, ha.VowelLength);
+        }
+
+        [Theory]
+        [InlineData("مِنْهُ مَا")]      // перед ه сукун
+        [InlineData("فِيهِ مَا")]       // перед ه долгая ī
+        [InlineData("لَهُ ٱلْمُلْكُ")]   // после ه безгласный лям
+        [InlineData("ٱللَّٰهُ أَحَدٌ")]    // ه имени Аллаха — коренная, а не местоимение
+        public void MaddSila_NeedsTwoMovementsOfVoice(string arabic)
+        {
+            var ha = TransliterationPipeline.Consonants(arabic).First(s => s.Letter == "ه");
+
+            Assert.Equal(1, ha.VowelLength);
+        }
+
+        [Fact]
+        public void MaddSila_HasItsExceptions()
+        {
+            // يَرْضَهُ لَكُمْ Хафс читает короткой даммой, хотя условия налицо…
+            var yardahu = TransliterationPipeline.Consonants("يَرْضَهُ لَكُمْ").First(s => s.Letter == "ه");
+            Assert.Equal(1, yardahu.VowelLength);
+
+            // …а فِيهِ مُهَانًا — с силёй, хотя перед ه стоит долгая ī.
+            var fihi = TransliterationPipeline.Consonants("فِيهِ مُهَانًا").First(s => s.Letter == "ه");
+            Assert.Equal(2, fihi.VowelLength);
+        }
     }
 
     public class LetterCoverageTests

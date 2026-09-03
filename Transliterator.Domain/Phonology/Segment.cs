@@ -21,7 +21,13 @@ namespace Transliterator.Domain.Phonology
 
         public Harakah Vowel { get; set; } = Harakah.None;
 
-        /// <summary>Длительность гласной в харакатах: 1 — краткая, 2 — мадд табии, 4 и 6 — удлинённые.</summary>
+        /// <summary>
+        /// Длительность гласной в харакатах: 1 — краткая, 2 — мадд табии, 4 и 6 — удлинённые.
+        /// <para>
+        /// У безгласного глайда тем же числом хранится мадд лин: там голос
+        /// тянет сами و и ي, а не фатху перед ними.
+        /// </para>
+        /// </summary>
         public int VowelLength { get; set; } = 1;
 
         public bool Shadda { get; set; }
