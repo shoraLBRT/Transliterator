@@ -21,7 +21,8 @@ namespace Transliterator.Tests
             var segments = new ArabicParser().Parse(normalized);
 
             new RulesService(new WaqfRule(), new WaslRule(), new ArticleRule(),
-                             new NasalRule(), new EmphasisRule(), new MaddRule())
+                             new NasalRule(), new EmphasisRule(), new MaddRule(),
+                             new QalqalahRule())
                 .ApplyTajweedRules(segments);
 
             return segments;

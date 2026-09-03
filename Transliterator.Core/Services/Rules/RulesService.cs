@@ -15,7 +15,7 @@ namespace Transliterator.Core.Services.Rules
     ///   <item>Нун сакина, танвин, мим сакина, идгамы — <c>NasalRule</c>.</item>
     ///   <item>Тафхим и таркик.</item>
     ///   <item>Длительность мадда.</item>
-    ///   <item>Кальканя — <b>не реализовано</b>.</item>
+    ///   <item>Кальканя — <c>QalqalahRule</c>.</item>
     ///   <item>Рендеринг по профилю — <c>CyrillicRenderer</c>.</item>
     /// </list>
     /// </summary>
@@ -27,6 +27,7 @@ namespace Transliterator.Core.Services.Rules
         private readonly NasalRule _nasalRule;
         private readonly EmphasisRule _emphasisRule;
         private readonly MaddRule _maddRule;
+        private readonly QalqalahRule _qalqalahRule;
 
         public RulesService(
             WaqfRule waqfRule,
@@ -34,7 +35,8 @@ namespace Transliterator.Core.Services.Rules
             ArticleRule articleRule,
             NasalRule nasalRule,
             EmphasisRule emphasisRule,
-            MaddRule maddRule)
+            MaddRule maddRule,
+            QalqalahRule qalqalahRule)
         {
             _waqfRule = waqfRule;
             _waslRule = waslRule;
@@ -42,6 +44,7 @@ namespace Transliterator.Core.Services.Rules
             _nasalRule = nasalRule;
             _emphasisRule = emphasisRule;
             _maddRule = maddRule;
+            _qalqalahRule = qalqalahRule;
         }
 
         public void ApplyTajweedRules(IList<Segment> segments)
@@ -64,8 +67,9 @@ namespace Transliterator.Core.Services.Rules
             _emphasisRule.Apply(segments);
             _maddRule.Apply(segments);
 
-            // Стадия 9: кальканя.
-            // TODO(P4).
+            // Стадия 9: кальканя. Идёт последней: безгласность, от которой она
+            // зависит, — итог всех предыдущих стадий.
+            _qalqalahRule.Apply(segments);
         }
     }
 }

@@ -21,6 +21,8 @@ namespace Transliterator.Core.Services.Phonology
         public const string WaqfVariant = "waqf";
         public const string InitialVariant = "initial";
         public const string GhunnaVariant = "ghunna";
+        public const string QalqalahVariant = "qalqalah";
+        public const string QalqalahStrongVariant = "qalqalah-strong";
 
         /// <summary>
         /// Сколько раз повторить графему гласной для заданной длительности в харакатах.
@@ -62,6 +64,9 @@ namespace Transliterator.Core.Services.Phonology
                     if (segment.Shadda)
                         result.Append(consonant);
 
+                    // Отзвук кальканя идёт после согласного целиком, а не вместо него:
+                    // удвоенная буква размыкается один раз, и отзвук у неё тоже один.
+                    result.Append(RenderQalqalah(segment, profile));
                     result.Append(RenderVowel(segment, profile));
                 }
 
@@ -154,6 +159,23 @@ namespace Transliterator.Core.Services.Phonology
         /// </summary>
         private static int GlideCount(Segment segment) =>
             segment.Vowel == Harakah.Sukun ? GraphemeCount(segment.VowelLength) : 1;
+
+        /// <summary>
+        /// Отзвук на размыкании безгласного ق ط ب ج د. Усиленный отзвук ищется
+        /// отдельным ключом и откатывается к обычному: степень кальканя — вопрос
+        /// громкости, и профиль вправе не различать её на письме.
+        /// </summary>
+        private string RenderQalqalah(Segment segment, TransliterationProfile profile)
+        {
+            if (segment.Qalqalah == Qalqalah.None)
+                return string.Empty;
+
+            var strong = segment.Qalqalah == Qalqalah.Major
+                ? Lookup(profile, Variant(segment.Letter, QalqalahStrongVariant))
+                : null;
+
+            return strong ?? Lookup(profile, Variant(segment.Letter, QalqalahVariant)) ?? string.Empty;
+        }
 
         private string RenderVowel(Segment segment, TransliterationProfile profile)
         {
