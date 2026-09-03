@@ -177,9 +177,11 @@ namespace Transliterator.Tests.RulesTests
         [Fact]
         public void TaMarbutaAndTanwin_AreNotDropped() =>
             // В соединении ة звучит как /t/, а танвин — как настоящий нун.
-            // На паузе обе буквы читаются иначе, поэтому проверка идёт на слитном стыке.
-            Assert.Equal("рохIматан уахIукмаа",
-                TransliterationPipeline.Transliterate("رَحْمَةً وَحُكْمًا"));
+            // На паузе обе буквы читаются иначе, поэтому проверка идёт на слитном стыке,
+            // и следующее слово начинается с гортанной: перед ней нун остаётся нуном.
+            // В прежнем "رَحْمَةً وَحُكْمًا" он сливается с و — это уже идгам стадии 6.
+            Assert.Equal("рохIматин 'аляйhим",
+                TransliterationPipeline.Transliterate("رَحْمَةٍ عَلَيْهِمْ"));
 
         [Fact]
         public void HamzaCarrier_KeepsItsOwnHarakah() =>

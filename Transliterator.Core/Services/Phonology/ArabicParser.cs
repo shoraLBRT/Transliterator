@@ -229,6 +229,11 @@ namespace Transliterator.Core.Services.Phonology
 
             ApplyVowel(cluster, segment);
 
+            // Знак икляба заменяет собой сукун: в مِنۢ огласовки не написано вовсе,
+            // и без этой строки нун остался бы «без огласовки», а не безгласным.
+            if (cluster.Has(ArabicScript.SmallHighMeemIsolated) && segment.Vowel == Harakah.None)
+                segment.Vowel = Harakah.Sukun;
+
             // آ в начале слова — это хамза с долгой ā (آمَنَ).
             if (cluster.Base == ArabicScript.AlefMadda)
             {
@@ -243,7 +248,7 @@ namespace Transliterator.Core.Services.Phonology
                 ApplyCarrierDefaultVowel(cluster.Base, segment);
 
             // Шадда на نّ и مّ всегда даёт гунну.
-            if (segment.Shadda && segment.Letter is ArabicScript.NunStr or "م")
+            if (segment.Shadda && segment.Letter is ArabicScript.NunStr or ArabicScript.MeemStr)
                 segment.Ghunna = true;
 
             segments.Add(segment);

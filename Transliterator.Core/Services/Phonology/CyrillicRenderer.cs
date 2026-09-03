@@ -20,6 +20,7 @@ namespace Transliterator.Core.Services.Phonology
         public const string SukunVariant = "sukun";
         public const string WaqfVariant = "waqf";
         public const string InitialVariant = "initial";
+        public const string GhunnaVariant = "ghunna";
 
         /// <summary>
         /// Сколько раз повторить графему гласной для заданной длительности в харакатах.
@@ -115,6 +116,16 @@ namespace Transliterator.Core.Services.Phonology
                 var pausal = Lookup(profile, Variant(letter, WaqfVariant));
                 if (pausal is not null)
                     return pausal;
+            }
+
+            // Назализованный носовой: ихфа, икляб, идгам с гунной и удвоенные نّ مّ.
+            // Отличать ли гунну на письме от обычных н и м — дело профиля;
+            // стадии довольно того, что звук помечен.
+            if (segment.Ghunna)
+            {
+                var nasal = Lookup(profile, Variant(letter, GhunnaVariant));
+                if (nasal is not null)
+                    return nasal;
             }
 
             // Закрытый слог: ل в "аль-" даёт "ль". Первая половина удвоения при идгаме —
