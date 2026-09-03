@@ -173,7 +173,8 @@ namespace Transliterator.Core.Services.Rules
 
             // Дальше должно звучать слово: перед паузой конечную огласовку и так
             // снимает вакф, а перед безгласной буквой второго движения голоса нет.
-            int next = NextPronouncedConsonant(segments, index);
+            // В لَهُ ٱلْمُلْكُ за ه звучит безгласный лям, а не немая васля перед ним.
+            int next = SegmentNavigator.NextPronouncedConsonant(segments, index);
             if (next < 0 || segments[next].Vowel is Harakah.None or Harakah.Sukun)
                 return false;
 
@@ -192,21 +193,6 @@ namespace Transliterator.Core.Services.Rules
 
             return word == SilaAfterMaddWord
                    && WordSkeleton(segments, next) == SilaAfterMaddNextWord;
-        }
-
-        /// <summary>
-        /// Следующий звучащий согласный, хоть бы и в соседнем слове. Немую васлю
-        /// пропускает: в لَهُ ٱلْمُلْكُ за ه звучит безгласный лям, а не она.
-        /// Через паузу, как и все, не смотрит.
-        /// </summary>
-        private static int NextPronouncedConsonant(IList<Segment> segments, int index)
-        {
-            int next = SegmentNavigator.NextConsonant(segments, index, crossWordBoundary: true);
-
-            while (next >= 0 && segments[next].Silent)
-                next = SegmentNavigator.NextConsonant(segments, next, crossWordBoundary: true);
-
-            return next;
         }
 
         /// <summary>

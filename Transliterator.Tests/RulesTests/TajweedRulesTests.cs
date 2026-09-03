@@ -400,6 +400,124 @@ namespace Transliterator.Tests.RulesTests
     }
 
     /// <summary>
+    /// Стадия 9: кальканя. Отзвук — не буква и не огласовка, поэтому проверяется
+    /// по пометке на сегменте; в Standard она до письма не доходит осознанно,
+    /// и как выглядит написанный отзвук, показывает отдельный профиль.
+    /// </summary>
+    public class QalqalahRuleTests
+    {
+        [Theory]
+        [InlineData("يَجْعَلُونَ", "ج")]
+        [InlineData("ٱلْفَجْرِ", "ج")]
+        [InlineData("أَدْبَرَ", "د")]
+        [InlineData("يَطْمَعُ", "ط")]
+        [InlineData("يَقْتُلُونَ", "ق")]
+        public void SakinLetter_GetsMinorQalqalah(string arabic, string letter)
+        {
+            // Кальканя сугра: безгласный взрывной посреди слова. Отзвук есть,
+            // но следующий слог его тут же гасит.
+            var segment = TransliterationPipeline.Consonants(arabic).First(s => s.Letter == letter);
+
+            Assert.Equal(Qalqalah.Minor, segment.Qalqalah);
+        }
+
+        [Theory]
+        [InlineData("خَلَقَ", "ق")]    // огласовку снял вакф
+        [InlineData("أَحَدْ", "د")]    // сукун написан, и снимать вакфу нечего
+        [InlineData("ٱلْفَلَقِ", "ق")]
+        public void LetterAtPause_GetsMajorQalqalah(string arabic, string letter)
+        {
+            // Кальканя кубра: за буквой не звучит уже ничего, и гасить отзвук нечем.
+            var segment = TransliterationPipeline.Consonants(arabic).Last(s => s.Letter == letter);
+
+            Assert.Equal(Qalqalah.Major, segment.Qalqalah);
+        }
+
+        [Fact]
+        public void WordFinalLetter_StaysMinorWhenReadingContinues()
+        {
+            // Та же безгласная د в конце слова: остановки нет, следующее слово звучит —
+            // и отзвук остаётся слабым. Степень решает положение, а не конец слова.
+            var dal = TransliterationPipeline.Consonants("قَدْ أَفْلَحَ").First(s => s.Letter == "د");
+
+            Assert.Equal(Qalqalah.Minor, dal.Qalqalah);
+        }
+
+        [Fact]
+        public void LetterBeforeStopMark_IsMajor()
+        {
+            // Слово следом написано, но чтение до него не доходит: знак ۘ требует
+            // остановки, и буква оказывается последней в высказывании.
+            var dal = TransliterationPipeline.Consonants("قَدْ ۘ أَفْلَحَ").First(s => s.Letter == "د");
+
+            Assert.Equal(Qalqalah.Major, dal.Qalqalah);
+        }
+
+        [Theory]
+        [InlineData("قَالَ", "ق")]
+        [InlineData("بَقَرَةٌ", "ب")]
+        public void VowelledLetter_HasNoQalqalah(string arabic, string letter)
+        {
+            // Отзвук берётся из размыкания смычки в тишину. Огласованной букве
+            // размыкаться есть во что.
+            var segment = TransliterationPipeline.Consonants(arabic).First(s => s.Letter == letter);
+
+            Assert.Equal(Qalqalah.None, segment.Qalqalah);
+        }
+
+        [Fact]
+        public void FirstHalfOfIdgham_HasNoQalqalah() =>
+            // ٱلدِّينِ: лям артикля стал первой половиной удвоенной د. Она не размыкается,
+            // а переходит во вторую — размыкание одно, и оно принадлежит второй половине.
+            Assert.All(TransliterationPipeline.Consonants("ٱلدِّينِ"),
+                s => Assert.Equal(Qalqalah.None, s.Qalqalah));
+
+        [Fact]
+        public void Grapheme_ComesFromTheProfile()
+        {
+            // Standard отзвук не пишет; профиль, который пишет, получает его
+            // без единой правки в правилах.
+            var profile = WithQalqalah("э", strong: "э̄");
+
+            Assert.Equal("qодэ афляхI", TransliterationPipeline.Transliterate("قَدْ أَفْلَحَ", profile));
+            Assert.Equal("хъолоqэ̄", TransliterationPipeline.Transliterate("خَلَقَ", profile));
+        }
+
+        [Fact]
+        public void StrongGrapheme_FallsBackToThePlainOne() =>
+            // Различать степени на письме профиль не обязан: кальканя кубра — тот же
+            // отзвук, только громче.
+            Assert.Equal("хъолоqэ",
+                TransliterationPipeline.Transliterate("خَلَقَ", WithQalqalah("э", strong: null)));
+
+        [Fact]
+        public void DoubledLetterAtPause_EchoesOnce() =>
+            // وَتَبَّ: удвоение звучит одной долгой смычкой и размыкается один раз,
+            // поэтому отзвук идёт после обеих графем, а не после каждой.
+            Assert.Equal("уатаббэ",
+                TransliterationPipeline.Transliterate("وَتَبَّ", WithQalqalah("э", strong: null)));
+
+        /// <summary>Standard с дописанным отзвуком: правила те же, различается только письмо.</summary>
+        private static TransliterationProfile WithQalqalah(string echo, string? strong)
+        {
+            var profile = new TransliterationProfile("Qalqalah", "Standard, пишущий отзвук кальканя")
+            {
+                Rules = new Dictionary<string, string>(TestProfiles.Standard.Rules)
+            };
+
+            foreach (var letter in new[] { "ق", "ط", "ب", "ج", "د" })
+            {
+                profile.Rules[$"{letter}|qalqalah"] = echo;
+
+                if (strong is not null)
+                    profile.Rules[$"{letter}|qalqalah-strong"] = strong;
+            }
+
+            return profile;
+        }
+    }
+
+    /// <summary>
     /// Имя Аллаха в современной орфографии: «ٱللَّهُ» вместо «ٱللَّٰهُ».
     /// Долготу в этом слове даёт только надстрочный алиф, и без него имя рассыпается
     /// сразу по трём стадиям — оттого проверки собраны в один класс, а не разложены

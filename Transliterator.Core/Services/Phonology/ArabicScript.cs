@@ -120,6 +120,19 @@ namespace Transliterator.Core.Services.Phonology
             Lam, Ra
         };
 
+        /// <summary>
+        /// Буквы кальканя (قطب جد): взрывные, у которых смычка полная и звонкая.
+        /// Безгласными их не удержать — размыкание слышно отдельным отзвуком.
+        /// </summary>
+        public static readonly HashSet<char> QalqalahLetters = new()
+        {
+            'ق', // ق
+            'ط', // ط
+            'ب', // ب
+            'ج', // ج
+            'د'  // د
+        };
+
         /// <summary>Буквы истиля — всегда произносятся твёрдо (тафхим).</summary>
         public static readonly HashSet<char> AlwaysHeavy = new()
         {

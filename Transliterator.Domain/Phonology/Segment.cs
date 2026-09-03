@@ -37,6 +37,9 @@ namespace Transliterator.Domain.Phonology
 
         public Emphasis Emphasis { get; set; } = Emphasis.Light;
 
+        /// <summary>Кальканя: отзвук на размыкании безгласного ق ط ب ج د. Проставляется стадией 9.</summary>
+        public Qalqalah Qalqalah { get; set; } = Qalqalah.None;
+
         /// <summary>Вариант огласовки этого сегмента. Проставляется правилом эмфазы.</summary>
         public VowelVariant VowelVariant { get; set; } = VowelVariant.Plain;
 

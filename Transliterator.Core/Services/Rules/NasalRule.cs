@@ -59,7 +59,10 @@ namespace Transliterator.Core.Services.Rules
         // ------------------------------------------------------------------
         private static void ApplyNunSakina(IList<Segment> segments, int index)
         {
-            int nextIndex = NextPronounced(segments, index);
+            // Идгам, икляб и ихфа работают в том числе на стыке слов, поэтому
+            // сосед ищется за границей слова, но не за паузой: после остановки
+            // соединять нечего.
+            int nextIndex = SegmentNavigator.NextPronouncedConsonant(segments, index);
             if (nextIndex < 0)
                 return;
 
@@ -121,7 +124,7 @@ namespace Transliterator.Core.Services.Rules
         // ------------------------------------------------------------------
         private static void ApplyMeemSakina(IList<Segment> segments, int index)
         {
-            int nextIndex = NextPronounced(segments, index);
+            int nextIndex = SegmentNavigator.NextPronouncedConsonant(segments, index);
             if (nextIndex < 0)
                 return;
 
@@ -179,22 +182,6 @@ namespace Transliterator.Core.Services.Rules
             for (int i = from + 1; i < to; i++)
                 if (segments[i].Kind == SegmentKind.Break)
                     segments[i].Literal = "-";
-        }
-
-        /// <summary>
-        /// Следующий звучащий согласный, в том числе в соседнем слове: идгам, икляб
-        /// и ихфа работают как раз на стыке слов. Немую васлю пропускает — сливаться
-        /// носовой будет с тем, что действительно звучит. Через паузу не смотрит:
-        /// после остановки соединять нечего.
-        /// </summary>
-        private static int NextPronounced(IList<Segment> segments, int index)
-        {
-            int next = SegmentNavigator.NextConsonant(segments, index, crossWordBoundary: true);
-
-            while (next >= 0 && segments[next].Silent)
-                next = SegmentNavigator.NextConsonant(segments, next, crossWordBoundary: true);
-
-            return next;
         }
 
         private static bool SeparatedByBreak(IList<Segment> segments, int from, int to)
