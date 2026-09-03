@@ -21,6 +21,22 @@ namespace Transliterator.Core.Services.Phonology
         public static int PreviousConsonantInWord(IList<Segment> segments, int index) =>
             PreviousConsonant(segments, index, crossWordBoundary: false);
 
+        /// <summary>
+        /// Следующий звучащий согласный, в том числе в соседнем слове. Немую букву
+        /// пропускает: соединяться, сливаться и удлиняться звук будет с тем, что
+        /// действительно звучит, а не с васлей, которую съело соединение.
+        /// Через паузу, как и всё здесь, не смотрит.
+        /// </summary>
+        public static int NextPronouncedConsonant(IList<Segment> segments, int index)
+        {
+            int next = NextConsonant(segments, index, crossWordBoundary: true);
+
+            while (next >= 0 && segments[next].Silent)
+                next = NextConsonant(segments, next, crossWordBoundary: true);
+
+            return next;
+        }
+
         public static int NextConsonant(IList<Segment> segments, int index, bool crossWordBoundary)
         {
             for (int i = index + 1; i < segments.Count; i++)

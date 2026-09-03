@@ -32,6 +32,7 @@ using IHost host = Host.CreateDefaultBuilder(args)
         services.AddTransient<NasalRule>();
         services.AddTransient<EmphasisRule>();
         services.AddTransient<MaddRule>();
+        services.AddTransient<QalqalahRule>();
     })
     .Build();
 
