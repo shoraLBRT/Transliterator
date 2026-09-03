@@ -39,6 +39,19 @@ namespace Transliterator.Tests.RulesTests
         }
 
         [Theory]
+        [InlineData("ٱلْحَمْدُ", "الْحَمْدُ", "аль-хIамд")]           // лунный лям
+        [InlineData("ٱلرَّحْمَٰنِ", "الرَّحْمَٰنِ", "ар-рохIмааан")]  // солнечный лям
+        [InlineData("بِسْمِ ٱللَّهِ", "بِسْمِ اللَّهِ", "бисми-лляяяh")] // васля в соединении
+        public void ImlaiArticle_ReadsLikeUthmani(string uthmani, string imlai, string expected)
+        {
+            // Артикль через обычный алиф и артикль через васлевый — одно и то же слово.
+            // Потеряв артикль, конвейер не просто теряет огласовку васли:
+            // без неё не срабатывают ни солнечный идгам, ни дефис на стыке слов.
+            Assert.Equal(expected, TransliterationPipeline.Transliterate(uthmani));
+            Assert.Equal(expected, TransliterationPipeline.Transliterate(imlai));
+        }
+
+        [Theory]
         [InlineData("مَـٰلِكِ", "م", 2)]   // надстрочный алиф — долгая ā
         [InlineData("قَالُوا", "ق", 2)]    // голый алиф удлиняет фатху
         [InlineData("ٱلسَّمَآءِ", "م", 4)] // мадд муттасиль перед хамзой

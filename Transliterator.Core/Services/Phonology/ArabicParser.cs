@@ -320,7 +320,7 @@ namespace Transliterator.Core.Services.Phonology
                 return ArabicScript.HamzaStr;
 
             if (baseChar == ArabicScript.AlefMaqsura)
-                return ArabicScript.Alef.ToString();
+                return ArabicScript.AlefStr;
 
             return baseChar.ToString();
         }
@@ -349,6 +349,12 @@ namespace Transliterator.Core.Services.Phonology
         /// В современной орфографии артикль пишется обычным алифом (الحمد), а не
         /// васлевым (ٱلحمد). Опознаём такой алиф, чтобы правило васли работало
         /// не только на тексте в написании усмани.
+        /// <para>
+        /// Голый алиф своего согласного не имеет, и <c>CanonicalLetter</c> его ни к чему
+        /// не сводит: в середине слова он ушёл бы в долготу предыдущей фатхи. Раз здесь
+        /// выяснилось, что это хамзат аль-васль, букву надо поменять на хамзу тоже —
+        /// дальше по конвейеру должно доехать одно написание, а не два.
+        /// </para>
         /// </summary>
         private static void DetectImlaiWasl(List<Segment> segments)
         {
@@ -357,7 +363,7 @@ namespace Transliterator.Core.Services.Phonology
                 var segment = segments[i];
                 if (segment.Kind != SegmentKind.Consonant) continue;
                 if (!segment.StartsWord || segment.IsWaslHamza) continue;
-                if (segment.Letter != ArabicScript.HamzaStr) continue;
+                if (segment.Letter is not (ArabicScript.HamzaStr or ArabicScript.AlefStr)) continue;
                 if (segment.Vowel is not (Harakah.None or Harakah.Fatha)) continue;
 
                 int lamIndex = SegmentNavigator.NextConsonantInWord(segments, i);
@@ -367,6 +373,7 @@ namespace Transliterator.Core.Services.Phonology
                 if (afterIndex < 0) continue;
                 if (segments[lamIndex].Vowel != Harakah.Sukun && !segments[afterIndex].Shadda) continue;
 
+                segment.Letter = ArabicScript.HamzaStr;
                 segment.IsWaslHamza = true;
             }
         }
