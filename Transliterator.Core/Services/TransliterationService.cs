@@ -14,6 +14,8 @@ using Transliterator.Domain.Interfaces;
 /// </summary>
 public class TransliterationService : ITransliterationService
 {
+    private const string DefaultProfileName = "Standard";
+
     private readonly IProfileRepository _profileRepository;
     private readonly ArabicNormalizer _normalizer;
     private readonly ArabicParser _parser;
@@ -36,10 +38,8 @@ public class TransliterationService : ITransliterationService
 
     public async Task<TransliterationResult> TransliterateAsync(string arabicText, string? selectedProfile = null)
     {
-        var profileName = string.IsNullOrWhiteSpace(selectedProfile) ? "Standard" : selectedProfile;
-
-        var profile = await _profileRepository.GetProfileAsync(profileName)
-                      ?? throw new TransliterationException($"Profile '{profileName}' not found");
+        var profileName = ResolveProfileName(selectedProfile);
+        var profile = await LoadProfileAsync(profileName);
 
         var resultText = Transliterate(arabicText, profile);
 
@@ -60,21 +60,57 @@ public class TransliterationService : ITransliterationService
         return _renderer.Render(segments, profile);
     }
 
-    // TODO
-    public Task UpdateRuleAsync(string arabicLetter, string cyrillicMapping, string? profile = null)
+    /// <summary>
+    /// Правка одной строки профиля.
+    /// <para>
+    /// Ключ — тот же, что в самом профиле: «буква» либо «буква|вариант»
+    /// (<c>"ر|heavy"</c>, <c>"ة|waqf"</c>). Проверять ключ по алфавиту нельзя:
+    /// вариантов у правил больше, чем букв, и их набор задаёт профиль, а не код.
+    /// Пустое значение — законная запись: так в <c>Standard</c> заданы отзвук
+    /// кальканя и начальная хамза.
+    /// </para>
+    /// </summary>
+    public async Task UpdateRuleAsync(string arabicLetter, string cyrillicMapping, string? profile = null)
     {
-        throw new NotImplementedException();
+        if (string.IsNullOrWhiteSpace(arabicLetter))
+            throw new TransliterationException("Rule key must not be empty");
+
+        var profileName = ResolveProfileName(profile);
+        var target = await LoadProfileAsync(profileName);
+
+        target.Rules[arabicLetter] = cyrillicMapping ?? string.Empty;
+
+        await _profileRepository.SaveProfileAsync(target);
     }
 
-    // TODO
-    public Task<IEnumerable<string>> GetAvailableProfilesAsync()
+    /// <summary>Имена профилей, доступных хранилищу, по алфавиту.</summary>
+    public async Task<IEnumerable<string>> GetAvailableProfilesAsync()
     {
-        throw new NotImplementedException();
+        var profiles = await _profileRepository.GetAllProfilesAsync();
+
+        return profiles.Select(p => p.Name)
+                       .Where(name => !string.IsNullOrWhiteSpace(name))
+                       .Distinct(StringComparer.Ordinal)
+                       .OrderBy(name => name, StringComparer.Ordinal)
+                       .ToList();
     }
 
-    // TODO
-    public Task<Dictionary<string, string>> GetRulesAsync(string? profile = null)
+    /// <summary>Правила профиля — копией.</summary>
+    /// <remarks>
+    /// Именно копией: репозиторий отдаёт профили из кеша, и правка возвращённого
+    /// словаря молча меняла бы профиль для всех, кто его уже держит.
+    /// </remarks>
+    public async Task<Dictionary<string, string>> GetRulesAsync(string? profile = null)
     {
-        throw new NotImplementedException();
+        var target = await LoadProfileAsync(ResolveProfileName(profile));
+
+        return new Dictionary<string, string>(target.Rules);
     }
+
+    private static string ResolveProfileName(string? profile) =>
+        string.IsNullOrWhiteSpace(profile) ? DefaultProfileName : profile;
+
+    private async Task<TransliterationProfile> LoadProfileAsync(string profileName) =>
+        await _profileRepository.GetProfileAsync(profileName)
+        ?? throw new TransliterationException($"Profile '{profileName}' not found");
 }

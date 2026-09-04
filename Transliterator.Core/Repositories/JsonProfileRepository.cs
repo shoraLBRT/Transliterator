@@ -1,5 +1,6 @@
-﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using System.Text.Encodings.Web;
 using System.Text.Json;
 using Transliterator.Core.Models;
 using Transliterator.Domain.Entities;
@@ -62,7 +63,7 @@ namespace Transliterator.Core.Repositories
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Error loading profiles into cache");
+                _logger.LogError(ex, "Error loading profiles into cache from {Path}", _storagePath);
             }
         }
 
@@ -84,11 +85,16 @@ namespace Transliterator.Core.Repositories
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Error loading profile {profileName}");
+                _logger.LogError(ex, "Error loading profile {Profile}", profileName);
                 return null;
             }
         }
 
+        /// <summary>
+        /// Профиль ищется по имени, а имя — это имя файла без расширения:
+        /// <see cref="GetProfileAsync"/> сам дописывает ".json", и полное имя
+        /// файла превращалось бы в "Standard.json.json".
+        /// </summary>
         public async Task<IEnumerable<TransliterationProfile>> GetAllProfilesAsync()
         {
             var files = Directory.GetFiles(_storagePath, "*.json");
@@ -96,7 +102,7 @@ namespace Transliterator.Core.Repositories
 
             foreach (var file in files)
             {
-                var profileName = Path.GetFileName(file);
+                var profileName = Path.GetFileNameWithoutExtension(file);
                 var profile = await GetProfileAsync(profileName);
                 if (profile != null)
                     profiles.Add(profile);
@@ -105,13 +111,23 @@ namespace Transliterator.Core.Repositories
             return profiles;
         }
 
+        /// <summary>
+        /// Профиль — файл, который читают и правят руками, поэтому арабица
+        /// и кириллица пишутся как есть. Экранирование по умолчанию превратило бы
+        /// весь профиль в "\u0631" при первой же записи.
+        /// </summary>
+        private static readonly JsonSerializerOptions _writeOptions = new()
+        {
+            WriteIndented = true,
+            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+        };
+
         public async Task SaveProfileAsync(TransliterationProfile profile)
         {
             try
             {
                 var filePath = Path.Combine(_storagePath, $"{profile.Name}.json");
-                var options = new JsonSerializerOptions { WriteIndented = true };
-                var json = JsonSerializer.Serialize(profile, options);
+                var json = JsonSerializer.Serialize(profile, _writeOptions);
 
                 await File.WriteAllTextAsync(filePath, json);
                 _cache[profile.Name] = profile;
