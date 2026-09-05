@@ -7,7 +7,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Include="Resources\Profiles\Standard.json">
+    <!-- Профили перечисляются маской, а не поимённо: хранилище читает из папки
+         всё, что там лежит, и профиль, забытый в этом списке, до него не доедет. -->
+    <Content Include="Resources\Profiles\*.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>

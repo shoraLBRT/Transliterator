@@ -11,8 +11,14 @@ namespace Transliterator.Tests
     public static class TestProfiles
     {
         private static readonly Lazy<TransliterationProfile> _standard = new(() => Load("Standard"));
+        private static readonly Lazy<TransliterationProfile> _latin = new(() => Load("Latin"));
 
         public static TransliterationProfile Standard => _standard.Value;
+
+        public static TransliterationProfile Latin => _latin.Value;
+
+        /// <summary>Все профили, которые приложение раздаёт из ресурсов.</summary>
+        public static IEnumerable<TransliterationProfile> All => new[] { Standard, Latin };
 
         private static TransliterationProfile Load(string name)
         {
