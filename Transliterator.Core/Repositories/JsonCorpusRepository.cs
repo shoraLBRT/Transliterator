@@ -1,5 +1,6 @@
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using System.Runtime.Versioning;
 using System.Text.Json;
 using Transliterator.Core.Models;
 using Transliterator.Domain.Entities;
@@ -14,11 +15,20 @@ namespace Transliterator.Core.Repositories
     /// сортировались по порядку сур, а не по первой цифре.
     /// </summary>
     /// <remarks>
+    /// <para>
     /// В отличие от <see cref="JsonProfileRepository"/> битый файл здесь не
     /// пропускается, а роняет чтение с внятным сообщением. Пропуск для профиля —
     /// потеря одного варианта письма, а для корпуса — молча исчезнувшие тесты:
     /// data-driven прогон построит на один случай меньше и останется зелёным.
+    /// </para>
+    /// <para>
+    /// Как и <see cref="JsonProfileRepository"/>, читает каталог рядом со сборкой
+    /// и потому в браузере неприменима. Корпус веб-версии (D3) придётся отдавать
+    /// откуда-то ещё; пока такого читателя нет, атрибут просто не даёт написать
+    /// его случайно поверх файловой системы.
+    /// </para>
     /// </remarks>
+    [UnsupportedOSPlatform("browser")]
     public class JsonCorpusRepository : ICorpusRepository
     {
         private const string FileMask = "*.json";
