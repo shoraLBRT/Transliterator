@@ -1,5 +1,6 @@
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using System.Runtime.Versioning;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using Transliterator.Core.Models;
@@ -8,6 +9,18 @@ using Transliterator.Domain.Interfaces;
 
 namespace Transliterator.Core.Repositories
 {
+    /// <summary>
+    /// Профили из каталога рядом со сборкой: файлы, которые правят руками.
+    /// </summary>
+    /// <remarks>
+    /// В браузере файловой системы нет, и эта реализация там неприменима —
+    /// отсюда <see cref="UnsupportedOSPlatformAttribute"/>. Атрибут не запрет,
+    /// а проверка: ядро объявлено совместимым с browser, и обращение к этому
+    /// классу из кода, который в браузере работает, ломает сборку (CA1416)
+    /// вместо того, чтобы упасть на старте страницы. Встроенные профили
+    /// в браузере читает <see cref="EmbeddedProfileRepository"/>.
+    /// </remarks>
+    [UnsupportedOSPlatform("browser")]
     public class JsonProfileRepository : IProfileRepository
     {
         private readonly string _storagePath;

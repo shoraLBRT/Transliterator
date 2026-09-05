@@ -4,7 +4,19 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+
+    <!-- Обращение к API, недоступному в браузере, должно ломать сборку здесь,
+         а не падать на старте страницы: проверку включает SupportedPlatform ниже,
+         а эта строка переводит её из предупреждения в ошибку. -->
+    <WarningsAsErrors>$(WarningsAsErrors);CA1416</WarningsAsErrors>
   </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Ядро должно собираться под браузер: веб-версия (эпик D) — Blazor
+         WebAssembly. Без этой строки анализ совместимости (CA1416)
+         про браузер молчит. -->
+    <SupportedPlatform Include="browser" />
+  </ItemGroup>
 
   <ItemGroup>
     <!-- Профили перечисляются маской, а не поимённо: хранилище читает из папки
@@ -14,6 +26,12 @@
       <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
     </Content>
+
+    <!-- Те же файлы вшиваются в сборку. Это не копия: источник один, и разойтись
+         файлу рядом со сборкой и ресурсом внутри неё физически негде.
+         В браузере каталога рядом со сборкой нет вовсе — там профили читаются
+         только отсюда (EmbeddedProfileRepository). -->
+    <EmbeddedResource Include="Resources\Profiles\*.json" />
   </ItemGroup>
 
   <ItemGroup>

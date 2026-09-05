@@ -20,6 +20,13 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- Заведомо испорченные профили — вшиты в сборку тестов, а не лежат файлами:
+         EmbeddedProfileRepository читает ресурсы сборки, и проверять его на чём-то,
+         кроме ресурсов, значит проверять не его. -->
+    <EmbeddedResource Include="Resources\**\*.json" />
+  </ItemGroup>
+
+  <ItemGroup>
     <!-- Тесты гоняют настоящие профили, а не их копии: копия уже успела разойтись с оригиналом.
          Маска, а не список имён, — чтобы новый профиль попадал под тесты сам. -->
     <Content Include="..\Transliterator.Core\Resources\Profiles\*.json"
