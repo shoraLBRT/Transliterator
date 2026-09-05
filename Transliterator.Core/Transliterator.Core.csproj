@@ -17,6 +17,16 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- Корпус примеров — такой же ресурс ядра, как и профили: тесты и веб-версия
+         читают один файл, копий нет. Маска по той же причине, что у профилей. -->
+    <Content Include="Resources\Corpus\*.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
     <Folder Include="Extensions\" />
   </ItemGroup>
 
