@@ -20,9 +20,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- Тесты гоняют настоящий профиль, а не его копию: копия уже успела разойтись с оригиналом. -->
-    <Content Include="..\Transliterator.Core\Resources\Profiles\Standard.json"
-             Link="Profiles\Standard.json"
+    <!-- Тесты гоняют настоящие профили, а не их копии: копия уже успела разойтись с оригиналом.
+         Маска, а не список имён, — чтобы новый профиль попадал под тесты сам. -->
+    <Content Include="..\Transliterator.Core\Resources\Profiles\*.json"
+             Link="Profiles\%(Filename)%(Extension)"
              CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
