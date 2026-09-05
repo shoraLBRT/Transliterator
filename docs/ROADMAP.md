@@ -186,7 +186,14 @@
 
 ## Не в конвейере
 
-- [ ] `TransliterationService`: `UpdateRuleAsync`, `GetAvailableProfilesAsync`,
-      `GetRulesAsync` — заглушки `NotImplementedException`
+- [x] `TransliterationService`: `UpdateRuleAsync`, `GetAvailableProfilesAsync`,
+      `GetRulesAsync`. `GetRulesAsync` отдаёт копию словаря: репозиторий раздаёт
+      профили из кеша, и правка возвращённого молча меняла бы профиль всем.
+      `UpdateRuleAsync` не проверяет ключ по алфавиту — вариантов правил больше,
+      чем букв, и их набор задаёт профиль, а не код. Заодно починено то, без чего
+      это не работает: `GetAllProfilesAsync` искала профиль по имени файла вместе
+      с расширением (`Standard.json.json`), а запись профиля экранировала арабицу
+      и кириллицу в `\uXXXX`
 - [ ] Профили, кроме `Standard`
-- [ ] Два предупреждения CS0168 в `JsonProfileRepository` (неиспользуемые `ex`)
+- [x] Два предупреждения CS0168 в `JsonProfileRepository`: пойманное исключение
+      теперь доходит до лога целиком, а не только его текст
