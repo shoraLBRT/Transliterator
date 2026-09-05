@@ -25,6 +25,12 @@
     <Content Include="..\Transliterator.Core\Resources\Profiles\*.json"
              Link="Profiles\%(Filename)%(Extension)"
              CopyToOutputDirectory="PreserveNewest" />
+
+    <!-- Корпус — по той же причине и той же маской: сура, добавленная в ресурсы,
+         должна доехать до тестов сама, без правки этого файла. -->
+    <Content Include="..\Transliterator.Core\Resources\Corpus\*.json"
+             Link="Corpus\%(Filename)%(Extension)"
+             CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>
