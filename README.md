@@ -13,11 +13,6 @@ impossible: by the time you are replacing letters, sukun, shadda, the type of
 hamza and the word boundaries are already gone — and those are exactly what
 tajweed needs.
 
-> Which rules are done and which are not is recorded in
-> [docs/ROADMAP.md](docs/ROADMAP.md). That file is the single source of truth
-> about the state of the pipeline; where any other text disagrees with it —
-> including this one — the roadmap wins.
-
 ---
 
 ## Features
