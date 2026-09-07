@@ -2,6 +2,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Transliterator.Core.Models;
 using Transliterator.Core.Repositories;
+using Transliterator.Core.Services.Phonology;
 using Transliterator.Domain.Entities;
 using Transliterator.Domain.Exceptions;
 using Xunit;
@@ -47,7 +48,9 @@ namespace Transliterator.Tests.CorpusTests
               "RussianName": "Ан-Наср",
               "TextEdition": "uthmani-wasl",
               "Ayahs": [
-                { "Number": 1, "Arabic": "إِذَا جَآءَ", "Expected": "изъаа джаааъа" },
+                { "Number": 1, "Arabic": "إِذَا جَآءَ نَصْرُ ٱللَّهِ",
+                  "ArabicImlai": "إِذَا جَآءَ نَصْرُ اللَّهِ",
+                  "Expected": "изъаа джаааъа насIру-ллааhи" },
                 { "Number": 2, "Arabic": "كَانَ", "Expected": "каана" }
               ]
             }
@@ -66,7 +69,9 @@ namespace Transliterator.Tests.CorpusTests
             Assert.Equal("Ан-Наср", surah.RussianName);
             Assert.Equal(CorpusTextEdition.UthmaniWasl, surah.TextEdition);
             Assert.Equal(2, surah.Ayahs.Count);
+            Assert.Equal("إِذَا جَآءَ نَصْرُ اللَّهِ", surah.Ayahs[0].ArabicImlai);
             Assert.Equal("كَانَ", surah.Ayahs[1].Arabic);
+            Assert.Equal(string.Empty, surah.Ayahs[1].ArabicImlai);
             Assert.Equal("каана", surah.Ayahs[1].Expected);
         }
 
@@ -111,6 +116,14 @@ namespace Transliterator.Tests.CorpusTests
         [InlineData("\"Arabic\": \"كَانَ\"", "\"Arabic\": \"\"")]
         [InlineData("\"RussianName\": \"Ан-Наср\"", "\"RussianName\": \" \"")]
         [InlineData("\"ArabicName\": \"سُورَةُ ٱلنَّصْرِ\"", "\"ArabicName\": \"\"")]
+        // Пара написаний бита с обеих сторон. Аят с васлей без современного написания —
+        // непроверенная ветка DetectImlaiWasl (B1). Лишнее написание у аята без васли —
+        // удвоенный прогон, который выглядит покрытием, но ничего не разбирает.
+        [InlineData("\"ArabicImlai\": \"إِذَا جَآءَ نَصْرُ اللَّهِ\"", "\"ArabicImlai\": \"\"")]
+        [InlineData("\"Arabic\": \"كَانَ\",", "\"Arabic\": \"كَانَ\", \"ArabicImlai\": \"كَانَ\",")]
+        // Знак васлы в «современном» написании — тот же текст вторым столбцом: прогон
+        // удваивается, а ветка разбора так и остаётся нетронутой.
+        [InlineData("\"ArabicImlai\": \"إِذَا جَآءَ نَصْرُ اللَّهِ\"", "\"ArabicImlai\": \"إِذَا جَآءَ نَصْرُ ٱللَّهِ\"")]
         public async Task BrokenFile_Throws_InsteadOfBeingSkipped(string original, string broken)
         {
             Write("110.json", Valid.Replace(original, broken));
@@ -145,6 +158,20 @@ namespace Transliterator.Tests.CorpusTests
             var surahs = await Resources().GetAllSurahsAsync();
 
             Assert.Contains(surahs.SelectMany(s => s.Ayahs), a => a.Arabic.Contains('\u0671'));
+        }
+
+        [Fact]
+        public async Task Resources_PairEveryWaslAyahWithAModernSpelling()
+        {
+            // Со знаком васлы опознавать нечего — ветку DetectImlaiWasl включает только
+            // обычный алиф. Нет пары — нет и входа, на котором её можно проверить.
+            var ayahs = (await Resources().GetAllSurahsAsync()).SelectMany(s => s.Ayahs).ToList();
+            var withWasl = ayahs.Where(a => a.Arabic.Contains(ArabicScript.AlefWasla)).ToList();
+
+            Assert.NotEmpty(withWasl);
+            Assert.All(withWasl, a => Assert.False(string.IsNullOrWhiteSpace(a.ArabicImlai)));
+            Assert.All(withWasl, a => Assert.False(a.ArabicImlai.Contains(ArabicScript.AlefWasla)));
+            Assert.All(ayahs.Except(withWasl), a => Assert.Equal(string.Empty, a.ArabicImlai));
         }
     }
 }
