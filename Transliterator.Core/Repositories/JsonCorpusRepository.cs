@@ -3,6 +3,7 @@ using Microsoft.Extensions.Options;
 using System.Runtime.Versioning;
 using System.Text.Json;
 using Transliterator.Core.Models;
+using Transliterator.Core.Services.Phonology;
 using Transliterator.Domain.Entities;
 using Transliterator.Domain.Exceptions;
 using Transliterator.Domain.Interfaces;
@@ -106,6 +107,12 @@ namespace Transliterator.Core.Repositories
         /// сура ищется, названия для панели примеров, редакцию текста и сплошную
         /// нумерацию аятов. Пропущенный аят — это не «корпус поменьше», а дыра
         /// в покрытии, и увидеть её надо при чтении, а не в отчёте о прогоне.
+        /// <para>
+        /// Пару написаний проверяем с обеих сторон. Аят с васлей без современного
+        /// написания — молча непроверенная ветка <c>DetectImlaiWasl</c>; аят без
+        /// васли с современным написанием — лишний прогон, который выглядит как
+        /// покрытие, но ничего нового не разбирает.
+        /// </para>
         /// </summary>
         private static void Validate(CorpusSurah surah, string filePath)
         {
@@ -131,6 +138,16 @@ namespace Transliterator.Core.Repositories
                 Require(ayah.Number == i + 1, $"ayah #{i + 1} is numbered {ayah.Number}");
                 Require(!string.IsNullOrWhiteSpace(ayah.Arabic), $"ayah {ayah.Number} has no arabic text");
                 Require(!string.IsNullOrWhiteSpace(ayah.Expected), $"ayah {ayah.Number} has no expected transliteration");
+
+                bool hasWasl = ayah.Arabic.Contains(ArabicScript.AlefWasla);
+                bool hasImlai = !string.IsNullOrWhiteSpace(ayah.ArabicImlai);
+
+                Require(hasWasl || !hasImlai,
+                        $"ayah {ayah.Number} has no wasl sign but carries an imlai spelling");
+                Require(!hasWasl || hasImlai,
+                        $"ayah {ayah.Number} has a wasl sign but no imlai spelling");
+                Require(!hasImlai || !ayah.ArabicImlai.Contains(ArabicScript.AlefWasla),
+                        $"ayah {ayah.Number}: imlai spelling still contains the wasl sign");
             }
         }
     }
