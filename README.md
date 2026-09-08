@@ -26,7 +26,7 @@ tajweed needs.
 * **Transliteration profiles** are JSON files, edited by hand with no rebuild
   of the core.
 * Profile selection via the second CLI argument.
-* 121 xUnit tests; the tests run against the real profile from resources rather
+* 250 xUnit tests; the tests run against the real profile from resources rather
   than a copy kept in code.
 
 ---
@@ -215,11 +215,17 @@ profile for everyone already holding it.
 
 ## Unit tests
 
-* 121 **xUnit** tests covering phonology, every tajweed stage, and the profile
+* 250 **xUnit** tests covering phonology, every tajweed stage, and the profile
   API.
 * The tests load the real `Standard.json` from resources rather than a copy in
   code — the previous hardcoded copy had drifted from the original, and the
   tests were verifying behaviour the application no longer had.
+* A data-driven run takes the whole corpus of worked examples through the
+  pipeline: every ayah in both spellings, and every surah as a single line.
+  The cases are built from the corpus files, so adding a surah adds its tests.
+  Where the pipeline still disagrees with the corpus, the divergence is
+  recorded with the bug that fixes it — closing the bug turns the run red until
+  the record is removed.
 
 From the command line:
 
