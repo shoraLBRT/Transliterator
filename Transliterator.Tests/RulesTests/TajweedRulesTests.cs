@@ -121,6 +121,35 @@ namespace Transliterator.Tests.RulesTests
         [InlineData("ٱنظُرْ", "унзIур")]      // третья буква с даммой
         public void InitialWasl_TakesVowelFromThirdLetter(string arabic, string expected) =>
             Assert.Equal(expected, TransliterationPipeline.Transliterate(arabic));
+
+        [Fact]
+        public void WaslAfterSukun_BorrowsAKasra_AndItDecidesEmphasis()
+        {
+            // Слово перед васлей кончается сукуном, и произнести две безгласные
+            // подряд нечем — ляму قُلْ достаётся привнесённая касра. Дальше она
+            // не остаётся при нём: лям имени Аллаха решает по огласовке перед
+            // собой, и от этой касры смягчается. Идгам здесь условие эмфазы
+            // не создаёт, а разрушает — ровно наоборот к مِن رَّبِّهِمْ.
+            Assert.Equal("qули-лляяhу ахIад", TransliterationPipeline.Transliterate("قُلْ ٱللَّهُ أَحَدٌ"));
+
+            var lam = TransliterationPipeline.Consonants("قُلْ ٱللَّهُ أَحَدٌ").Last(s => s.Letter == "ل");
+
+            Assert.Equal(Emphasis.Light, lam.Emphasis);
+        }
+
+        [Fact]
+        public void WaslAfterStop_IsVoicedInstead_AndEmphasisFollows()
+        {
+            // Тот же текст с обязательной остановкой. Сукун ляма قُلْ остаётся при
+            // нём — занимать васле нечего, и она звучит сама. Перед лямом имени
+            // теперь фатха этой васли, а не касра, и лям снова твёрдый: одна
+            // и та же пара слов читается двумя разными способами, и решает пауза.
+            Assert.Equal("qуль ал-лааhу ахIад", TransliterationPipeline.Transliterate("قُلْ ۘ ٱللَّهُ أَحَدٌ"));
+
+            var lam = TransliterationPipeline.Consonants("قُلْ ۘ ٱللَّهُ أَحَدٌ").Last(s => s.Letter == "ل");
+
+            Assert.Equal(Emphasis.Heavy, lam.Emphasis);
+        }
     }
 
     public class ArticleRuleTests
@@ -148,6 +177,29 @@ namespace Transliterator.Tests.RulesTests
         public void MoonLam_ProducesSingleSoftSign() =>
             // Прежде правило мягкого знака шло после артикля и давало "альь-".
             Assert.DoesNotContain("ьь", TransliterationPipeline.Transliterate("ٱلْحَمْدُ"));
+
+        [Theory]
+        [InlineData("صُدُورِ ٱلنَّاسِ", "сIудуури-ннааас")]
+        [InlineData("فِي ٱلنَّاسِ", "фии-ннааас")]
+        public void SunLam_AfterASeparateWord_KeepsTheHyphen(string arabic, string expected) =>
+            // Дефис приходится между двумя копиями солнечной буквы — как у идгама.
+            Assert.Equal(expected, TransliterationPipeline.Transliterate(arabic));
+
+        [Fact]
+        public void SunLam_RightAfterWasl_HasNoHyphenAtAll() =>
+            // Тот же артикль с той же солнечной буквой, но васля приросла к слову,
+            // и пробела перед ней нет. Обоснование, похоже, орфографическое:
+            // дефис ставится там, где в арабском был пробел. Записано это нигде
+            // не было — третий пункт B3 в docs/BACKLOG.md как раз об этом,
+            // и до решения тест закрепляет вывод, а не одобряет его.
+            Assert.Equal("уаннааас", TransliterationPipeline.Transliterate("وَٱلنَّاسِ"));
+
+        [Fact]
+        public void BothHyphenationsMeet_InOneVerse() =>
+            // 114:6 целиком: лунный лям после отдельного слова — с дефисом,
+            // солнечный сразу за приросшей васлей — без.
+            Assert.Equal("мина-ль-джиннати уаннааас",
+                TransliterationPipeline.Transliterate("مِنَ ٱلْجِنَّةِ وَٱلنَّاسِ"));
     }
 
     /// <summary>
@@ -245,6 +297,44 @@ namespace Transliterator.Tests.RulesTests
             Assert.False(beforeDal.Ghunna);
         }
 
+        [Theory]
+        [InlineData("عَابِدٌۭ مَّا", "'аабидум-маа")]                 // танвин в мим
+        [InlineData("حَبْلٌۭ مِّن مَّسَدٍۢ", "хIаблум-мим-масад")]      // танвин в мим, затем написанный нун в мим
+        [InlineData("لَهَبٍۢ وَتَبَّ", "ляhабиу-уатабб")]              // танвин в вав
+        public void IdghamWithGhunna_MergesAcrossTheWordBoundary(string arabic, string expected) =>
+            // Стык слов — единственное место, где идгам вообще бывает: внутри слова
+            // это изхар мутлак. Принимающая буква у всех трёх разная, а шов один и тот же.
+            Assert.Equal(expected, TransliterationPipeline.Transliterate(arabic));
+
+        [Fact]
+        public void IdghamIntoLam_LeavesNoGhunna()
+        {
+            // ل в списке идгама без гунны стоит рядом с ر, и ведёт себя так же:
+            // нун становится лямом целиком, носового призвука не остаётся.
+            Assert.Equal("йакул-ляhуу", TransliterationPipeline.Transliterate("يَكُن لَّهُۥ"));
+
+            var merged = Assert.Single(TransliterationPipeline.Consonants("يَكُن لَّهُۥ"),
+                                       s => s.IsGeminateFirstHalf);
+
+            Assert.Equal("ل", merged.Letter);
+            Assert.False(merged.Ghunna);
+        }
+
+        [Fact]
+        public void TanwinBeforeIhfaLetter_IsMarkedButNotWritten()
+        {
+            // ذ — буква ихфа, и танвин перед ней получает ту же помету, что نْ
+            // в أُنزِلَ. Standard пишет её обычным «н», и на письме ихфа неотличима
+            // от чистого нуна: разница осталась в сегменте и доедет до профиля,
+            // который её пишет. Владельцем это не подтверждено и багом не заведено —
+            // тест закрепляет вывод раньше решения, чтобы он не менялся молча.
+            var nun = Assert.Single(TransliterationPipeline.Consonants("نَارًۭا ذَاتَ لَهَبٍۢ"),
+                                    s => s.Letter == "ن" && s.Vowel == Harakah.Sukun);
+
+            Assert.True(nun.Ghunna);
+            Assert.Equal("наарон зъаата ляhаб", TransliterationPipeline.Transliterate("نَارًۭا ذَاتَ لَهَبٍۢ"));
+        }
+
         [Fact]
         public void Ghunna_TakesItsGraphemeFromTheProfile()
         {
@@ -301,6 +391,17 @@ namespace Transliterator.Tests.RulesTests
             var ra = TransliterationPipeline.Consonants("فِرْعَوْنَ").First(s => s.Letter == "ر");
 
             Assert.Equal(Emphasis.Light, ra.Emphasis);
+        }
+
+        [Fact]
+        public void EmphasisBackwards_DoesNotAskHowTheSukunAppeared()
+        {
+            // Пара разводит два объяснения одного вывода. В نَصْرُ сукун на ص написан;
+            // в ٱلْفَلَقِ у ق своя касра, и безгласной её делает пауза. Гласная перед
+            // ними окрашивается в обоих случаях — значит, решение принимается уже
+            // после вакфа и на написание не смотрит.
+            OpenBug.StillProduces("B5", "نَصْرُ", expected: "насIр", today: "носIр");
+            OpenBug.StillProduces("B5", "ٱلْفَلَقِ", expected: "аль-фаляq", today: "аль-фалоq");
         }
 
         [Fact]
@@ -384,6 +485,22 @@ namespace Transliterator.Tests.RulesTests
             var ha = TransliterationPipeline.Consonants(arabic).First(s => s.Letter == "ه");
 
             Assert.Equal(1, ha.VowelLength);
+        }
+
+        [Fact]
+        public void MaddSila_MeetsHamzaAndPause_InOneAyah()
+        {
+            // 104:3. Первая ه стоит перед хамзой соседнего слова — силя кубра
+            // в четыре хараката. Вторая приходится на конец высказывания: пауза
+            // снимает конечные краткие гласные, но эту долготу оставляет, и силя
+            // сугра доживает до тишины. Решения об этом нигде нет — тест
+            // закрепляет вывод, а не одобряет его.
+            var ha = TransliterationPipeline.Consonants("يَحْسَبُ أَنَّ مَالَهُۥٓ أَخْلَدَهُۥ")
+                                            .Where(s => s.Letter == "ه").ToList();
+
+            Assert.Equal(2, ha.Count);
+            Assert.Equal(4, ha[0].VowelLength);
+            Assert.Equal(2, ha[1].VowelLength);
         }
 
         [Fact]
@@ -471,6 +588,24 @@ namespace Transliterator.Tests.RulesTests
             // а переходит во вторую — размыкание одно, и оно принадлежит второй половине.
             Assert.All(TransliterationPipeline.Consonants("ٱلدِّينِ"),
                 s => Assert.Equal(Qalqalah.None, s.Qalqalah));
+
+        [Fact]
+        public void MergedFirstHalf_HasNoEchoOfItsOwn()
+        {
+            // Первая половина удвоения — безгласная взрывная, то есть ровно то,
+            // за что в قَدْ أَفْلَحَ полагается отзвук. Здесь его нет: половина
+            // не размыкается, а переходит во вторую, и размыкание одно на двоих.
+            var first = Assert.Single(TransliterationPipeline.Consonants("ٱلدِّينِ"),
+                                      s => s.IsGeminateFirstHalf);
+
+            Assert.Equal("د", first.Letter);
+            Assert.Equal(Harakah.Sukun, first.Vowel);
+            Assert.Equal(Qalqalah.None, first.Qalqalah);
+
+            // И профиль, который отзвук пишет, между двумя د ничего не ставит.
+            Assert.Equal("ад-дииин",
+                TransliterationPipeline.Transliterate("ٱلدِّينِ", WithQalqalah("э", strong: null)));
+        }
 
         [Fact]
         public void Grapheme_ComesFromTheProfile()
@@ -576,6 +711,161 @@ namespace Transliterator.Tests.RulesTests
             Assert.Equal(1, segments.Last(s => s.Letter == "ل").VowelLength);
             Assert.Equal(2, segments.First(s => s.Letter == "ه").VowelLength);
         }
+    }
+
+    /// <summary>
+    /// Три ветки <c>ArabicParser.DetectImlaiWasl</c>. В современной орфографии
+    /// хамзат аль-васль пишется обычным алифом, и опознать её больше не по чему —
+    /// только по тому, что за ней стоит артикль. Веток ровно столько, сколько
+    /// способов написать этот артикль, и корпус их не разводит: аят проверяется
+    /// целиком, и по падению не видно, какая из трёх не сработала.
+    /// </summary>
+    public class ImlaiWaslBranchTests
+    {
+        [Theory]
+        [InlineData("الْحَمْدُ", "ٱلْحَمْدُ", "аль-хIамд")] // сукун на ляме
+        [InlineData("النَّاسِ", "ٱلنَّاسِ", "ан-нааас")]    // шадда на следующей букве
+        public void RecognisedBranches_ReadLikeTheWaslSpelling(string imlai, string uthmani, string expected)
+        {
+            // Написания два, чтение одно: иначе про орфографию пришлось бы знать
+            // каждой стадии, которая опирается на васлю.
+            Assert.Equal(expected, TransliterationPipeline.Transliterate(uthmani));
+            Assert.Equal(expected, TransliterationPipeline.Transliterate(imlai));
+        }
+
+        [Fact]
+        public void ShaddaOnTheLamItself_IsTheBranchThatIsMissing()
+        {
+            // У الَّذِينَ шадда стоит не на следующей букве, а на самом ляме, и сукуна
+            // на нём поэтому нет: обе проверки мимо, васля не опознана, и в начале
+            // высказывания огласовывать нечего. Написание со знаком васлы читается
+            // верно — там опознавать нечего, васля уже написана.
+            Assert.Equal("аллязъииин", TransliterationPipeline.Transliterate("ٱلَّذِينَ"));
+            OpenBug.StillProduces("B1", "الَّذِينَ", expected: "аллязъииин", today: "ллязъииин");
+        }
+
+        [Theory]
+        [InlineData("أَلَمْ", "алям")]
+        [InlineData("إِلَّا", "илляя")]
+        public void WordsThatOnlyLookLikeTheArticle_AreLeftAlone(string arabic, string expected) =>
+            // Алиф, за ним лям — и артикля нет. Ложное срабатывание здесь дороже
+            // пропуска: слово получило бы чужую огласовку и стало бы другим словом.
+            Assert.Equal(expected, TransliterationPipeline.Transliterate(arabic));
+    }
+
+    /// <summary>
+    /// Алиф максура всеми четырьмя способами разом. Буква одна, решений о ней
+    /// четыре, и три принимает одна ветка <c>ArabicParser.TryFoldLongVowel</c>:
+    /// поодиночке они выглядят как разные ошибки, вместе — как одна.
+    /// </summary>
+    public class AlefMaqsuraTests
+    {
+        [Fact]
+        public void Bare_AfterKasra_ShouldLengthenIt() =>
+            // В усмани ى пишут и на месте долгой ī, но ветка удлиняет только фатху.
+            // С обычной ي всё работает — и расхождение видно лишь на той редакции,
+            // которую корпус объявляет своей.
+            OpenBug.StillProduces("B4", "فِى دِينِ", expected: "фии дииин", today: "фи дииин");
+
+        [Fact]
+        public void WithSuperscriptAlef_MakesASegmentOfItsOwn() =>
+            // Долготы не выходит: появляется отдельный сегмент со своей фатхой
+            // длиной 2, и на письме краткая «а» слипается с ней в «ааа».
+            OpenBug.StillProduces("B5, B6", "أَغْنَىٰ", expected: "агънаа", today: "огънааа");
+
+        [Theory]
+        [InlineData("عَلَىٰ", "'аляаа")]
+        [InlineData("هُدَىٰ", "hудааа")]
+        public void AfterFatha_MustSurviveTheFixUntouched(string arabic, string expected) =>
+            // Критерий B6: эти два не меняются. Тем же выводом они записаны и здесь,
+            // чтобы правка соседней ветки не поехала на них молча.
+            Assert.Equal(expected, TransliterationPipeline.Transliterate(arabic));
+
+        [Fact]
+        public void WithFatha_IsAConsonantOnlyInTheModernSpelling()
+        {
+            // На ى написана фатха — значит согласная, а не долгота. С обычной ي
+            // так и выходит; у максуры сегмента с ي не остаётся вовсе, и «й»
+            // из вывода пропадает. Багом это не заведено — запись, а не одобрение.
+            Assert.Equal("уалий", TransliterationPipeline.Transliterate("وَلِيَ"));
+            Assert.Equal("уали", TransliterationPipeline.Transliterate("وَلِىَ"));
+            Assert.DoesNotContain(TransliterationPipeline.Consonants("وَلِىَ"), s => s.Letter == "ي");
+        }
+
+        [Fact]
+        public void BeforeSukun_TheVowelStaysShort()
+        {
+            // Долгота перед безгласным согласным снимается — в усмани так и выходит,
+            // но не поэтому: её там не возникает вовсе (B4). С обычной ي видно,
+            // что снимать её сегодня некому.
+            Assert.Equal("фи-ль-'уqод", TransliterationPipeline.Transliterate("فِى ٱلْعُقَدِ"));
+            OpenBug.StillProduces("B9", "فِي ٱلْعُقَدِ", expected: "фи-ль-'уqод", today: "фии-ль-'уqод");
+        }
+    }
+
+    /// <summary>
+    /// و и ي: одна буква, два разных звука. Между гласными это согласная со своей
+    /// огласовкой, после подходящей огласовки и без своей — долгота предыдущей,
+    /// и отдельного сегмента у неё не остаётся. В кириллице оба пишутся «у»,
+    /// и различить их можно только по сегментам.
+    /// </summary>
+    public class GlideTests
+    {
+        [Theory]
+        [InlineData("هُوَ ٱللَّهُ", "hууа-ллаааh")]
+        [InlineData("كُفُوًا أَحَدٌ", "куфууан ахIад")]
+        [InlineData("يُوَسْوِسُ", "йууасуис")]
+        public void BetweenVowels_ItKeepsItsOwnSegment(string arabic, string expected)
+        {
+            Assert.All(TransliterationPipeline.Consonants(arabic).Where(s => s.Letter == "و"),
+                       s => Assert.True(s.Vowel is Harakah.Fatha or Harakah.Kasra or Harakah.Damma));
+
+            Assert.Equal(expected, TransliterationPipeline.Transliterate(arabic));
+        }
+
+        [Theory]
+        [InlineData("يُولَدْ", "йууляд", "ي")]
+        [InlineData("صُدُورِ ٱلنَّاسِ", "сIудуури-ннааас", "د")]
+        public void InALongVowel_ItLeavesNoSegmentAtAll(string arabic, string expected, string carrier)
+        {
+            // Долгота живёт в харакате предыдущей буквы: тянется она, а не و.
+            Assert.DoesNotContain(TransliterationPipeline.Consonants(arabic), s => s.Letter == "و");
+            Assert.Equal(2, TransliterationPipeline.Consonants(arabic).First(s => s.Letter == carrier).VowelLength);
+            Assert.Equal(expected, TransliterationPipeline.Transliterate(arabic));
+        }
+    }
+
+    /// <summary>
+    /// Хамза во всех положениях сразу. Пишется она по-разному не потому, что буква
+    /// разная, а потому, что разное вокруг неё, — и одним ключом в профиле эти
+    /// случаи не разводятся.
+    /// </summary>
+    public class HamzaPositionTests
+    {
+        [Fact]
+        public void AtTheStartOfAWord_WritesNothing() =>
+            // Начальная хамза — приступ голоса, и в кириллице его пишет сама гласная.
+            Assert.Equal("а'буду маа", TransliterationPipeline.Transliterate("أَعْبُدُ مَا"));
+
+        [Theory]
+        [InlineData("جَآءَ مَا", "джааа-а маа", "джаааъа маа")]                             // после долгой
+        [InlineData("وَرَأَيْتَ ٱلنَّاسَ", "уаро-айта-ннааас", "уароъайта-ннааас")]             // после согласной
+        [InlineData("وَإِيَّاكَ نَسْتَعِينُ", "уа-иййаака наста'ииин", "уаъиййаака наста'ииин")] // под алифом
+        public void BetweenVowels_NeedsASeparator(string arabic, string expected, string today) =>
+            OpenBug.StillProduces("B7", arabic, expected, today);
+
+        [Fact]
+        public void WaslHamza_SeparatesNothing() =>
+            // Хамзат аль-васль в соединении нема, и разделителем ей быть нечем:
+            // «уаль-хIамд», а не «уаъаль-хIамд» и не «уа-аль-хIамд».
+            Assert.Equal("уаль-хIамд", TransliterationPipeline.Transliterate("وَٱلْحَمْدُ"));
+
+        [Fact]
+        public void AtTheEndOfAWord_HasNothingToSeparate() =>
+            // Разделять нечего: за хамзой гласной нет. Отсюда и требование B7 —
+            // разделитель нужен вариантом ключа, а не заменой базовой графемы,
+            // иначе здесь повис бы дефис.
+            Assert.Equal("щайййъ", TransliterationPipeline.Transliterate("شَيْءٍ"));
     }
 
     public class LetterCoverageTests
