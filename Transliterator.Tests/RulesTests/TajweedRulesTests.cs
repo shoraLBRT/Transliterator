@@ -719,12 +719,19 @@ namespace Transliterator.Tests.RulesTests
     /// только по тому, что за ней стоит артикль. Веток ровно столько, сколько
     /// способов написать этот артикль, и корпус их не разводит: аят проверяется
     /// целиком, и по падению не видно, какая из трёх не сработала.
+    /// <para>
+    /// Ложное срабатывание проверяется наравне с пропуском: артикль опознаётся
+    /// по чужим признакам — по ляму и его огласовке, — а лям после алифа бывает
+    /// и корневым.
+    /// </para>
     /// </summary>
     public class ImlaiWaslBranchTests
     {
         [Theory]
-        [InlineData("الْحَمْدُ", "ٱلْحَمْدُ", "аль-хIамд")] // сукун на ляме
-        [InlineData("النَّاسِ", "ٱلنَّاسِ", "ан-нааас")]    // шадда на следующей букве
+        [InlineData("الْحَمْدُ", "ٱلْحَمْدُ", "аль-хIамд")]   // сукун на ляме
+        [InlineData("النَّاسِ", "ٱلنَّاسِ", "ан-нааас")]      // шадда на следующей букве
+        [InlineData("الَّذِينَ", "ٱلَّذِينَ", "аллязъииин")] // шадда на самом ляме
+        [InlineData("الَّيْلِ", "ٱلَّيْلِ", "алляйййль")]     // она же, но лям солнечный не в местоимении
         public void RecognisedBranches_ReadLikeTheWaslSpelling(string imlai, string uthmani, string expected)
         {
             // Написания два, чтение одно: иначе про орфографию пришлось бы знать
@@ -734,22 +741,27 @@ namespace Transliterator.Tests.RulesTests
         }
 
         [Fact]
-        public void ShaddaOnTheLamItself_IsTheBranchThatIsMissing()
+        public void ShaddaOnTheLamItself_IsNotSukun()
         {
-            // У الَّذِينَ шадда стоит не на следующей букве, а на самом ляме, и сукуна
-            // на нём поэтому нет: обе проверки мимо, васля не опознана, и в начале
-            // высказывания огласовывать нечего. Написание со знаком васлы читается
-            // верно — там опознавать нечего, васля уже написана.
-            Assert.Equal("аллязъииин", TransliterationPipeline.Transliterate("ٱلَّذِينَ"));
-            OpenBug.StillProduces("B1", "الَّذِينَ", expected: "аллязъииин", today: "ллязъииин");
+            // Ветка «шадда на самом ляме» существует отдельно от двух других не из
+            // симметрии: у ٱلَّذِينَ на ляме стоит фатха следующего слога, сукуна нет,
+            // и шадды на следующей букве тоже нет — проверять больше нечего.
+            var lam = TransliterationPipeline.Consonants("الَّذِينَ").First(s => s.Letter == "ل");
+
+            Assert.True(lam.Shadda);
+            Assert.NotEqual(Harakah.Sukun, lam.Vowel);
         }
 
         [Theory]
         [InlineData("أَلَمْ", "алям")]
         [InlineData("إِلَّا", "илляя")]
+        [InlineData("أَلَّا", "алляя")]   // шадда на ляме есть, а артикля нет: носитель — хамза
+        [InlineData("أَلْقَى", "альqоо")] // сукун на ляме есть, а артикля нет: носитель — хамза
         public void WordsThatOnlyLookLikeTheArticle_AreLeftAlone(string arabic, string expected) =>
             // Алиф, за ним лям — и артикля нет. Ложное срабатывание здесь дороже
             // пропуска: слово получило бы чужую огласовку и стало бы другим словом.
+            // Отличает их носитель: артикль пишется голым алифом, а أ и إ — это
+            // хамзат аль-qотI, она произносится всегда.
             Assert.Equal(expected, TransliterationPipeline.Transliterate(arabic));
     }
 
