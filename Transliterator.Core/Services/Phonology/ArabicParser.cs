@@ -355,6 +355,13 @@ namespace Transliterator.Core.Services.Phonology
         /// выяснилось, что это хамзат аль-васль, букву надо поменять на хамзу тоже —
         /// дальше по конвейеру должно доехать одно написание, а не два.
         /// </para>
+        /// <para>
+        /// Носителем артикля признаётся только голый алиф (ا). Носитель хамзы
+        /// (أ, إ) — это хамзат аль-qотI, она произносится всегда, и алифом артикля
+        /// не бывает: أَلَمْ, إِلَّا, أَلْقَى начинаются на алиф с лямом, но артикля
+        /// в них нет. Та же граница проведена в <c>ArabicNormalizer</c>, где имя
+        /// Аллаха опознаётся по ляму после ا или ٱ, но не после أ.
+        /// </para>
         /// </summary>
         private static void DetectImlaiWasl(List<Segment> segments)
         {
@@ -363,7 +370,7 @@ namespace Transliterator.Core.Services.Phonology
                 var segment = segments[i];
                 if (segment.Kind != SegmentKind.Consonant) continue;
                 if (!segment.StartsWord || segment.IsWaslHamza) continue;
-                if (segment.Letter is not (ArabicScript.HamzaStr or ArabicScript.AlefStr)) continue;
+                if (segment.Letter != ArabicScript.AlefStr) continue;
                 if (segment.Vowel is not (Harakah.None or Harakah.Fatha)) continue;
 
                 int lamIndex = SegmentNavigator.NextConsonantInWord(segments, i);
@@ -371,12 +378,26 @@ namespace Transliterator.Core.Services.Phonology
 
                 int afterIndex = SegmentNavigator.NextConsonantInWord(segments, lamIndex);
                 if (afterIndex < 0) continue;
-                if (segments[lamIndex].Vowel != Harakah.Sukun && !segments[afterIndex].Shadda) continue;
+                if (!IsArticleLam(segments[lamIndex], segments[afterIndex])) continue;
 
                 segment.Letter = ArabicScript.HamzaStr;
                 segment.IsWaslHamza = true;
             }
         }
+
+        /// <summary>
+        /// Лям артикля перед телом слова. Способов написать его три, и все три —
+        /// про одно и то же: лям артикля собственной огласовки не имеет.
+        /// <list type="bullet">
+        ///   <item>сукун — лунная буква, лям звучит: ٱلْحَمْدُ;</item>
+        ///   <item>шадда на следующей букве — солнечная, лям в неё ушёл: ٱلنَّاسِ;</item>
+        ///   <item>шадда на самом ляме — солнечная буква и есть лям, и удвоение
+        ///         мусхаф пишет на нём: ٱلَّذِي, ٱلَّيْلِ. Сукуна на таком ляме нет,
+        ///         а огласовка на нём — от следующего слога, не его собственная.</item>
+        /// </list>
+        /// </summary>
+        private static bool IsArticleLam(Segment lam, Segment after) =>
+            lam.Vowel == Harakah.Sukun || lam.Shadda || after.Shadda;
 
     }
 }
