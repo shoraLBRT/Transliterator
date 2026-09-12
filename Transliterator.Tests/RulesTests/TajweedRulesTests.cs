@@ -182,17 +182,39 @@ namespace Transliterator.Tests.RulesTests
         [InlineData("صُدُورِ ٱلنَّاسِ", "сIудуури-ннааас")]
         [InlineData("فِي ٱلنَّاسِ", "фии-ннааас")]
         public void SunLam_AfterASeparateWord_KeepsTheHyphen(string arabic, string expected) =>
-            // Дефис приходится между двумя копиями солнечной буквы — как у идгама.
+            // Дефис берёт шов слова и приходится перед обеими копиями, а своего
+            // дефиса у солнечного ляма тут нет: иначе вышло бы «сIудуури-н-нааас»
+            // — один звук тремя кусками.
             Assert.Equal(expected, TransliterationPipeline.Transliterate(arabic));
 
         [Fact]
         public void SunLam_RightAfterWasl_HasNoHyphenAtAll() =>
             // Тот же артикль с той же солнечной буквой, но васля приросла к слову,
-            // и пробела перед ней нет. Обоснование, похоже, орфографическое:
-            // дефис ставится там, где в арабском был пробел. Записано это нигде
-            // не было — третий пункт B3 в docs/BACKLOG.md как раз об этом,
-            // и до решения тест закрепляет вывод, а не одобряет его.
+            // и шва в письме нет — взять дефису нечего, и его нет вовсе. Артикль
+            // виден только удвоением. Признано верным при ревизии B3, записано
+            // пунктом стадии 5 в docs/ROADMAP.md.
             Assert.Equal("уаннааас", TransliterationPipeline.Transliterate("وَٱلنَّاسِ"));
+
+        [Fact]
+        public void MoonLam_RightAfterWasl_KeepsItsHyphen() =>
+            // Та же приросшая буква, тот же артикль без пробела перед ним — и дефис
+            // на месте. Поэтому «нет пробела — нет дефиса» решение не объясняет:
+            // лунный лям звучит сам по себе, между ним и именем стоит написанное
+            // «ль», и спорить двум дефисам не за что.
+            Assert.Equal("уаль-фатхI", TransliterationPipeline.Transliterate("وَٱلْفَتْحُ"));
+
+        [Fact]
+        public void SunLam_AtTheStartOfAnUtterance_HyphenatesBetweenTheCopies()
+        {
+            // 112:1 против 112:2: одно и то же слово, и решает внешняя граница.
+            // В первом её нет — артикль начинает высказывание, и дефис приходится
+            // между копиями ляма. Во втором есть — её берёт шов слова, а второй
+            // артикль того же аята снова остаётся без своего дефиса.
+            Assert.Equal("ал-лааhу-сIсIомад",
+                TransliterationPipeline.Transliterate("ٱللَّهُ ٱلصَّمَدُ"));
+            Assert.Equal("qуль hууа-ллааhу ахIад",
+                TransliterationPipeline.Transliterate("قُلْ هُوَ ٱللَّهُ أَحَدٌ"));
+        }
 
         [Fact]
         public void BothHyphenationsMeet_InOneVerse() =>
@@ -877,7 +899,9 @@ namespace Transliterator.Tests.RulesTests
         {
             // Долгота перед безгласным согласным снимается — в усмани так и выходит,
             // но не поэтому: её там не возникает вовсе (B4). С обычной ي видно,
-            // что снимать её сегодня некому.
+            // что снимать её сегодня некому. Само правило признано верным при
+            // ревизии B3 и записано снятым пунктом стадии 9 в docs/ROADMAP.md;
+            // чекбокс ставит B9, он же и чинит.
             Assert.Equal("фи-ль-'уqод", TransliterationPipeline.Transliterate("فِى ٱلْعُقَدِ"));
             OpenBug.StillProduces("B9", "فِي ٱلْعُقَدِ", expected: "фи-ль-'уqод", today: "фии-ль-'уqод");
         }
