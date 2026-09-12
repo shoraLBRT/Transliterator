@@ -4,13 +4,18 @@ using Transliterator.Domain.Phonology;
 namespace Transliterator.Core.Services.Rules
 {
     /// <summary>
-    /// Стадия 6 конвейера: нун сакина, танвин и мим сакина.
+    /// Стадия 7 конвейера: нун сакина, танвин и мим сакина.
     /// <para>
     /// Безгласный носовой не имеет одного звучания: он читается чисто (изхар),
     /// сливается со следующей буквой (идгам), переходит в мим (икляб) или прячется
     /// в назализацию (ихфа). Решает всё следующая буква, поэтому стадия стоит после
     /// артикля: до него неизвестно, какой согласный окажется следующим — у солнечного
     /// ляма это уже не ل.
+    /// </para>
+    /// <para>
+    /// Носовые не отданы общей стадии ассимиляции (стадия 6) именно поэтому:
+    /// слияние — только одна из четырёх их возможностей, а по одному лишь признаку
+    /// «шадда на следующей букве» изхар, ихфа и икляб от него не отличить.
     /// </para>
     /// <para>
     /// И до эмфазы: идгам создаёт и разрушает её условия. В "مِن رَّبِّهِمْ" твёрдость ر
@@ -96,8 +101,11 @@ namespace Transliterator.Core.Services.Rules
                     return;
                 }
 
-                Merge(segments, index, nextIndex,
-                      ghunna: ArabicScript.IdghamWithGhunna.Contains(next));
+                // Идгам: нун не исчезает, а становится следующей буквой — ровно как
+                // лям артикля перед солнечной. Механизм слияния общий для всех стадий,
+                // здесь решается только одно: остаётся ли на шве назализация.
+                Idgham.Merge(segments, index, nextIndex,
+                             ghunna: ArabicScript.IdghamWithGhunna.Contains(next));
                 return;
             }
 
@@ -133,7 +141,7 @@ namespace Transliterator.Core.Services.Rules
             // Идгам мисляйн: мим сливается с мимом в один долгий носовой.
             if (next == ArabicScript.Meem)
             {
-                Merge(segments, index, nextIndex, ghunna: true);
+                Idgham.Merge(segments, index, nextIndex, ghunna: true);
                 return;
             }
 
@@ -145,45 +153,6 @@ namespace Transliterator.Core.Services.Rules
         // ------------------------------------------------------------------
         // Общее
         // ------------------------------------------------------------------
-        /// <summary>
-        /// Идгам: носовой не исчезает, а <b>становится</b> следующей буквой — ровно
-        /// как лям артикля перед солнечной. Удвоение выражено двумя сегментами,
-        /// поэтому шадда, которой мусхаф отметил слияние, на второй половине лишняя:
-        /// иначе стадия мадда приняла бы её за настоящее удвоение и растянула бы
-        /// предыдущую гласную до мадда лязим.
-        /// </summary>
-        private static void Merge(IList<Segment> segments, int nasalIndex, int targetIndex, bool ghunna)
-        {
-            var nasal = segments[nasalIndex];
-            var target = segments[targetIndex];
-
-            nasal.Letter = target.Letter;
-            nasal.Vowel = Harakah.Sukun;
-            nasal.Shadda = false;
-            nasal.IsGeminateFirstHalf = true;
-            nasal.Ghunna = ghunna;
-
-            target.Shadda = false;
-
-            // Идгам в ن и م назален обеими половинами; в و и ي (идгам накыс)
-            // назализация остаётся только на первой.
-            if (ghunna && target.Letter is ArabicScript.NunStr or ArabicScript.MeemStr)
-                target.Ghunna = true;
-
-            Hyphenate(segments, nasalIndex, targetIndex);
-        }
-
-        /// <summary>
-        /// Слово кончилось посреди звука: граница между половинами удвоения
-        /// рендерится дефисом, а не пробелом — "гъофуурур-рохIииим".
-        /// </summary>
-        private static void Hyphenate(IList<Segment> segments, int from, int to)
-        {
-            for (int i = from + 1; i < to; i++)
-                if (segments[i].Kind == SegmentKind.Break)
-                    segments[i].Literal = "-";
-        }
-
         private static bool SeparatedByBreak(IList<Segment> segments, int from, int to)
         {
             for (int i = from + 1; i < to; i++)

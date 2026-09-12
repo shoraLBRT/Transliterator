@@ -203,7 +203,75 @@ namespace Transliterator.Tests.RulesTests
     }
 
     /// <summary>
-    /// Стадия 6: нун сакина, танвин и мим сакина. Танвин отдельных проверок не требует —
+    /// Стадия 6: идгам мутаджанисайн и мутакарибайн. Признак один — шадда
+    /// на следующей букве при безгласной предыдущей; списка пар у правила нет,
+    /// потому что мусхаф уже отметил слияние там, где оно есть.
+    /// </summary>
+    public class AssimilationRuleTests
+    {
+        [Theory]
+        [InlineData("عَبَدتُّمْ", "'абаттум")]                        // د в ت, внутри слова
+        [InlineData("قَالَت طَّآئِفَةٌۭ", "qоолятI-тIоооъифаh")]        // ت в ط, на стыке слов
+        [InlineData("يَلْهَث ذَّٰلِكَ", "йальhазъ-зъаалик")]           // ث в ذ, на стыке слов
+        public void SakinBeforeShadda_MergesIntoTheNextLetter(string arabic, string expected) =>
+            // Механизм тот же, что у солнечного ляма и у нуна: первая буква
+            // становится второй, удвоение выражено двумя сегментами.
+            Assert.Equal(expected, TransliterationPipeline.Transliterate(arabic));
+
+        [Fact]
+        public void MergeInsideOneWord_IsTheMainCase()
+        {
+            // Нун сакина внутри слова не сливается — это изхар мутлак. Здесь запрета
+            // нет и быть не может: в عَبَدتُّمْ сливаются соседние буквы одного слова,
+            // и границы, через которую можно было бы не заглядывать, между ними нет.
+            var merged = Assert.Single(TransliterationPipeline.Consonants("عَبَدتُّمْ"),
+                                       s => s.IsGeminateFirstHalf);
+
+            Assert.Equal("ت", merged.Letter);
+            Assert.Equal(Harakah.Sukun, merged.Vowel);
+            Assert.False(merged.Ghunna);
+        }
+
+        [Fact]
+        public void ShaddaOfTheSecondHalf_IsRemoved() =>
+            // Удвоение теперь выражено двумя сегментами, и оставленная шадда стала бы
+            // вторым, лишним: стадия мадда приняла бы её за настоящее удвоение.
+            Assert.DoesNotContain(TransliterationPipeline.Consonants("عَبَدتُّمْ"), s => s.Shadda);
+
+        [Fact]
+        public void SakinWithoutShadda_IsLeftAlone()
+        {
+            // Идгам накыс в بَسَطتَ мусхаф шаддой не отмечает — ط сохраняет свой итбак,
+            // и полного слияния там нет. Нет отметки — нет и слияния.
+            Assert.Equal("басотIт", TransliterationPipeline.Transliterate("بَسَطتَ"));
+            Assert.DoesNotContain(TransliterationPipeline.Consonants("بَسَطتَ"), s => s.IsGeminateFirstHalf);
+        }
+
+        [Fact]
+        public void SunLetterOfTheArticle_IsNotMergedTwice()
+        {
+            // Стадия стоит после артикля: шадда солнечной буквы к этому моменту снята,
+            // и за отметку нового слияния больше не сойдёт.
+            Assert.Equal("ан-нааас", TransliterationPipeline.Transliterate("ٱلنَّاسِ"));
+            Assert.Single(TransliterationPipeline.Consonants("ٱلنَّاسِ"), s => s.IsGeminateFirstHalf);
+        }
+
+        [Fact]
+        public void NasalsAreLeftToTheNextStage()
+        {
+            // Носовому, кроме слияния, доступны изхар, ихфа и икляб, и по одной лишь
+            // шадде их не различить. Эта стадия нун и мим не трогает вовсе — слияние
+            // и гунну им даёт стадия 7.
+            var merged = Assert.Single(TransliterationPipeline.Consonants("مِن نُّطْفَةٍ"),
+                                       s => s.IsGeminateFirstHalf);
+
+            Assert.Equal("ن", merged.Letter);
+            Assert.True(merged.Ghunna);
+        }
+    }
+
+    /// <summary>
+    /// Стадия 7: нун сакина, танвин и мим сакина. Танвин отдельных проверок не требует —
     /// парсер развернул его в нун ещё до правил, и это тот же нун сакина.
     /// </summary>
     public class NasalRuleTests
@@ -694,7 +762,7 @@ namespace Transliterator.Tests.RulesTests
         [InlineData("لِلَّهِ", Emphasis.Light)] // касра перед лямом
         public void Lam_KeepsItsEmphasisWithoutSuperscriptAlef(string arabic, Emphasis expected)
         {
-            // Лям имени Аллаха стадия 7 узнаёт по долгой ā при нём. Без алифа это
+            // Лям имени Аллаха стадия 8 узнаёт по долгой ā при нём. Без алифа это
             // обычный лям, и твёрдым он не станет ни при какой огласовке.
             var lam = TransliterationPipeline.Consonants(arabic).Last(s => s.Letter == "ل");
 
@@ -891,7 +959,7 @@ namespace Transliterator.Tests.RulesTests
             // В соединении ة звучит как /t/, а танвин — как настоящий нун.
             // На паузе обе буквы читаются иначе, поэтому проверка идёт на слитном стыке,
             // и следующее слово начинается с гортанной: перед ней нун остаётся нуном.
-            // В прежнем "رَحْمَةً وَحُكْمًا" он сливается с و — это уже идгам стадии 6.
+            // В прежнем "رَحْمَةً وَحُكْمًا" он сливается с و — это уже идгам стадии 7.
             Assert.Equal("рохIматин 'аляйhим",
                 TransliterationPipeline.Transliterate("رَحْمَةٍ عَلَيْهِمْ"));
 

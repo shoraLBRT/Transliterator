@@ -200,13 +200,13 @@ namespace Transliterator.Core.Services.Phonology
         public static bool IsWaqfMark(char c) =>
             c is >= WaqfContinuePreferred and <= WaqfSaktah;
 
-        /// <summary>Знак икляба. Как и знак вакфа, переживает нормализацию: его читает стадия 6.</summary>
+        /// <summary>Знак икляба. Как и знак вакфа, переживает нормализацию: его читает стадия 7.</summary>
         public static bool IsIqlabMark(char c) => c == SmallHighMeemIsolated;
 
         /// <summary>
         /// Разметка, не несущая звука: знаки вакфа, разделители аятов и пометы чтеца.
         /// Знаки вакфа и знак икляба опознаются и здесь, но нормализация их сохраняет —
-        /// их читают стадии 3 и 6.
+        /// их читают стадии 3 и 7.
         /// </summary>
         public static bool IsRecitationMark(char c) =>
             IsWaqfMark(c)

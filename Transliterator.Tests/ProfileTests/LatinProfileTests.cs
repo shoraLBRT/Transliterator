@@ -46,7 +46,7 @@ namespace Transliterator.Tests.ProfileTests
         [InlineData("رَبِّ", "robb")]  // фатха при твёрдой ر
         [InlineData("رِزْقِ", "rizq")] // касра держит ر мягкой
         public void Emphasis_ColorsTheVowelHere_Too(string arabic, string expected) =>
-            // Решение об эмфазе принимает стадия 7, а не профиль: латиница просто
+            // Решение об эмфазе принимает стадия 8, а не профиль: латиница просто
             // получает уже окрашенную гласную и пишет её своей графемой.
             Assert.Equal(expected, TransliterationPipeline.Transliterate(arabic, TestProfiles.Latin));
 

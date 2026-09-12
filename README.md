@@ -6,7 +6,7 @@
 applying the rules of tajweed.
 
 Transliteration here is not letter-by-letter substitution. The text goes through
-a ten-stage pipeline: orthography is normalised, parsed into a stream of
+an eleven-stage pipeline: orthography is normalised, parsed into a stream of
 phonological segments, the tajweed rules operate on those segments, and only the
 final stage maps the result to graphemes through a profile. The reverse order is
 impossible: by the time you are replacing letters, sukun, shadda, the type of
@@ -18,7 +18,7 @@ tajweed needs.
 ## Features
 
 * Transliterates vocalised Arabic text into extended Russian Cyrillic.
-* All ten pipeline stages are implemented, from orthographic normalisation
+* All eleven pipeline stages are implemented, from orthographic normalisation
   through to qalqalah (see the table below).
 * Rules operate on a segment stream, never on finished Cyrillic: there is not a
   single Cyrillic grapheme in the rule code — every one of them comes from
@@ -109,11 +109,12 @@ builds on the decisions of the ones before it, and they cannot be reordered.
 | 3 | Pause marking (waqf) | `WaqfRule` |
 | 4 | Hamzat al-wasl | `WaslRule` |
 | 5 | The article lam | `ArticleRule` |
-| 6 | Nun sakina, tanwin, mim sakina | `NasalRule` |
-| 7 | Tafkhim and tarqiq | `EmphasisRule` |
-| 8 | Madd length | `MaddRule` |
-| 9 | Qalqalah | `QalqalahRule` |
-| 10 | Rendering through a profile | `CyrillicRenderer` |
+| 6 | Idgham of homorganic and close consonants | `AssimilationRule` |
+| 7 | Nun sakina, tanwin, mim sakina | `NasalRule` |
+| 8 | Tafkhim and tarqiq | `EmphasisRule` |
+| 9 | Madd length | `MaddRule` |
+| 10 | Qalqalah | `QalqalahRule` |
+| 11 | Rendering through a profile | `CyrillicRenderer` |
 
 Each stage is broken down with its acceptance criteria in
 [docs/ROADMAP.md](docs/ROADMAP.md).
@@ -153,7 +154,7 @@ reasoning is under "Открытые решения" in the roadmap.
 ### What a profile does not contain
 
 A profile only decides **how to write** a sound that has already been
-identified. What the sound *is* was decided by stages 1–9, and much of the
+identified. What the sound *is* was decided by stages 1–10, and much of the
 original text never reaches the profile at all:
 
 * **Hamza carriers** (`أ إ ؤ ئ آ ٱ`) — stage 2 reduces them to the single
@@ -215,7 +216,7 @@ profile for everyone already holding it.
 
 ## Unit tests
 
-* 250 **xUnit** tests covering phonology, every tajweed stage, and the profile
+* 298 **xUnit** tests covering phonology, every tajweed stage, and the profile
   API.
 * The tests load the real `Standard.json` from resources rather than a copy in
   code — the previous hardcoded copy had drifted from the original, and the
