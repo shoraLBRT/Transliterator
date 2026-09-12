@@ -156,11 +156,22 @@ namespace Transliterator.Core.Services.Phonology
                 // Голый алиф собственного звука не имеет. Он либо удлиняет фатху,
                 // либо нем — алиф аль-фарика после глагольного "ـوا" (أُوتُوا, ٱدْخُلُوا).
                 case ArabicScript.Alef:
-                case ArabicScript.AlefMaqsura:
                     if (!cluster.IsBare)
                         return false;
                     if (previous.Vowel == Harakah.Fatha)
                         Lengthen(previous, Harakah.Fatha, maddLength);
+                    return true;
+
+                // Алиф максура — тоже долгота предыдущей огласовки, но не одной
+                // фатхи: в усмани ى пишут и на месте долгой ī (فِى, ٱلَّذِى, أَبِى),
+                // и тогда предыдущая огласовка — касра. Даммы перед ней не бывает:
+                // долгую ū пишут только و. Своей огласовки у голой максуры нет,
+                // и всё, чем она может быть, — это долгота или немота.
+                case ArabicScript.AlefMaqsura:
+                    if (!cluster.IsBare)
+                        return false;
+                    if (previous.Vowel is Harakah.Fatha or Harakah.Kasra)
+                        Lengthen(previous, previous.Vowel, maddLength);
                     return true;
 
                 // آ в середине слова после фатхи — не хамза, а удлинённая ā

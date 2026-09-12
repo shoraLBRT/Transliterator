@@ -180,7 +180,7 @@ namespace Transliterator.Tests.RulesTests
 
         [Theory]
         [InlineData("صُدُورِ ٱلنَّاسِ", "сIудуури-ннааас")]
-        [InlineData("فِي ٱلنَّاسِ", "фии-ннааас")]
+        [InlineData("فِي ٱلنَّاسِ", "фи-ннааас")]
         public void SunLam_AfterASeparateWord_KeepsTheHyphen(string arabic, string expected) =>
             // Дефис берёт шов слова и приходится перед обеими копиями, а своего
             // дефиса у солнечного ляма тут нет: иначе вышло бы «сIудуури-н-нааас»
@@ -607,6 +607,63 @@ namespace Transliterator.Tests.RulesTests
     }
 
     /// <summary>
+    /// Стадия 9: долгота уступает безгласному согласному соседнего слова —
+    /// التقاء الساكنين. Отдельно فِى — «фии», но в فِى ٱلْعُقَدِ хамзат аль-васль
+    /// выпадает, за долгой ī встаёт безгласный лям, и две безгласности подряд
+    /// произнести нечем — «фи-ль-'уqод».
+    /// <para>
+    /// Проверяется длительность на последнем звучащем согласном первого слова,
+    /// а не весь вывод: решение стадии — одно число, а полный вывод задевали бы
+    /// открытые баги соседних стадий.
+    /// </para>
+    /// </summary>
+    public class MaddBeforeSakinTests
+    {
+        [Theory]
+        [InlineData("فِى ٱلْعُقَدِ")]               // ī перед лунным лямом
+        [InlineData("فِي الْعُقَدِ")]               // то же в современном написании
+        [InlineData("فِى ٱلنَّاسِ")]                // перед солнечным: безгласна первая копия
+        [InlineData("عَلَى ٱلْعَرْشِ")]             // ā на алифе максуре
+        [InlineData("ٱهْدِنَا ٱلصِّرَٰطَ")]          // ā на алифе, 1:6
+        [InlineData("يَٰٓأَيُّهَا ٱلْكَٰفِرُونَ")]     // 109:1
+        [InlineData("ذُو ٱلْعَرْشِ")]               // ū
+        [InlineData("قَالُوا۟ ٱتَّخَذَ")]            // ū перед шаддой глагола с васлей
+        public void AcrossWords_BeforeSakin_TheLengthIsDropped(string arabic)
+        {
+            // Разбор долготу даёт — снимает её именно стадия 9.
+            Assert.True(MaddOfFirstWord(TransliterationPipeline.ParseWithoutRules(arabic)).VowelLength >= 2);
+            Assert.Equal(1, MaddOfFirstWord(TransliterationPipeline.Parse(arabic)).VowelLength);
+        }
+
+        [Theory]
+        [InlineData("فِى", 2)]                      // слово само по себе
+        [InlineData("فِى دِينِ", 2)]                // перед огласованной буквой
+        [InlineData("مَا تَعْبُدُونَ", 2)]
+        [InlineData("يَدَآ أَبِى لَهَبٍ", 4)]        // перед хамзой — мунфасиль, а не снятие
+        [InlineData("فِى ۘ ٱلْعُقَدِ", 2)]           // пауза: стыка нет, васля звучит
+        public void OtherwiseTheLengthStays(string arabic, int length) =>
+            Assert.Equal(length, MaddOfFirstWord(TransliterationPipeline.Parse(arabic)).VowelLength);
+
+        [Fact]
+        public void WithinAWord_TheSameMeetingIsMaddLazim()
+        {
+            // Обе встречи в одном месте 1:7: на стыке слов долгота снята («уаля-»),
+            // внутри слова перед удвоением растянута до шести харакатов.
+            const string arabic = "وَلَا ٱلضَّآلِّينَ";
+            var segments = TransliterationPipeline.Parse(arabic);
+
+            Assert.Equal(1, MaddOfFirstWord(segments).VowelLength);
+            Assert.Equal(6, segments.Last(s => s.Letter == "ض").VowelLength);
+            Assert.Equal("уаля-дIдIооооллииин", TransliterationPipeline.Transliterate(arabic));
+        }
+
+        /// <summary>Последний звучащий согласный первого слова — носитель долготы на стыке.</summary>
+        private static Segment MaddOfFirstWord(List<Segment> segments) =>
+            segments.TakeWhile(s => s.Kind != SegmentKind.Break)
+                    .Last(s => s.Kind == SegmentKind.Consonant && !s.Silent);
+    }
+
+    /// <summary>
     /// Стадия 9: кальканя. Отзвук — не буква и не огласовка, поэтому проверяется
     /// по пометке на сегменте; в Standard она до письма не доходит осознанно,
     /// и как выглядит написанный отзвук, показывает отдельный профиль.
@@ -862,12 +919,15 @@ namespace Transliterator.Tests.RulesTests
     /// </summary>
     public class AlefMaqsuraTests
     {
-        [Fact]
-        public void Bare_AfterKasra_ShouldLengthenIt() =>
-            // В усмани ى пишут и на месте долгой ī, но ветка удлиняет только фатху.
-            // С обычной ي всё работает — и расхождение видно лишь на той редакции,
-            // которую корпус объявляет своей.
-            OpenBug.StillProduces("B4", "فِى دِينِ", expected: "фии дииин", today: "фи дииин");
+        [Theory]
+        [InlineData("فِى دِينِ", "фии дииин")]
+        [InlineData("ٱلَّذِى يُوَسْوِسُ", "аллязъии йууасуис")]
+        [InlineData("أَبِى لَهَبٍ", "абии ляhаб")]
+        public void Bare_AfterKasra_LengthensIt(string arabic, string expected) =>
+            // В усмани ى пишут и на месте долгой ī, и выводом она обязана совпадать
+            // с обычной ي — иначе расхождение видно лишь на той редакции, которую
+            // корпус объявляет своей (B4).
+            Assert.Equal(expected, TransliterationPipeline.Transliterate(arabic));
 
         [Fact]
         public void WithSuperscriptAlef_MakesASegmentOfItsOwn() =>
@@ -894,16 +954,19 @@ namespace Transliterator.Tests.RulesTests
             Assert.DoesNotContain(TransliterationPipeline.Consonants("وَلِىَ"), s => s.Letter == "ي");
         }
 
-        [Fact]
-        public void BeforeSukun_TheVowelStaysShort()
+        [Theory]
+        [InlineData("فِى ٱلْعُقَدِ")]
+        [InlineData("فِي الْعُقَدِ")]
+        public void BeforeSukun_TheVowelStaysShort(string arabic)
         {
-            // Долгота перед безгласным согласным снимается — в усмани так и выходит,
-            // но не поэтому: её там не возникает вовсе (B4). С обычной ي видно,
-            // что снимать её сегодня некому. Само правило признано верным при
-            // ревизии B3 и записано снятым пунктом стадии 9 в docs/ROADMAP.md;
-            // чекбокс ставит B9, он же и чинит.
-            Assert.Equal("фи-ль-'уqод", TransliterationPipeline.Transliterate("فِى ٱلْعُقَدِ"));
-            OpenBug.StillProduces("B9", "فِي ٱلْعُقَدِ", expected: "фи-ль-'уqод", today: "фии-ль-'уqод");
+            // Оба написания 113:4 — одно слово, одно чтение и один вывод.
+            Assert.Equal("фи-ль-'уqод", TransliterationPipeline.Transliterate(arabic));
+
+            // И краткость не оттого, что долготы не возникло: разбор её даёт,
+            // а снимает стадия 9 (B9). До B4 в усмани верный вывод выходил
+            // именно так — по неправильной причине.
+            Assert.Equal(2, TransliterationPipeline.ParseWithoutRules(arabic)[0].VowelLength);
+            Assert.Equal(1, TransliterationPipeline.Parse(arabic)[0].VowelLength);
         }
     }
 
