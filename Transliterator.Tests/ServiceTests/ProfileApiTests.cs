@@ -36,8 +36,8 @@ namespace Transliterator.Tests.ServiceTests
             _service = new TransliterationService(
                 _repository, new ArabicNormalizer(), new ArabicParser(),
                 new RulesService(new WaqfRule(), new WaslRule(), new ArticleRule(),
-                                 new NasalRule(), new EmphasisRule(), new MaddRule(),
-                                 new QalqalahRule()),
+                                 new AssimilationRule(), new NasalRule(),
+                                 new EmphasisRule(), new MaddRule(), new QalqalahRule()),
                 new CyrillicRenderer());
         }
 

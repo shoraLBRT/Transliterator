@@ -12,6 +12,7 @@ namespace Transliterator.Core.Services.Rules
     ///   <item>Разметка пауз (вакф) — <c>WaqfRule</c>. Решает, какие слова соединяются.</item>
     ///   <item>Хамзат аль-васль.</item>
     ///   <item>Лям артикля.</item>
+    ///   <item>Идгам однородных и близких согласных — <c>AssimilationRule</c>.</item>
     ///   <item>Нун сакина, танвин, мим сакина, идгамы — <c>NasalRule</c>.</item>
     ///   <item>Тафхим и таркик.</item>
     ///   <item>Длительность мадда.</item>
@@ -24,6 +25,7 @@ namespace Transliterator.Core.Services.Rules
         private readonly WaqfRule _waqfRule;
         private readonly WaslRule _waslRule;
         private readonly ArticleRule _articleRule;
+        private readonly AssimilationRule _assimilationRule;
         private readonly NasalRule _nasalRule;
         private readonly EmphasisRule _emphasisRule;
         private readonly MaddRule _maddRule;
@@ -33,6 +35,7 @@ namespace Transliterator.Core.Services.Rules
             WaqfRule waqfRule,
             WaslRule waslRule,
             ArticleRule articleRule,
+            AssimilationRule assimilationRule,
             NasalRule nasalRule,
             EmphasisRule emphasisRule,
             MaddRule maddRule,
@@ -41,6 +44,7 @@ namespace Transliterator.Core.Services.Rules
             _waqfRule = waqfRule;
             _waslRule = waslRule;
             _articleRule = articleRule;
+            _assimilationRule = assimilationRule;
             _nasalRule = nasalRule;
             _emphasisRule = emphasisRule;
             _maddRule = maddRule;
@@ -59,15 +63,21 @@ namespace Transliterator.Core.Services.Rules
             _waslRule.Apply(segments);
             _articleRule.Apply(segments);
 
-            // Стадия 6: нун сакина, танвин, мим сакина. Стоит после артикля —
-            // солнечный лям к этому моменту уже стал другой буквой — и до эмфазы,
-            // потому что идгам меняет её условия.
+            // Стадия 6: идгам однородных и близких согласных. Стоит после артикля:
+            // шадда солнечной буквы к этому моменту снята и за отметку слияния
+            // больше не сойдёт. Носовых не касается — они решают свою судьбу сами.
+            _assimilationRule.Apply(segments);
+
+            // Стадия 7: нун сакина, танвин, мим сакина. Носовым нужен тот же
+            // уже слитый текст — у солнечного ляма на этом месте не ل, — но своё
+            // слияние они решают сами: по одной шадде изхар и ихфу от идгама
+            // не отличить. И до эмфазы, потому что идгам меняет её условия.
             _nasalRule.Apply(segments);
 
             _emphasisRule.Apply(segments);
             _maddRule.Apply(segments);
 
-            // Стадия 9: кальканя. Идёт последней: безгласность, от которой она
+            // Стадия 10: кальканя. Идёт последней: безгласность, от которой она
             // зависит, — итог всех предыдущих стадий.
             _qalqalahRule.Apply(segments);
         }

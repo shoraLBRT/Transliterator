@@ -291,7 +291,7 @@ namespace Transliterator.Core.Services.Phonology
 
         /// <summary>
         /// Танвин — это краткая гласная плюс нун сакин. Разворачиваем его здесь,
-        /// чтобы правила нун сакины (стадия 6) работали с ним наравне с написанным нуном,
+        /// чтобы правила нун сакины (стадия 7) работали с ним наравне с написанным нуном,
         /// а стадия вакфа могла его снять.
         /// </summary>
         private static void AppendTanwinNun(Cluster cluster, List<Segment> segments)
