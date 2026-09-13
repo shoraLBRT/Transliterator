@@ -1,0 +1,70 @@
+@inject IProfileRepository Profiles
+@inject ITransliterationService Transliteration
+@inject ILogger<App> Logger
+
+<main class="page">
+    <label for="arabic">Арабский текст</label>
+    <textarea id="arabic" class="arabic" dir="rtl" lang="ar" rows="6" spellcheck="false"
+              value="@_arabic" @oninput="OnInput"></textarea>
+
+    <label for="result">Транслитерация</label>
+    <textarea id="result" class="result" dir="ltr" rows="6" readonly
+              value="@_result"></textarea>
+
+    @if (_error is not null)
+    {
+        <p class="error" role="alert">@_error</p>
+    }
+</main>
+
+@code {
+    // Одна страница без маршрутов: поле ввода, расчёт, поле результата (D1).
+    // Выбор профиля появится с панелью профилей (D2), до тех пор — Standard.
+    private const string ProfileName = "Standard";
+
+    private TransliterationProfile? _profile;
+    private string _arabic = string.Empty;
+    private string _result = string.Empty;
+    private string? _error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _profile = await Profiles.GetProfileAsync(ProfileName);
+
+        if (_profile is null)
+            _error = $"Профиль «{ProfileName}» не найден.";
+    }
+
+    private void OnInput(ChangeEventArgs e)
+    {
+        _arabic = e.Value?.ToString() ?? string.Empty;
+        Calculate();
+    }
+
+    /// <summary>
+    /// Пересчёт на каждую правку, без кнопки. Профиль загружен один раз, и путь
+    /// «текст + профиль» (C2) синхронный: ответ на прежний ввод не может прийти
+    /// после ответа на новый и затереть его.
+    /// </summary>
+    private void Calculate()
+    {
+        if (_profile is null)
+            return;
+
+        try
+        {
+            _result = Transliteration.Transliterate(_arabic, _profile).TransliteratedText;
+            _error = null;
+        }
+        catch (Exception ex)
+        {
+            // Ловится всё, а не только TransliterationException: текст вставляют
+            // откуда придётся, и необработанное исключение в WebAssembly гасит
+            // страницу целиком — до перезагрузки она больше не отвечает.
+            // Ошибка разбора на одном вводе не должна отнимать поле у следующего.
+            Logger.LogError(ex, "Transliteration failed");
+            _result = string.Empty;
+            _error = ex.Message;
+        }
+    }
+}
