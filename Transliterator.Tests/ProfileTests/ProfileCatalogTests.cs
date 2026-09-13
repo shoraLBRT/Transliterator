@@ -88,9 +88,21 @@ namespace Transliterator.Tests.ProfileTests
             // где стоит дефис слияния и где идёт номер аята — решает конвейер.
             // Профиль вправе поменять каждую графему и не вправе сдвинуть ни одну
             // границу. Всё, что не пробел и не дефис, здесь схлопнуто в «·».
-            Assert.Equal(Skeleton(TransliterationPipeline.Transliterate(Fatiha)),
-                         Skeleton(TransliterationPipeline.Transliterate(Fatiha, Get(name))));
+            //
+            // Разделитель хамзы между гласными — не граница, а графема: Standard
+            // пишет его дефисом, Latin — той же ʾ (B7). Чтобы он не сошёл здесь
+            // за структуру, вариант снят с обоих профилей и берётся базовый ключ.
+            Assert.Equal(Skeleton(TransliterationPipeline.Transliterate(Fatiha, WithoutHiatus(TestProfiles.Standard))),
+                         Skeleton(TransliterationPipeline.Transliterate(Fatiha, WithoutHiatus(Get(name)))));
         }
+
+        private static TransliterationProfile WithoutHiatus(TransliterationProfile profile) =>
+            new(profile.Name, profile.Description)
+            {
+                Rules = profile.Rules
+                    .Where(rule => !rule.Key.EndsWith("|" + CyrillicRenderer.HiatusVariant))
+                    .ToDictionary(rule => rule.Key, rule => rule.Value)
+            };
 
         private static string Skeleton(string rendered)
         {

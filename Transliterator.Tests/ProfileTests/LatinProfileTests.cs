@@ -43,6 +43,18 @@ namespace Transliterator.Tests.ProfileTests
         }
 
         [Theory]
+        [InlineData("وَإِيَّاكَ نَعْبُدُ", "уа-иййаака на'буд", "waʾiyyaaka naʿbud")]
+        [InlineData("جَآءَ مَا", "джааа-а маа", "ǧaaaʾa maa")]
+        public void HamzaBetweenVowels_KeepsItsLetterInLatin(string arabic, string cyrillic, string latin)
+        {
+            // Разделитель между гласными нужен кириллице: там "ъ" спорит с диграфами
+            // "зъ", "хъ", "гъ". В латинице ʾ ни с чем не спорит и сама разводит
+            // гласные, поэтому "ء|hiatus" задан ей явно — той же ʾ, а не пропущен.
+            Assert.Equal(cyrillic, TransliterationPipeline.Transliterate(arabic));
+            Assert.Equal(latin, TransliterationPipeline.Transliterate(arabic, TestProfiles.Latin));
+        }
+
+        [Theory]
         [InlineData("رَبِّ", "robb")]  // фатха при твёрдой ر
         [InlineData("رِزْقِ", "rizq")] // касра держит ر мягкой
         public void Emphasis_ColorsTheVowelHere_Too(string arabic, string expected) =>

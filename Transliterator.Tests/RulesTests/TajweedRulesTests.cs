@@ -233,7 +233,7 @@ namespace Transliterator.Tests.RulesTests
     {
         [Theory]
         [InlineData("عَبَدتُّمْ", "'абаттум")]                        // د в ت, внутри слова
-        [InlineData("قَالَت طَّآئِفَةٌۭ", "qоолятI-тIоооъифаh")]        // ت в ط, на стыке слов
+        [InlineData("قَالَت طَّآئِفَةٌۭ", "qоолятI-тIооо-ифаh")]        // ت в ط, на стыке слов; хамза между гласными (B7)
         [InlineData("يَلْهَث ذَّٰلِكَ", "йальhазъ-зъаалик")]           // ث в ذ, на стыке слов
         public void SakinBeforeShadda_MergesIntoTheNextLetter(string arabic, string expected) =>
             // Механизм тот же, что у солнечного ляма и у нуна: первая буква
@@ -1042,11 +1042,16 @@ namespace Transliterator.Tests.RulesTests
             Assert.Equal("а'буду маа", TransliterationPipeline.Transliterate("أَعْبُدُ مَا"));
 
         [Theory]
-        [InlineData("جَآءَ مَا", "джааа-а маа", "джаааъа маа")]                             // после долгой
-        [InlineData("وَرَأَيْتَ ٱلنَّاسَ", "уаро-айта-ннааас", "уароъайта-ннааас")]             // после согласной
-        [InlineData("وَإِيَّاكَ نَسْتَعِينُ", "уа-иййаака наста'ииин", "уаъиййаака наста'ииин")] // под алифом
-        public void BetweenVowels_NeedsASeparator(string arabic, string expected, string today) =>
-            OpenBug.StillProduces("B7", arabic, expected, today);
+        [InlineData("جَآءَ مَا", "джааа-а маа")]                  // после долгой
+        [InlineData("وَرَأَيْتَ ٱلنَّاسَ", "уаро-айта-ннааас")]      // после огласованной согласной
+        [InlineData("وَإِيَّاكَ نَسْتَعِينُ", "уа-иййаака наста'ииин")] // под алифом, за приросшей буквой
+        [InlineData("يَٰٓأَيُّهَا", "йааа-аййуhаа")]               // 109:1, после мадда
+        [InlineData("وَٱمْرَأَتُهُۥ", "уамро-атуhуу")]              // 111:4
+        public void BetweenVowels_IsWrittenAsASeparator(string arabic, string expected) =>
+            // Хамза здесь разводит две гласные, и на письме это разрыв, а не буква:
+            // решение владельца при сверке корпуса (B7). Графему выбирает профиль —
+            // вариант "ء|hiatus", — а стоит ли хамза между гласными, решает рендерер.
+            Assert.Equal(expected, TransliterationPipeline.Transliterate(arabic));
 
         [Fact]
         public void WaslHamza_SeparatesNothing() =>
@@ -1054,12 +1059,24 @@ namespace Transliterator.Tests.RulesTests
             // «уаль-хIамд», а не «уаъаль-хIамд» и не «уа-аль-хIамд».
             Assert.Equal("уаль-хIамд", TransliterationPipeline.Transliterate("وَٱلْحَمْدُ"));
 
-        [Fact]
-        public void AtTheEndOfAWord_HasNothingToSeparate() =>
-            // Разделять нечего: за хамзой гласной нет. Отсюда и требование B7 —
-            // разделитель нужен вариантом ключа, а не заменой базовой графемы,
-            // иначе здесь повис бы дефис.
-            Assert.Equal("щайййъ", TransliterationPipeline.Transliterate("شَيْءٍ"));
+        [Theory]
+        [InlineData("شَيْءٍ", "щайййъ")]          // в конце слова, после безгласного глайда
+        [InlineData("جَآءَ", "джаааъ")]           // в конце слова после долгой: огласовку сняла пауза
+        [InlineData("ٱلسَّمَآءِ", "ас-самаааъ")]
+        [InlineData("قُرْءَانِ", "qуръааан")]      // после безгласной согласной
+        [InlineData("وَٱلْأَرْضِ", "уаль-ъардI")]  // после ляма артикля
+        [InlineData("يُؤْمِنُونَ", "йуъминууун")]  // с сукуном: гласная только перед ней
+        public void WithoutAVowelOnBothSides_KeepsItsLetter(string arabic, string expected)
+        {
+            // Разделять нечего, пока гласная есть лишь с одной стороны. Поэтому
+            // разделитель — вариант ключа, а не замена базовой графемы: с "ء": "-"
+            // здесь повис бы дефис, а после дефиса артикля встал бы второй.
+            var actual = TransliterationPipeline.Transliterate(arabic);
+
+            Assert.Equal(expected, actual);
+            Assert.DoesNotContain("--", actual);
+            Assert.False(actual.EndsWith('-'));
+        }
     }
 
     public class LetterCoverageTests
