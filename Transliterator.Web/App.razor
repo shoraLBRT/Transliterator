@@ -1,5 +1,7 @@
+@using Transliterator.Core.Repositories
 @using Transliterator.Core.Services
 @inject IProfileRepository Profiles
+@inject UserProfileRepository UserProfiles
 @inject ICorpusRepository Corpus
 @inject ITransliterationService Transliteration
 @inject IJSRuntime JS
@@ -7,7 +9,17 @@
 
 <div class="page">
     <aside class="settings">
-        <ProfilePanel Profiles="_profiles" Selected="_profile" SelectedChanged="SelectAsync" />
+        <ProfilePanel Profiles="_profiles" BuiltIn="_builtIn" Selected="_profile" SelectedChanged="SelectAsync" />
+
+        @if (_notices.Count > 0)
+        {
+            <ul class="notices" role="status">
+                @foreach (var notice in _notices)
+                {
+                    <li>@notice</li>
+                }
+            </ul>
+        }
 
         @if (_surahs.Count > 0)
         {
@@ -47,6 +59,8 @@
 
     private IReadOnlyList<TransliterationProfile> _profiles = Array.Empty<TransliterationProfile>();
     private IReadOnlyList<CorpusSurah> _surahs = Array.Empty<CorpusSurah>();
+    private IReadOnlySet<string> _builtIn = new HashSet<string>();
+    private IReadOnlyList<string> _notices = Array.Empty<string>();
     private TransliterationProfile? _profile;
     private string _arabic = string.Empty;
     private string _result = string.Empty;
@@ -84,6 +98,17 @@
         foreach (var name in await Transliteration.GetAvailableProfilesAsync())
             if (await Profiles.GetProfileAsync(name) is { } profile)
                 profiles.Add(profile);
+
+        var builtIn = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var profile in profiles)
+            if (await UserProfiles.IsBuiltInAsync(profile.Name))
+                builtIn.Add(profile.Name);
+
+        _builtIn = builtIn;
+
+        // Битая запись в localStorage список не роняет: профиль пропущен,
+        // и страница говорит, какой и почему.
+        _notices = UserProfiles.Problems.ToList();
 
         return profiles;
     }
