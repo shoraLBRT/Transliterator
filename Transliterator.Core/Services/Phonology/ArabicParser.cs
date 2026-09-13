@@ -41,7 +41,10 @@ namespace Transliterator.Core.Services.Phonology
             // которая отделит его от следующего слова.
             var pendingWaqf = WaqfMark.None;
 
-            foreach (var cluster in BuildClusters(normalizedText))
+            var clusters = BuildClusters(normalizedText);
+            DetectImlaiWasl(clusters);
+
+            foreach (var cluster in clusters)
             {
                 if (ArabicScript.IsWaqfMark(cluster.Base))
                 {
@@ -91,7 +94,6 @@ namespace Transliterator.Core.Services.Phonology
             // конец текста и так пауза.
 
             MarkWordStarts(segments);
-            DetectImlaiWasl(segments);
             return segments;
         }
 
@@ -370,43 +372,82 @@ namespace Transliterator.Core.Services.Phonology
         }
 
         /// <summary>
-        /// В современной орфографии артикль пишется обычным алифом (الحمد), а не
-        /// васлевым (ٱلحمد). Опознаём такой алиф, чтобы правило васли работало
-        /// не только на тексте в написании усмани.
+        /// В современной орфографии хамзат аль-васль пишется обычным алифом (الحمد,
+        /// اهدنا), а не васлевым (ٱلحمد, ٱهدنا). Опознаём такой алиф и меняем его на ٱ,
+        /// чтобы дальше по конвейеру доехало одно написание, а не два.
         /// <para>
-        /// Голый алиф своего согласного не имеет, и <c>CanonicalLetter</c> его ни к чему
-        /// не сводит: в середине слова он ушёл бы в долготу предыдущей фатхи. Раз здесь
-        /// выяснилось, что это хамзат аль-васль, букву надо поменять на хамзу тоже —
-        /// дальше по конвейеру должно доехать одно написание, а не два.
+        /// Решать приходится до разбора, на кластерах: голый алиф своего согласного
+        /// не имеет, и за приросшей буквой (وَالْفَتْحُ) разбор сразу отдал бы его
+        /// в долготу её фатхи — сегмента, который можно было бы переписать, не осталось бы.
         /// </para>
         /// <para>
-        /// Носителем артикля признаётся только голый алиф (ا). Носитель хамзы
-        /// (أ, إ) — это хамзат аль-qотI, она произносится всегда, и алифом артикля
-        /// не бывает: أَلَمْ, إِلَّا, أَلْقَى начинаются на алиф с лямом, но артикля
-        /// в них нет. Та же граница проведена в <c>ArabicNormalizer</c>, где имя
-        /// Аллаха опознаётся по ляму после ا или ٱ, но не после أ.
+        /// Признак васли — безгласный согласный сразу за ней: ради него она и пишется,
+        /// начать слово с безгласного нельзя. Долгая ā перед безгласным внутри слова
+        /// не встречается, кроме мадда лязим перед удвоением, и отсюда все границы:
+        /// </para>
+        /// <list type="bullet">
+        ///   <item>до алифа в слове — только приставки (<see cref="ArabicScript.Proclitics"/>)
+        ///         с краткой гласной. Иначе алиф стоит внутри слова и значит долготу;</item>
+        ///   <item>за алифом — артикль (<see cref="IsArticleLam"/>) или согласный
+        ///         с сукуном или шаддой, и после него слово продолжается;</item>
+        ///   <item>шадда без ляма артикля засчитывается, только если перед алифом нет
+        ///         приставки или приставка глагольная. Слияние в начале слова с васлей
+        ///         бывает лишь у глагола (ٱتَّقُوا), а за ب и ك алиф перед шаддой —
+        ///         мадд лязим имени: كَافَّةً;</item>
+        ///   <item>огласовку на алифе допускает только артикль (اَلْحَمْدُ). Фатха
+        ///         на голом алифе перед безгласным вне артикля — это хамза, у которой
+        ///         не написали носитель (اَنْتُمْ), а не васля.</item>
+        /// </list>
+        /// <para>
+        /// Носителем васли признаётся только голый алиф (ا). Носитель хамзы
+        /// (أ, إ) — это хамзат аль-qотI, она произносится всегда, и васлей
+        /// не бывает: أَلَمْ, إِلَّا, أَلْقَى, وَأَنْتُمْ. Та же граница проведена
+        /// в <c>ArabicNormalizer</c>, где имя Аллаха опознаётся по ляму после ا или ٱ,
+        /// но не после أ. Хамзу, у которой носитель не написан вовсе (انْتُمْ), от васли
+        /// по письму не отличить, и это уже не орфография, а опечатка.
         /// </para>
         /// </summary>
-        private static void DetectImlaiWasl(List<Segment> segments)
+        private static void DetectImlaiWasl(List<Cluster> clusters)
         {
-            for (int i = 0; i < segments.Count; i++)
+            for (int i = 0; i < clusters.Count; i++)
             {
-                var segment = segments[i];
-                if (segment.Kind != SegmentKind.Consonant) continue;
-                if (!segment.StartsWord || segment.IsWaslHamza) continue;
-                if (segment.Letter != ArabicScript.AlefStr) continue;
-                if (segment.Vowel is not (Harakah.None or Harakah.Fatha)) continue;
+                var alef = clusters[i];
+                if (alef.Base != ArabicScript.Alef) continue;
+                if (!FollowsOnlyProclitics(clusters, i, out var proclitic)) continue;
 
-                int lamIndex = SegmentNavigator.NextConsonantInWord(segments, i);
-                if (lamIndex < 0 || segments[lamIndex].Letter != ArabicScript.LamStr) continue;
+                int second = NextLetterInWord(clusters, i);
+                if (second < 0) continue;
+                int third = NextLetterInWord(clusters, second);
+                if (third < 0) continue;
 
-                int afterIndex = SegmentNavigator.NextConsonantInWord(segments, lamIndex);
-                if (afterIndex < 0) continue;
-                if (!IsArticleLam(segments[lamIndex], segments[afterIndex])) continue;
+                bool isWasl = IsArticleLam(clusters[second], clusters[third])
+                    ? alef.Marks.All(m => m == ArabicScript.Fatha)
+                    : alef.Marks.Count == 0 && IsSakinAfterWasl(clusters[second], proclitic);
 
-                segment.Letter = ArabicScript.HamzaStr;
-                segment.IsWaslHamza = true;
+                if (isWasl)
+                    alef.Base = ArabicScript.AlefWasla;
             }
+        }
+
+        /// <summary>
+        /// До алифа в его слове стоят только приставки с краткой гласной — или ничего.
+        /// Через <paramref name="proclitic"/> возвращает ближайшую к алифу приставку.
+        /// </summary>
+        private static bool FollowsOnlyProclitics(List<Cluster> clusters, int index, out Cluster? proclitic)
+        {
+            proclitic = null;
+
+            for (int i = index - 1; i >= 0 && ArabicScript.Consonants.Contains(clusters[i].Base); i--)
+            {
+                var letter = clusters[i];
+                if (!ArabicScript.Proclitics.Contains(letter.Base)) return false;
+                if (letter.Marks.Count != 1 || letter.Marks[0] is not (ArabicScript.Fatha or ArabicScript.Kasra))
+                    return false;
+
+                proclitic ??= letter;
+            }
+
+            return true;
         }
 
         /// <summary>
@@ -420,8 +461,37 @@ namespace Transliterator.Core.Services.Phonology
         ///         а огласовка на нём — от следующего слога, не его собственная.</item>
         /// </list>
         /// </summary>
-        private static bool IsArticleLam(Segment lam, Segment after) =>
-            lam.Vowel == Harakah.Sukun || lam.Shadda || after.Shadda;
+        private static bool IsArticleLam(Cluster lam, Cluster after) =>
+            lam.Base == ArabicScript.Lam
+            && (lam.Has(ArabicScript.Sukun) || lam.Has(ArabicScript.Shadda) || after.Has(ArabicScript.Shadda));
+
+        /// <summary>
+        /// Безгласный согласный за васлей вне артикля: сукун (ٱهْدِنَا, ٱسْتَغْفِرْ) или
+        /// первая половина удвоения (ٱتَّقُوا) — последняя только у глагола.
+        /// </summary>
+        private static bool IsSakinAfterWasl(Cluster letter, Cluster? proclitic) =>
+            letter.Has(ArabicScript.Sukun)
+            || (letter.Has(ArabicScript.Shadda)
+                && (proclitic is null || ArabicScript.VerbProclitics.Contains(proclitic.Base)));
+
+        /// <summary>
+        /// Следующая буква того же слова, иначе -1. Граница слова та же, что у разбора:
+        /// пробел, знак вакфа, цифра; прочие знаки пропускаются, как их пропускает
+        /// <c>SegmentNavigator.NextConsonantInWord</c>.
+        /// </summary>
+        private static int NextLetterInWord(List<Cluster> clusters, int index)
+        {
+            for (int i = index + 1; i < clusters.Count; i++)
+            {
+                var c = clusters[i].Base;
+                if (ArabicScript.Consonants.Contains(c))
+                    return i;
+                if (char.IsWhiteSpace(c) || ArabicScript.IsWaqfMark(c) || char.IsDigit(c) || ArabicScript.IsArabicDigit(c))
+                    return -1;
+            }
+
+            return -1;
+        }
 
     }
 }

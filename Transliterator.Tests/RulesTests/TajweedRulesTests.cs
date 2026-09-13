@@ -878,11 +878,12 @@ namespace Transliterator.Tests.RulesTests
     }
 
     /// <summary>
-    /// Три ветки <c>ArabicParser.DetectImlaiWasl</c>. В современной орфографии
+    /// Ветки <c>ArabicParser.DetectImlaiWasl</c>. В современной орфографии
     /// хамзат аль-васль пишется обычным алифом, и опознать её больше не по чему —
-    /// только по тому, что за ней стоит артикль. Веток ровно столько, сколько
-    /// способов написать этот артикль, и корпус их не разводит: аят проверяется
-    /// целиком, и по падению не видно, какая из трёх не сработала.
+    /// только по тому, что за ней стоит: артикль или безгласный согласный. Артикль
+    /// пишут тремя способами, васля бывает в начале слова и за приросшей буквой,
+    /// и корпус этих веток не разводит: аят проверяется целиком, и по падению
+    /// не видно, какая не сработала.
     /// <para>
     /// Ложное срабатывание проверяется наравне с пропуском: артикль опознаётся
     /// по чужим признакам — по ляму и его огласовке, — а лям после алифа бывает
@@ -914,6 +915,66 @@ namespace Transliterator.Tests.RulesTests
 
             Assert.True(lam.Shadda);
             Assert.NotEqual(Harakah.Sukun, lam.Vowel);
+        }
+
+        [Theory]
+        [InlineData("وَالْفَتْحُ", "وَٱلْفَتْحُ", "уаль-фатхI")]       // 110:1, лунный лям за союзом
+        [InlineData("وَالنَّاسِ", "وَٱلنَّاسِ", "уаннааас")]           // 114:6, солнечный
+        [InlineData("وَالَّذِينَ", "وَٱلَّذِينَ", "уаллязъииин")]     // шадда на самом ляме
+        [InlineData("بِالْحَقِّ", "بِٱلْحَقِّ", "биль-хIаqq")]         // предлог с касрой
+        [InlineData("كَالْعِهْنِ", "كَٱلْعِهْنِ", "каль-'иhн")]
+        [InlineData("وَبِالْحَقِّ", "وَبِٱلْحَقِّ", "уабиль-хIаqq")]   // две приставки подряд
+        public void ArticleAfterAProclitic_ReadsLikeTheWaslSpelling(string imlai, string uthmani, string expected)
+        {
+            // Приросшая буква не делает слово другим словом: артикль за ней тот же.
+            // Но алиф здесь уже не начинает слово, и без этой ветки разбор отдал бы
+            // его в долготу фатхи приставки — «уаальфатхI» (B8).
+            Assert.Equal(expected, TransliterationPipeline.Transliterate(uthmani));
+            Assert.Equal(expected, TransliterationPipeline.Transliterate(imlai));
+        }
+
+        [Theory]
+        [InlineData("اهْدِنَا", "ٱهْدِنَا", "иhдинаа")]                   // 1:6, в начале высказывания
+        [InlineData("ابْنَ مَرْيَمَ", "ٱبْنَ مَرْيَمَ", "ибна марйам")]       // одно из семи имён
+        [InlineData("اتَّقُوا", "ٱتَّقُوا", "уттаqуу")]                   // удвоение вместо сукуна
+        [InlineData("رَبِّ ارْحَمْ", "رَبِّ ٱرْحَمْ", "робби-рхIам")]      // в соединении
+        [InlineData("وَاسْتَغْفِرْهُ", "وَٱسْتَغْفِرْهُ", "уастагъфирh")]   // 110:3, за приросшей буквой
+        [InlineData("وَامْرَأَتُهُۥ", "وَٱمْرَأَتُهُۥ", "уамро-атуhуу")]     // 111:4
+        [InlineData("فَاتَّقُوا", "فَٱتَّقُوا", "фаттаqуу")]               // удвоение за союзом
+        [InlineData("لَاسْتَكْثَرْتُ", "لَٱسْتَكْثَرْتُ", "лястакс́арт")]    // за лямом подтверждения
+        public void WaslOutsideTheArticle_ReadsLikeTheWaslSpelling(string imlai, string uthmani, string expected)
+        {
+            // Лям здесь не нужен: васля пишется ради безгласного согласного за ней,
+            // и он же её выдаёт. Огласовку в начале высказывания выбирает уже
+            // стадия 4 — разбору достаточно отдать ей ту же ٱ, что в усмани (B8).
+            Assert.Equal(expected, TransliterationPipeline.Transliterate(uthmani));
+            Assert.Equal(expected, TransliterationPipeline.Transliterate(imlai));
+        }
+
+        [Theory]
+        [InlineData("وَأَنْتُمْ", "уа-антум")]  // за приставкой хамза, а не васля
+        [InlineData("فَإِذَا", "фа-изъаа")]
+        [InlineData("وَالِدٍ", "уаалид")]     // за алифом огласованный согласный — это долгота
+        [InlineData("فَاكِهَةٌ", "фаакиhаh")]
+        [InlineData("فَلَا", "фаляя")]         // алиф в конце слова
+        public void ProcliticBeforeAnAlefThatIsNotWasl_KeepsTheLongVowel(string arabic, string expected) =>
+            // Приставка перед алифом — ещё не повод искать васлю: и و, и ف бывают
+            // корневыми, а за приставкой бывает хамзат аль-qотI.
+            Assert.Equal(expected, TransliterationPipeline.Transliterate(arabic));
+
+        [Theory]
+        [InlineData("كَافَّةً", "ك")]         // шадда за ك: мадд лязим имени
+        [InlineData("دَابَّةٍ", "د")]         // та же шадда, но алиф не за приставкой
+        public void LongVowelBeforeShadda_IsNotWasl(string arabic, string letterBeforeAlef)
+        {
+            // Удвоение за алифом выдаёт васлю только у глагола (ٱتَّقُوا). Перед
+            // именем та же шадда — мадд лязим, и алиф остаётся долготой. Проверяется
+            // сама долгота, а не её запись: сколько харакатов у мадда лязим без
+            // маддаха, решает стадия 9, а не эта ветка.
+            var consonants = TransliterationPipeline.Consonants(arabic);
+
+            Assert.True(consonants.First(s => s.Letter == letterBeforeAlef).VowelLength >= 2);
+            Assert.DoesNotContain(consonants, s => s.IsWaslHamza && !s.StartsWord);
         }
 
         [Theory]

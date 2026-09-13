@@ -28,11 +28,6 @@ namespace Transliterator.Tests.CorpusTests
 
         private static readonly Dictionary<string, Divergence> _entries = new()
         {
-            ["1:6 имля"] = new("B8", "hдина-сIсIироотIо-ль-мустаqииим"),
-            ["110:1 имля"] = new("B8", "изъаа джааа-а насIру-ллааhи уаальфатхI"),
-            ["110:3 имля"] = new("B8", "фасаббихI бихIамди роббика уаастагъфирhу иннаhуу каана таууаабаа"),
-            ["111:4 имля"] = new("B8", "уаамро-атуhуу хIаммаалята-ль-хIатIоб"),
-            ["114:6 имля"] = new("B8", "мина-ль-джиннати уааннааас"),
         };
 
         public static IReadOnlyDictionary<string, Divergence> Entries => _entries;
