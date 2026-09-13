@@ -265,7 +265,7 @@ namespace Transliterator.Tests.RulesTests
         {
             // Идгам накыс в بَسَطتَ мусхаф шаддой не отмечает — ط сохраняет свой итбак,
             // и полного слияния там нет. Нет отметки — нет и слияния.
-            Assert.Equal("басотIт", TransliterationPipeline.Transliterate("بَسَطتَ"));
+            Assert.Equal("басатIт", TransliterationPipeline.Transliterate("بَسَطتَ"));
             Assert.DoesNotContain(TransliterationPipeline.Consonants("بَسَطتَ"), s => s.IsGeminateFirstHalf);
         }
 
@@ -372,7 +372,7 @@ namespace Transliterator.Tests.RulesTests
         [Fact]
         public void MeemSakina_MergesIntoMeem() =>
             // Идгам мисляйн: два мима сливаются в один долгий носовой.
-            Assert.Equal("ляhум-могъфироh", TransliterationPipeline.Transliterate("لَهُم مَّغْفِرَةٌ"));
+            Assert.Equal("ляhум-магъфироh", TransliterationPipeline.Transliterate("لَهُم مَّغْفِرَةٌ"));
 
         [Fact]
         public void MeemSakina_IsNasalizedBeforeBaAndClearElsewhere()
@@ -450,9 +450,24 @@ namespace Transliterator.Tests.RulesTests
             Assert.Equal(expected, TransliterationPipeline.Transliterate(arabic));
 
         [Fact]
-        public void SakinEmphatic_ColoursPrecedingVowel() =>
-            // Эмфаза распространяется и назад: прежде правило смотрело только вперёд.
-            Assert.Equal("бор", TransliterationPipeline.Transliterate("بَر"));
+        public void SakinEmphatic_LeavesPrecedingVowelAlone()
+        {
+            // Назад твёрдость не красит (B5): у гласной свой согласный, и решает он.
+            // Сама ر при этом твёрдая — по предыдущей фатхе, и это решение не меняется.
+            Assert.Equal("бар", TransliterationPipeline.Transliterate("بَر"));
+            Assert.Equal(Emphasis.Heavy, TransliterationPipeline.Consonants("بَر").First(s => s.Letter == "ر").Emphasis);
+        }
+
+        [Theory]
+        [InlineData("نَصْرُ ٱللَّهِ", "насIру-ллаааh")]      // 110:1
+        [InlineData("وَٱسْتَغْفِرْهُ", "уастагъфирh")]       // 110:3
+        [InlineData("ٱلْمَغْضُوبِ", "аль-магъдIуууб")]       // 1:7
+        [InlineData("سَيَصْلَىٰ", "сайасIляаа")]            // 111:3, «ляаа» — это B6
+        [InlineData("مِن شَرِّ مَا خَلَقَ", "мин щарри маа хъоляq")] // 113:2
+        public void SakinEmphatic_ColoursOnlyItsOwnVowel(string arabic, string expected) =>
+            // Своя гласная твёрдого согласного по-прежнему окрашена: «хъо» в «хъоляq»
+            // остаётся, а лям перед безгласной ق снова мягкий.
+            Assert.Equal(expected, TransliterationPipeline.Transliterate(arabic));
 
         [Fact]
         public void LamOfAllah_IsHeavyAfterFatha() =>
@@ -488,10 +503,10 @@ namespace Transliterator.Tests.RulesTests
         {
             // Пара разводит два объяснения одного вывода. В نَصْرُ сукун на ص написан;
             // в ٱلْفَلَقِ у ق своя касра, и безгласной её делает пауза. Гласная перед
-            // ними окрашивается в обоих случаях — значит, решение принимается уже
-            // после вакфа и на написание не смотрит.
-            OpenBug.StillProduces("B5", "نَصْرُ", expected: "насIр", today: "носIр");
-            OpenBug.StillProduces("B5", "ٱلْفَلَقِ", expected: "аль-фаляq", today: "аль-фалоq");
+            // ними не окрашивается ни в одном из случаев — назад твёрдость не красит
+            // вовсе, и откуда взялась безгласность, значения не имеет (B5).
+            Assert.Equal("насIр", TransliterationPipeline.Transliterate("نَصْرُ"));
+            Assert.Equal("аль-фаляq", TransliterationPipeline.Transliterate("ٱلْفَلَقِ"));
         }
 
         [Fact]
@@ -762,14 +777,14 @@ namespace Transliterator.Tests.RulesTests
             var profile = WithQalqalah("э", strong: "э̄");
 
             Assert.Equal("qодэ афляхI", TransliterationPipeline.Transliterate("قَدْ أَفْلَحَ", profile));
-            Assert.Equal("хъолоqэ̄", TransliterationPipeline.Transliterate("خَلَقَ", profile));
+            Assert.Equal("хъоляqэ̄", TransliterationPipeline.Transliterate("خَلَقَ", profile));
         }
 
         [Fact]
         public void StrongGrapheme_FallsBackToThePlainOne() =>
             // Различать степени на письме профиль не обязан: кальканя кубра — тот же
             // отзвук, только громче.
-            Assert.Equal("хъолоqэ",
+            Assert.Equal("хъоляqэ",
                 TransliterationPipeline.Transliterate("خَلَقَ", WithQalqalah("э", strong: null)));
 
         [Fact]
@@ -933,7 +948,7 @@ namespace Transliterator.Tests.RulesTests
         public void WithSuperscriptAlef_MakesASegmentOfItsOwn() =>
             // Долготы не выходит: появляется отдельный сегмент со своей фатхой
             // длиной 2, и на письме краткая «а» слипается с ней в «ааа».
-            OpenBug.StillProduces("B5, B6", "أَغْنَىٰ", expected: "агънаа", today: "огънааа");
+            OpenBug.StillProduces("B6", "أَغْنَىٰ", expected: "агънаа", today: "агънааа");
 
         [Theory]
         [InlineData("عَلَىٰ", "'аляаа")]

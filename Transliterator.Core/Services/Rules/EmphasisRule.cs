@@ -186,9 +186,12 @@ namespace Transliterator.Core.Services.Rules
         }
 
         /// <summary>
-        /// Твёрдость окрашивает гласную: и свою, и предыдущую, если сам согласный безгласен
-        /// (بَرْ → "бор"). Мягкий лям, наоборот, смягчает свою гласную: "ля", а не "ла".
-        /// Конкретные графемы задаёт профиль, а не это правило.
+        /// Твёрдость окрашивает только свою гласную. Назад она не красит: безгласный
+        /// твёрдый согласный гласную перед собой не трогает — "насIру" (نَصْرُ), "бар"
+        /// (بَرْ), "фаляq" (ٱلْفَلَقِ). Прежде красилась и она (B5), но у предыдущей
+        /// гласной свой согласный, и решает её качество он. Мягкий лям, наоборот,
+        /// смягчает свою гласную: "ля", а не "ла". Конкретные графемы задаёт профиль,
+        /// а не это правило.
         /// </summary>
         private static VowelVariant ResolveVowelVariant(IList<Segment> segments, int index)
         {
@@ -196,17 +199,6 @@ namespace Transliterator.Core.Services.Rules
 
             if (segment.Emphasis == Emphasis.Heavy)
                 return segment.Letter[0] == ArabicScript.Lam ? VowelVariant.Plain : VowelVariant.Heavy;
-
-            int next = SegmentNavigator.NextConsonantInWord(segments, index);
-            if (next >= 0)
-            {
-                var following = segments[next];
-                bool followingIsClosing = following.Vowel is Harakah.Sukun or Harakah.None;
-                if (followingIsClosing && !following.IsGeminateFirstHalf
-                                       && following.Emphasis == Emphasis.Heavy
-                                       && following.Letter[0] != ArabicScript.Lam)
-                    return VowelVariant.Heavy;
-            }
 
             if (segment.Letter[0] == ArabicScript.Lam)
                 return VowelVariant.Soft;
