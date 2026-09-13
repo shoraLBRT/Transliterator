@@ -1031,15 +1031,20 @@ namespace Transliterator.Tests.RulesTests
             Assert.Equal(expected, TransliterationPipeline.Transliterate(withAlef));
         }
 
-        [Fact]
-        public void WithFatha_IsAConsonantOnlyInTheModernSpelling()
+        [Theory]
+        [InlineData("وَلِيَ", "уалий")]
+        [InlineData("وَلِىَ", "уалий")]
+        [InlineData("وَلِىَ دِينِ", "уалийа дииин")]  // 109:6
+        public void WithItsOwnVowel_IsTheConsonantYa_InBothSpellings(string arabic, string expected)
         {
-            // На ى написана фатха — значит согласная, а не долгота. С обычной ي
-            // так и выходит; у максуры сегмента с ي не остаётся вовсе, и «й»
-            // из вывода пропадает. Запись, а не одобрение: заведено багом B10.
-            Assert.Equal("уалий", TransliterationPipeline.Transliterate("وَلِيَ"));
-            Assert.Equal("уали", TransliterationPipeline.Transliterate("وَلِىَ"));
-            Assert.DoesNotContain(TransliterationPipeline.Consonants("وَلِىَ"), s => s.Letter == "ي");
+            // На ى написана фатха — значит согласная, а не долгота, и та же «й»,
+            // что у обычной ي. Прежде максура становилась звучащей ا, которую
+            // ни один профиль не пишет, и «й» пропадала: «уали» (B10).
+            Assert.Equal(expected, TransliterationPipeline.Transliterate(arabic));
+            // Фатха своя, но в конце текста её снимает пауза — остаётся она в OriginalVowel.
+            Assert.Contains(TransliterationPipeline.Consonants(arabic),
+                s => s.Letter == "ي" && (s.Vowel == Harakah.Fatha || s.OriginalVowel == Harakah.Fatha));
+            Assert.DoesNotContain(TransliterationPipeline.Consonants(arabic), s => s.Letter == "ا");
         }
 
         [Theory]
