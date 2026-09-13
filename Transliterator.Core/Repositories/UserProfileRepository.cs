@@ -180,7 +180,7 @@ namespace Transliterator.Core.Repositories
         }
 
         /// <summary>«Standard (копия)», затем «Standard (копия 2)» — первое свободное имя.</summary>
-        private async Task<string> FreeCopyNameAsync(string name)
+        public async Task<string> FreeCopyNameAsync(string name)
         {
             var candidate = $"{name} ({CopySuffix})";
 
