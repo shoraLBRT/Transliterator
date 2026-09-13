@@ -1,7 +1,9 @@
 @using Transliterator.Core.Repositories
 @using Transliterator.Core.Services
+@using Transliterator.Domain.Exceptions
 @inject IProfileRepository Profiles
 @inject UserProfileRepository UserProfiles
+@inject ProfileEditor Editor
 @inject ICorpusRepository Corpus
 @inject ITransliterationService Transliteration
 @inject IJSRuntime JS
@@ -10,6 +12,11 @@
 <div class="page">
     <aside class="settings">
         <ProfilePanel Profiles="_profiles" BuiltIn="_builtIn" Selected="_profile" SelectedChanged="SelectAsync" />
+
+        @if (_profile is not null)
+        {
+            <ProfileActions Profile="_profile" IsBuiltIn="_builtIn.Contains(_profile.Name)" Changed="OnProfilesChangedAsync" />
+        }
 
         @if (_notices.Count > 0)
         {
@@ -41,9 +48,14 @@
             <p class="error" role="alert">@_error</p>
         }
 
+        @if (_editError is not null)
+        {
+            <p class="error" role="alert">@_editError</p>
+        }
+
         @if (_profile is not null)
         {
-            <RulesPanel Profile="_profile" />
+            <RulesPanel Profile="_profile" Editable="!_builtIn.Contains(_profile.Name)" RuleChanged="ChangeRuleAsync" />
         }
     </main>
 </div>
@@ -65,6 +77,7 @@
     private string _arabic = string.Empty;
     private string _result = string.Empty;
     private string? _error;
+    private string? _editError;
 
     protected override async Task OnInitializedAsync()
     {
@@ -151,9 +164,53 @@
     private async Task SelectAsync(TransliterationProfile profile)
     {
         _profile = profile;
+        _editError = null;
         Calculate();
 
         await StoreProfileNameAsync(profile.Name);
+    }
+
+    /// <summary>
+    /// Профиль создан, переименован или удалён (E2): список перечитывается, и выбирается
+    /// тот профиль, с которым только что работали, — после удаления Standard.
+    /// </summary>
+    private async Task OnProfilesChangedAsync(string? selectName)
+    {
+        _profiles = await LoadProfilesAsync();
+
+        var next = _profiles.FirstOrDefault(p => p.Name == selectName)
+                ?? _profiles.FirstOrDefault(p => p.Name == DefaultProfileName)
+                ?? _profiles.FirstOrDefault();
+
+        if (next is null)
+        {
+            _profile = null;
+            return;
+        }
+
+        await SelectAsync(next);
+    }
+
+    /// <summary>
+    /// Правка графемы: сразу на тексте и сразу в хранилище. Не записалось — правка
+    /// всё равно видна, а под полем результата сказано, что она не сохранена.
+    /// </summary>
+    private async Task ChangeRuleAsync(KeyValuePair<string, string> edit)
+    {
+        if (_profile is null)
+            return;
+
+        try
+        {
+            await Editor.SetRuleAsync(_profile, edit.Key, edit.Value);
+            _editError = null;
+        }
+        catch (TransliterationException ex)
+        {
+            _editError = ex.Message;
+        }
+
+        Calculate();
     }
 
     /// <summary>

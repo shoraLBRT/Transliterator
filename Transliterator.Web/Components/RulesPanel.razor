@@ -4,6 +4,11 @@
 <details class="rules">
     <summary>Правила профиля «@Profile.Name»</summary>
 
+    @if (!Editable)
+    {
+        <p class="rules-hint">Встроенный профиль не редактируется — создайте копию.</p>
+    }
+
     <input type="search" class="rules-search" aria-label="Поиск по ключу"
            placeholder="Поиск по ключу: буква или вариант (heavy, waqf…)"
            @bind="_query" @bind:event="oninput" />
@@ -32,7 +37,7 @@
                             <span class="rule-letter" dir="rtl" lang="ar">@Display(group.BaseKey)</span>
                             <code class="rule-code">@CodePoints(group.BaseKey)</code>
                         </th>
-                        <td>@Grapheme(group.BaseValue)</td>
+                        <td>@Cell(group.BaseKey)</td>
                     </tr>
 
                     @foreach (var variant in group.Variants)
@@ -42,7 +47,7 @@
                                 <span class="rule-variant-of" aria-hidden="true">↳</span>
                                 <code title="@variant.Key">@variant.Name</code>
                             </th>
-                            <td>@Grapheme(variant.Value)</td>
+                            <td>@Cell(variant.Key)</td>
                         </tr>
                     }
                 </tbody>
@@ -55,12 +60,21 @@
     [Parameter, EditorRequired]
     public TransliterationProfile Profile { get; set; } = default!;
 
+    /// <summary>Свой профиль правится прямо в таблице; встроенный — только смотрится.</summary>
+    [Parameter]
+    public bool Editable { get; set; }
+
+    /// <summary>Графема изменена: ключ и новое значение. Сохраняет и пересчитывает страница.</summary>
+    [Parameter]
+    public EventCallback<KeyValuePair<string, string>> RuleChanged { get; set; }
+
     private TransliterationProfile? _grouped;
     private IReadOnlyList<RuleGroup> _groups = Array.Empty<RuleGroup>();
     private string _query = string.Empty;
 
     // Группы пересобираются только при смене профиля, а не на каждую отрисовку:
-    // страница перерисовывается на каждую правку текста.
+    // страница перерисовывается на каждую правку текста. Значения же берутся
+    // из словаря профиля в момент отрисовки — правка графемы группы не меняет.
     protected override void OnParametersSet()
     {
         if (ReferenceEquals(_grouped, Profile))
@@ -81,6 +95,22 @@
 
     private static string CodePoints(string key) =>
         string.Join(" ", key.Select(c => $"U+{(int)c:X4}"));
+
+    /// <summary>
+    /// Графема ключа: полем ввода у своего профиля, текстом у встроенного.
+    /// Незаданный базовый ключ полем не становится — ключи добавляет не таблица.
+    /// </summary>
+    private RenderFragment Cell(string key)
+    {
+        var value = Profile.Rules.TryGetValue(key, out var found) ? found : null;
+
+        if (!Editable || value is null)
+            return Grapheme(value);
+
+        return @<input class="rule-input" value="@value" aria-label="@($"Графема для {key}")"
+                       placeholder="пусто — не пишется" spellcheck="false" autocomplete="off"
+                       @oninput="e => RuleChanged.InvokeAsync(new(key, e.Value?.ToString() ?? string.Empty))" />;
+    }
 
     /// <summary>
     /// Три разных состояния — три разных вида. Пустая графема — решение профиля

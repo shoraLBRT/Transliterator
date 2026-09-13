@@ -1,0 +1,158 @@
+@using Transliterator.Core.Services
+@using Transliterator.Domain.Exceptions
+@inject ProfileEditor Editor
+
+<div class="profile-actions">
+    @switch (_mode)
+    {
+        case Mode.None:
+            <div class="buttons">
+                <button type="button" @onclick="StartCopyAsync">Создать копию</button>
+                @if (!IsBuiltIn)
+                {
+                    <button type="button" @onclick="StartRename">Переименовать</button>
+                    <button type="button" class="danger" @onclick="StartDelete">Удалить</button>
+                }
+            </div>
+            break;
+
+        case Mode.Copy:
+        case Mode.Rename:
+            <form class="profile-name-form" @onsubmit="SubmitNameAsync" @onsubmit:preventDefault>
+                <label for="profile-name">
+                    @(_mode == Mode.Copy ? $"Имя копии профиля «{Profile.Name}»" : $"Новое имя профиля «{Profile.Name}»")
+                </label>
+                <input id="profile-name" autocomplete="off" spellcheck="false"
+                       @bind="_name" @bind:event="oninput" @bind:after="CheckNameAsync" />
+
+                @if (_nameProblem is not null)
+                {
+                    <p class="field-error" role="alert">@_nameProblem</p>
+                }
+
+                <div class="buttons">
+                    <button type="submit" disabled="@(_nameProblem is not null)">
+                        @(_mode == Mode.Copy ? "Создать" : "Переименовать")
+                    </button>
+                    <button type="button" @onclick="Cancel">Отмена</button>
+                </div>
+            </form>
+            break;
+
+        case Mode.Delete:
+            <div class="profile-confirm" role="alertdialog" aria-labelledby="profile-confirm-text">
+                <p id="profile-confirm-text">Удалить профиль «@Profile.Name»? Вернуть его будет нельзя.</p>
+                <div class="buttons">
+                    <button type="button" class="danger" @onclick="DeleteAsync">Удалить</button>
+                    <button type="button" @onclick="Cancel">Отмена</button>
+                </div>
+            </div>
+            break;
+    }
+
+    @if (_error is not null)
+    {
+        <p class="field-error" role="alert">@_error</p>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public TransliterationProfile Profile { get; set; } = default!;
+
+    /// <summary>Встроенный профиль можно только скопировать.</summary>
+    [Parameter]
+    public bool IsBuiltIn { get; set; }
+
+    /// <summary>
+    /// Список профилей изменился. Аргумент — имя профиля, который надо выбрать:
+    /// созданная копия, новое имя; <c>null</c> после удаления.
+    /// </summary>
+    [Parameter]
+    public EventCallback<string?> Changed { get; set; }
+
+    private enum Mode { None, Copy, Rename, Delete }
+
+    private Mode _mode;
+    private string _name = string.Empty;
+    private string? _nameProblem;
+    private string? _error;
+    private string? _shownFor;
+
+    // Выбрали другой профиль — начатая над прежним форма к нему уже не относится.
+    protected override void OnParametersSet()
+    {
+        if (_shownFor == Profile.Name)
+            return;
+
+        _shownFor = Profile.Name;
+        Reset();
+    }
+
+    private async Task StartCopyAsync()
+    {
+        Reset();
+        _mode = Mode.Copy;
+        _name = await Editor.SuggestCopyNameAsync(Profile.Name);
+        await CheckNameAsync();
+    }
+
+    private void StartRename()
+    {
+        Reset();
+        _mode = Mode.Rename;
+        _name = Profile.Name;
+        _nameProblem = "Имя не изменилось.";
+    }
+
+    private void StartDelete()
+    {
+        Reset();
+        _mode = Mode.Delete;
+    }
+
+    private void Cancel() => Reset();
+
+    private void Reset()
+    {
+        _mode = Mode.None;
+        _name = string.Empty;
+        _nameProblem = null;
+        _error = null;
+    }
+
+    /// <summary>Имя проверяется на каждую букву: кнопка не нажимается, пока имя не годится.</summary>
+    private async Task CheckNameAsync() =>
+        _nameProblem = await Editor.CheckNameAsync(_name, _mode == Mode.Rename ? Profile.Name : null);
+
+    private async Task SubmitNameAsync()
+    {
+        try
+        {
+            var profile = _mode == Mode.Copy
+                ? await Editor.CreateCopyAsync(Profile.Name, _name)
+                : await Editor.RenameAsync(Profile.Name, _name);
+
+            Reset();
+            await Changed.InvokeAsync(profile.Name);
+        }
+        catch (TransliterationException ex)
+        {
+            _error = ex.Message;
+        }
+    }
+
+    private async Task DeleteAsync()
+    {
+        try
+        {
+            await Editor.DeleteAsync(Profile.Name);
+            Reset();
+            await Changed.InvokeAsync(null);
+        }
+        catch (TransliterationException ex)
+        {
+            _error = ex.Message;
+        }
+    }
+}

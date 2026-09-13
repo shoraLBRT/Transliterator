@@ -1,6 +1,7 @@
 // Transliterator.Web/Program.cs
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Transliterator.Core.Repositories;
+using Transliterator.Core.Services;
 using Transliterator.Core.Services.Phonology;
 using Transliterator.Core.Services.Rules;
 using Transliterator.Domain.Interfaces;
@@ -23,6 +24,7 @@ builder.Services.AddSingleton(services => new UserProfileRepository(
     services.GetRequiredService<IKeyValueStore>(),
     services.GetRequiredService<ILogger<UserProfileRepository>>()));
 builder.Services.AddSingleton<IProfileRepository>(services => services.GetRequiredService<UserProfileRepository>());
+builder.Services.AddSingleton<ProfileEditor>();
 
 // Корпус — тоже из ресурсов (C3): панель сур и прогон тестов читают одни и те же файлы.
 builder.Services.AddSingleton<ICorpusRepository, EmbeddedCorpusRepository>();
