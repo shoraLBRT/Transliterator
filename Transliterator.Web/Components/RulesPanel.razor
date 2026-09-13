@@ -1,0 +1,96 @@
+@using System.Globalization
+@using Transliterator.Core.Services
+
+<details class="rules">
+    <summary>Правила профиля «@Profile.Name»</summary>
+
+    <input type="search" class="rules-search" aria-label="Поиск по ключу"
+           placeholder="Поиск по ключу: буква или вариант (heavy, waqf…)"
+           @bind="_query" @bind:event="oninput" />
+
+    @{ var groups = RuleTable.Filter(_groups, _query); }
+
+    @if (groups.Count == 0)
+    {
+        <p class="rules-empty">Ни один ключ не подходит.</p>
+    }
+    else
+    {
+        <table class="rules-table">
+            <thead>
+                <tr>
+                    <th scope="col">Ключ</th>
+                    <th scope="col">Графема</th>
+                </tr>
+            </thead>
+
+            @foreach (var group in groups)
+            {
+                <tbody class="rule-group">
+                    <tr>
+                        <th scope="row">
+                            <span class="rule-letter" dir="rtl" lang="ar">@Display(group.BaseKey)</span>
+                            <code class="rule-code">@CodePoints(group.BaseKey)</code>
+                        </th>
+                        <td>@Grapheme(group.BaseValue)</td>
+                    </tr>
+
+                    @foreach (var variant in group.Variants)
+                    {
+                        <tr class="rule-variant">
+                            <th scope="row">
+                                <span class="rule-variant-of" aria-hidden="true">↳</span>
+                                <code title="@variant.Key">@variant.Name</code>
+                            </th>
+                            <td>@Grapheme(variant.Value)</td>
+                        </tr>
+                    }
+                </tbody>
+            }
+        </table>
+    }
+</details>
+
+@code {
+    [Parameter, EditorRequired]
+    public TransliterationProfile Profile { get; set; } = default!;
+
+    private TransliterationProfile? _grouped;
+    private IReadOnlyList<RuleGroup> _groups = Array.Empty<RuleGroup>();
+    private string _query = string.Empty;
+
+    // Группы пересобираются только при смене профиля, а не на каждую отрисовку:
+    // страница перерисовывается на каждую правку текста.
+    protected override void OnParametersSet()
+    {
+        if (ReferenceEquals(_grouped, Profile))
+            return;
+
+        _grouped = Profile;
+        _groups = RuleTable.Group(Profile.Rules);
+    }
+
+    /// <summary>
+    /// Огласовка без буквы не видна: её рисуют над пунктирным кружком — так
+    /// диакритику принято показывать отдельно от текста.
+    /// </summary>
+    private static string Display(string key) =>
+        key.Length > 0 && CharUnicodeInfo.GetUnicodeCategory(key[0]) == UnicodeCategory.NonSpacingMark
+            ? "◌" + key
+            : key;
+
+    private static string CodePoints(string key) =>
+        string.Join(" ", key.Select(c => $"U+{(int)c:X4}"));
+
+    /// <summary>
+    /// Три разных состояния — три разных вида. Пустая графема — решение профиля
+    /// (кальканя, начальная хамза), и выглядеть пропуском она не должна.
+    /// Отсутствующий базовый ключ бывает только у варианта без своей буквы.
+    /// </summary>
+    private static RenderFragment Grapheme(string? value) => value switch
+    {
+        null => @<span class="rule-missing">не задана</span>,
+        "" => @<span class="rule-empty" title="Пустая строка: звук на письме не отмечается">пусто — не пишется</span>,
+        _ => @<span class="rule-grapheme">@value</span>
+    };
+}

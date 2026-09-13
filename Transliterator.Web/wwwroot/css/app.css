@@ -138,6 +138,87 @@ textarea + label {
     font-size: 1.125rem;
 }
 
+.rules {
+    margin-top: 1rem;
+}
+
+.rules summary {
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.rules-search {
+    box-sizing: border-box;
+    width: 100%;
+    margin: 0.75rem 0;
+    padding: 0.5rem 0.75rem;
+    font: inherit;
+}
+
+.rules-empty {
+    margin: 0;
+    opacity: 0.8;
+}
+
+.rules-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.rules-table th,
+.rules-table td {
+    padding: 0.25rem 0.5rem;
+    text-align: start;
+    vertical-align: baseline;
+}
+
+.rules-table thead th {
+    border-bottom: 1px solid color-mix(in srgb, currentColor 40%, transparent);
+}
+
+/* Буква и её варианты — одна группа: черта отделяет группу, а не строку. */
+.rule-group + .rule-group {
+    border-top: 1px solid color-mix(in srgb, currentColor 15%, transparent);
+}
+
+.rule-group th {
+    font-weight: 400;
+}
+
+.rule-letter {
+    display: inline-block;
+    min-width: 2rem;
+    font-family: "Amiri Quran", "Amiri", "Scheherazade New", "Noto Naskh Arabic",
+                 "Traditional Arabic", "Geeza Pro", "Segoe UI", serif;
+    font-size: 1.5rem;
+}
+
+.rule-code {
+    font-size: 0.75rem;
+    opacity: 0.6;
+}
+
+.rule-variant th {
+    padding-inline-start: 1.5rem;
+}
+
+.rule-variant-of {
+    opacity: 0.5;
+}
+
+.rule-grapheme {
+    font-size: 1.125rem;
+}
+
+.rule-empty {
+    font-style: italic;
+    opacity: 0.7;
+}
+
+.rule-missing {
+    color: #b00020;
+}
+
 .error {
     margin: 0;
     color: #b00020;

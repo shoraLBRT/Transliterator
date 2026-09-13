@@ -28,6 +28,11 @@
         {
             <p class="error" role="alert">@_error</p>
         }
+
+        @if (_profile is not null)
+        {
+            <RulesPanel Profile="_profile" />
+        }
     </main>
 </div>
 
