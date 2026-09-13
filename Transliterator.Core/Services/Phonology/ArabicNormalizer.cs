@@ -181,26 +181,41 @@ namespace Transliterator.Core.Services.Phonology
             return false;
         }
 
+        /// <summary>
+        /// Сводит пробельный промежуток к одному символу. Перевод строки — единственный,
+        /// который схлопывание переживает: промежуток с ним становится одним
+        /// <c>\n</c>, без него — одним пробелом. Для правил перевод строки та же
+        /// граница слов, что и пробел, а на письме он разводит строки: аяты,
+        /// подставленные панелью сур, не сливаются в полотно (D3).
+        /// </summary>
         private static string CollapseWhitespace(string text)
         {
             var result = new StringBuilder(text.Length);
             bool inWhitespace = false;
+            bool lineBreak = false;
 
             foreach (var c in text)
             {
                 if (char.IsWhiteSpace(c))
                 {
-                    if (!inWhitespace && result.Length > 0)
-                        result.Append(' ');
                     inWhitespace = true;
+                    lineBreak |= IsLineBreak(c);
                     continue;
                 }
 
+                // Промежуток пишется перед следующим знаком, а не сразу: так пробелы
+                // в начале и в конце текста отпадают сами, без Trim.
+                if (inWhitespace && result.Length > 0)
+                    result.Append(lineBreak ? '\n' : ' ');
+
                 inWhitespace = false;
+                lineBreak = false;
                 result.Append(c);
             }
 
-            return result.ToString().TrimEnd();
+            return result.ToString();
         }
+
+        private static bool IsLineBreak(char c) => c is '\n' or '\r' or '\u2028' or '\u2029';
     }
 }

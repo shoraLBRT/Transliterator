@@ -14,6 +14,9 @@ builder.RootComponents.Add<App>("#app");
 // Одно хранилище на страницу: ресурсы читаются при его создании, и читать их
 // заново на каждый пересчёт незачем.
 builder.Services.AddSingleton<IProfileRepository, EmbeddedProfileRepository>();
+
+// Корпус — тоже из ресурсов (C3): панель сур и прогон тестов читают одни и те же файлы.
+builder.Services.AddSingleton<ICorpusRepository, EmbeddedCorpusRepository>();
 builder.Services.AddTransient<ITransliterationService, TransliterationService>();
 
 // Стадии конвейера
