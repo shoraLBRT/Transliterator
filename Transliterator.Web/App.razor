@@ -1,27 +1,39 @@
 @inject IProfileRepository Profiles
 @inject ITransliterationService Transliteration
+@inject IJSRuntime JS
 @inject ILogger<App> Logger
 
-<main class="page">
-    <label for="arabic">Арабский текст</label>
-    <textarea id="arabic" class="arabic" dir="rtl" lang="ar" rows="6" spellcheck="false"
-              value="@_arabic" @oninput="OnInput"></textarea>
+<div class="page">
+    <aside class="settings">
+        <ProfilePanel Profiles="_profiles" Selected="_profile" SelectedChanged="SelectAsync" />
+    </aside>
 
-    <label for="result">Транслитерация</label>
-    <textarea id="result" class="result" dir="ltr" rows="6" readonly
-              value="@_result"></textarea>
+    <main class="work">
+        <label for="arabic">Арабский текст</label>
+        <textarea id="arabic" class="arabic" dir="rtl" lang="ar" rows="6" spellcheck="false"
+                  value="@_arabic" @oninput="OnInput"></textarea>
 
-    @if (_error is not null)
-    {
-        <p class="error" role="alert">@_error</p>
-    }
-</main>
+        <label for="result">Транслитерация</label>
+        <textarea id="result" class="result" dir="ltr" rows="6" readonly
+                  value="@_result"></textarea>
+
+        @if (_error is not null)
+        {
+            <p class="error" role="alert">@_error</p>
+        }
+    </main>
+</div>
 
 @code {
-    // Одна страница без маршрутов: поле ввода, расчёт, поле результата (D1).
-    // Выбор профиля появится с панелью профилей (D2), до тех пор — Standard.
-    private const string ProfileName = "Standard";
+    private const string DefaultProfileName = "Standard";
 
+    /// <summary>
+    /// Ключ localStorage с именем выбранного профиля. Хранится только имя:
+    /// сами профили лежат в хранилище, и копия профиля здесь разошлась бы с ним.
+    /// </summary>
+    private const string SelectedProfileKey = "transliterator.selected-profile";
+
+    private IReadOnlyList<TransliterationProfile> _profiles = Array.Empty<TransliterationProfile>();
     private TransliterationProfile? _profile;
     private string _arabic = string.Empty;
     private string _result = string.Empty;
@@ -29,10 +41,37 @@
 
     protected override async Task OnInitializedAsync()
     {
-        _profile = await Profiles.GetProfileAsync(ProfileName);
+        _profiles = await LoadProfilesAsync();
 
-        if (_profile is null)
-            _error = $"Профиль «{ProfileName}» не найден.";
+        if (_profiles.Count == 0)
+        {
+            _error = "Нет ни одного профиля.";
+            return;
+        }
+
+        // Сохранённого профиля может уже не быть: его удалили или переименовали.
+        // Тогда — Standard, а без него первый по списку, но не пустая страница.
+        var stored = await ReadStoredProfileNameAsync();
+
+        _profile = _profiles.FirstOrDefault(p => p.Name == stored)
+                ?? _profiles.FirstOrDefault(p => p.Name == DefaultProfileName)
+                ?? _profiles[0];
+    }
+
+    /// <summary>
+    /// Список — из <see cref="ITransliterationService.GetAvailableProfilesAsync"/>,
+    /// а не из разметки: профиль, добавленный в хранилище, появляется в панели сам.
+    /// Сами профили — из хранилища: панели нужно описание, а не только имя.
+    /// </summary>
+    private async Task<IReadOnlyList<TransliterationProfile>> LoadProfilesAsync()
+    {
+        var profiles = new List<TransliterationProfile>();
+
+        foreach (var name in await Transliteration.GetAvailableProfilesAsync())
+            if (await Profiles.GetProfileAsync(name) is { } profile)
+                profiles.Add(profile);
+
+        return profiles;
     }
 
     private void OnInput(ChangeEventArgs e)
@@ -41,8 +80,17 @@
         Calculate();
     }
 
+    /// <summary>Смена профиля пересчитывает вывод; введённый текст не трогается.</summary>
+    private async Task SelectAsync(TransliterationProfile profile)
+    {
+        _profile = profile;
+        Calculate();
+
+        await StoreProfileNameAsync(profile.Name);
+    }
+
     /// <summary>
-    /// Пересчёт на каждую правку, без кнопки. Профиль загружен один раз, и путь
+    /// Пересчёт на каждую правку, без кнопки. Профиль загружен заранее, и путь
     /// «текст + профиль» (C2) синхронный: ответ на прежний ввод не может прийти
     /// после ответа на новый и затереть его.
     /// </summary>
@@ -65,6 +113,35 @@
             Logger.LogError(ex, "Transliteration failed");
             _result = string.Empty;
             _error = ex.Message;
+        }
+    }
+
+    // localStorage бывает недоступен: приватный режим, запрет сайтам хранить данные.
+    // Выбор профиля — удобство, а не данные, и без хранилища страница просто
+    // забудет его при перезагрузке, а не перестанет работать.
+
+    private async Task<string?> ReadStoredProfileNameAsync()
+    {
+        try
+        {
+            return await JS.InvokeAsync<string?>("localStorage.getItem", SelectedProfileKey);
+        }
+        catch (JSException ex)
+        {
+            Logger.LogWarning(ex, "Selected profile could not be read from localStorage");
+            return null;
+        }
+    }
+
+    private async Task StoreProfileNameAsync(string name)
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("localStorage.setItem", SelectedProfileKey, name);
+        }
+        catch (JSException ex)
+        {
+            Logger.LogWarning(ex, "Selected profile could not be saved to localStorage");
         }
     }
 }
