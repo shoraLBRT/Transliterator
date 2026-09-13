@@ -23,6 +23,10 @@ namespace Transliterator.Core.Services.Phonology
             public bool Has(char mark) => Marks.Contains(mark);
             public bool IsBare => Marks.Count == 0
                                   || (Marks.Count == 1 && Marks[0] == ArabicScript.Maddah);
+
+            /// <summary>Над буквой только знаки долготы — надстрочный алиф и маддах, без огласовки.</summary>
+            public bool CarriesOnlyLength => Marks.Count > 0
+                                             && Marks.All(m => m is ArabicScript.SuperscriptAlef or ArabicScript.Maddah);
         }
 
         public List<Segment> Parse(string normalizedText)
@@ -167,11 +171,20 @@ namespace Transliterator.Core.Services.Phonology
                 // и тогда предыдущая огласовка — касра. Даммы перед ней не бывает:
                 // долгую ū пишут только و. Своей огласовки у голой максуры нет,
                 // и всё, чем она может быть, — это долгота или немота.
+                // Надстрочный алиф на ней (أَغْنَىٰ, عَلَىٰ) звука не добавляет: он лишь
+                // явно пишет ту же ā, которую голая максура после фатхи даёт и так.
+                // Своим сегментом он стал бы второй фатхой, и «а» + «аа» слиплись бы
+                // в «ааа» — на письме мадд в четыре хараката, которого нет.
                 case ArabicScript.AlefMaqsura:
-                    if (!cluster.IsBare)
+                    if (cluster.IsBare)
+                    {
+                        if (previous.Vowel is Harakah.Fatha or Harakah.Kasra)
+                            Lengthen(previous, previous.Vowel, maddLength);
+                        return true;
+                    }
+                    if (!cluster.CarriesOnlyLength || previous.Vowel != Harakah.Fatha)
                         return false;
-                    if (previous.Vowel is Harakah.Fatha or Harakah.Kasra)
-                        Lengthen(previous, previous.Vowel, maddLength);
+                    Lengthen(previous, Harakah.Fatha, maddLength);
                     return true;
 
                 // آ в середине слова после фатхи — не хамза, а удлинённая ā

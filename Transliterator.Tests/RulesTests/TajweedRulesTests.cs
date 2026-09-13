@@ -462,7 +462,7 @@ namespace Transliterator.Tests.RulesTests
         [InlineData("نَصْرُ ٱللَّهِ", "насIру-ллаааh")]      // 110:1
         [InlineData("وَٱسْتَغْفِرْهُ", "уастагъфирh")]       // 110:3
         [InlineData("ٱلْمَغْضُوبِ", "аль-магъдIуууб")]       // 1:7
-        [InlineData("سَيَصْلَىٰ", "сайасIляаа")]            // 111:3, «ляаа» — это B6
+        [InlineData("سَيَصْلَىٰ", "сайасIляя")]             // 111:3
         [InlineData("مِن شَرِّ مَا خَلَقَ", "мин щарри маа хъоляq")] // 113:2
         public void SakinEmphatic_ColoursOnlyItsOwnVowel(string arabic, string expected) =>
             // Своя гласная твёрдого согласного по-прежнему окрашена: «хъо» в «хъоляq»
@@ -639,6 +639,7 @@ namespace Transliterator.Tests.RulesTests
         [InlineData("فِي الْعُقَدِ")]               // то же в современном написании
         [InlineData("فِى ٱلنَّاسِ")]                // перед солнечным: безгласна первая копия
         [InlineData("عَلَى ٱلْعَرْشِ")]             // ā на алифе максуре
+        [InlineData("عَلَىٰ ٱلْعَرْشِ")]            // то же с надстрочным алифом (B6)
         [InlineData("ٱهْدِنَا ٱلصِّرَٰطَ")]          // ā на алифе, 1:6
         [InlineData("يَٰٓأَيُّهَا ٱلْكَٰفِرُونَ")]     // 109:1
         [InlineData("ذُو ٱلْعَرْشِ")]               // ū
@@ -654,6 +655,7 @@ namespace Transliterator.Tests.RulesTests
         [InlineData("فِى", 2)]                      // слово само по себе
         [InlineData("فِى دِينِ", 2)]                // перед огласованной буквой
         [InlineData("مَا تَعْبُدُونَ", 2)]
+        [InlineData("أَغْنَىٰ عَنْهُ", 2)]            // 111:2, надстрочный алиф (B6)
         [InlineData("يَدَآ أَبِى لَهَبٍ", 4)]        // перед хамзой — мунфасиль, а не снятие
         [InlineData("فِى ۘ ٱلْعُقَدِ", 2)]           // пауза: стыка нет, васля звучит
         public void OtherwiseTheLengthStays(string arabic, int length) =>
@@ -944,19 +946,29 @@ namespace Transliterator.Tests.RulesTests
             // корпус объявляет своей (B4).
             Assert.Equal(expected, TransliterationPipeline.Transliterate(arabic));
 
-        [Fact]
-        public void WithSuperscriptAlef_MakesASegmentOfItsOwn() =>
-            // Долготы не выходит: появляется отдельный сегмент со своей фатхой
-            // длиной 2, и на письме краткая «а» слипается с ней в «ааа».
-            OpenBug.StillProduces("B6", "أَغْنَىٰ", expected: "агънаа", today: "агънааа");
+        [Theory]
+        [InlineData("أَغْنَىٰ", "агънаа", "ن")]      // 111:2
+        [InlineData("سَيَصْلَىٰ", "сайасIляя", "ل")]  // 111:3
+        public void WithSuperscriptAlef_LengthensTheFatha(string arabic, string expected, string carrier)
+        {
+            // Надстрочный алиф пишет ту же ā, что и голая максура, и отдельного
+            // сегмента не даёт: иначе краткая «а» слиплась бы с его «аа» в «ааа» (B6).
+            Assert.DoesNotContain(TransliterationPipeline.Consonants(arabic), s => s.Letter == "ا");
+            Assert.Equal(2, TransliterationPipeline.Consonants(arabic).Last(s => s.Letter == carrier).VowelLength);
+            Assert.Equal(expected, TransliterationPipeline.Transliterate(arabic));
+        }
 
         [Theory]
-        [InlineData("عَلَىٰ", "'аляаа")]
-        [InlineData("هُدَىٰ", "hудааа")]
-        public void AfterFatha_MustSurviveTheFixUntouched(string arabic, string expected) =>
-            // Критерий B6: эти два не меняются. Тем же выводом они записаны и здесь,
-            // чтобы правка соседней ветки не поехала на них молча.
-            Assert.Equal(expected, TransliterationPipeline.Transliterate(arabic));
+        [InlineData("عَلَىٰ", "عَلَى", "'аляя")]
+        [InlineData("هُدَىٰ", "هُدَى", "hудаа")]
+        [InlineData("أَغْنَىٰ", "أَغْنَى", "агънаа")]
+        public void AfterFatha_ReadsTheSameWithOrWithoutSuperscriptAlef(string withAlef, string bare, string expected)
+        {
+            // Одно слово, одно чтение, один вывод. Голая максура после фатхи давала
+            // верную ā и до B6 — её вывод здесь и служит эталоном для написания с алифом.
+            Assert.Equal(expected, TransliterationPipeline.Transliterate(bare));
+            Assert.Equal(expected, TransliterationPipeline.Transliterate(withAlef));
+        }
 
         [Fact]
         public void WithFatha_IsAConsonantOnlyInTheModernSpelling()
