@@ -24,6 +24,7 @@ namespace Transliterator.Core.Services.Rules
     /// </summary>
     public class MaddRule
     {
+        private const int Short = 1;
         private const int Natural = 2;
         private const int Obligatory = 4;
         private const int Lazim = 6;
@@ -88,6 +89,15 @@ namespace Transliterator.Core.Services.Rules
                 if (segment.VowelLength < Natural)
                     continue;
 
+                // Встреча двух безгласных на стыке слов: долгота уступает.
+                // Ни одна ветка ниже здесь не применима — за долготой не звучит
+                // ни удвоение, ни хамза, а сукун написан, а не наведён паузой.
+                if (MeetsSakinAcrossWords(segments, i))
+                {
+                    segment.VowelLength = Short;
+                    continue;
+                }
+
                 int nextIndex = SegmentNavigator.NextConsonant(segments, i, crossWordBoundary: true);
                 if (nextIndex < 0)
                     continue;
@@ -114,6 +124,54 @@ namespace Transliterator.Core.Services.Rules
                                                 && segment.VowelLength < Arid)
                     segment.VowelLength = Arid;
             }
+        }
+
+        /// <summary>
+        /// Долгота снимается перед безгласным согласным соседнего слова — التقاء الساكنين.
+        /// Буква мадда безгласна сама по себе; хамзат аль-васль в соединении выпадает,
+        /// и за буквой мадда встаёт безгласный согласный следующего слова. Две
+        /// безгласности подряд произнести нечем, и уступает более слабая — долгота:
+        /// فِى ٱلْعُقَدِ → «фи-ль-'уqод», فِى ٱلنَّاسِ → «фи-ннааас». Отдельно же
+        /// и перед огласованной буквой долгота на месте: فِى دِينِ → «фии диини».
+        /// <para>
+        /// Граница слова обязательна. Внутри слова та же встреча даёт противоположное —
+        /// мадд лязим в шесть харакатов (ٱلضَّآلِّينَ, ءَآلْـَٔانَ): долготу там тянут,
+        /// а не снимают. Через границу же безгласный в начале слова приходит только
+        /// после васли — слово с безгласной буквы не начинается, — и потому отдельной
+        /// проверки на саму васлю не нужно: немую букву навигатор и так пропускает.
+        /// </para>
+        /// <para>
+        /// Безгласным считается и первая половина удвоения. Солнечный лям артикля
+        /// стал ею отдельным сегментом (ل, ставший «н» в «-ннааас»); у глагола
+        /// с васлей удвоение написано шаддой на одной букве (قَالُوا۟ ٱتَّخَذَ →
+        /// «qоолу-ттахъозъ»), но звучит так же — сначала безгласная половина.
+        /// Сукун при этом должен быть написан или создан слиянием, но не наведён
+        /// паузой: у наведённого стык не произносится вовсе, и там своя ветка — мадд арид.
+        /// </para>
+        /// <para>
+        /// Сестра этого правила — вспомогательная касра в <c>WaslRule</c>: если слово
+        /// кончается не долготой, а сукуном (قُلِ ٱللَّهُمَّ), уступать нечему, и стык
+        /// размыкается гласной. Там — стадия 4, потому что меняется огласовка;
+        /// здесь — стадия 9, потому что меняется длительность.
+        /// </para>
+        /// </summary>
+        private static bool MeetsSakinAcrossWords(IList<Segment> segments, int index)
+        {
+            int next = SegmentNavigator.NextPronouncedConsonant(segments, index);
+            if (next < 0)
+                return false;
+
+            var sakin = segments[next];
+            bool startsSilent = sakin.Shadda
+                                || (sakin.Vowel == Harakah.Sukun && sakin.OriginalVowel == Harakah.None);
+            if (!startsSilent)
+                return false;
+
+            for (int i = index + 1; i < next; i++)
+                if (segments[i].Kind == SegmentKind.Break)
+                    return true;
+
+            return false;
         }
 
         /// <summary>
