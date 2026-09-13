@@ -1,0 +1,9 @@
+{
+  "Number": 109,
+  "ArabicName": "سُورَةُ ٱلْكَافِرُونَ",
+  "RussianName": "Аль-Кяфирун",
+  "TextEdition": "uthmani-wasl",
+  "Ayahs": [
+    { "Number": 1, "Arabic": "كَانَ", "Expected": "каана" }
+  ]
+}
