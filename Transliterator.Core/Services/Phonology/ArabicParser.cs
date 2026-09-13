@@ -54,7 +54,13 @@ namespace Transliterator.Core.Services.Phonology
 
                 if (char.IsWhiteSpace(cluster.Base))
                 {
-                    AppendBreak(segments);
+                    var boundary = AppendBreak(segments);
+
+                    // Перевод строки нормализация сохранила; граница, на которую он
+                    // пришёлся, остаётся одной и той же, но пишется переводом строки.
+                    if (cluster.Base == '\n')
+                        boundary.Literal = Segment.LineBreakLiteral;
+
                     continue;
                 }
 

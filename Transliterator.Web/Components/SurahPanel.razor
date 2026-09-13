@@ -1,0 +1,28 @@
+<section class="panel surahs" aria-labelledby="surahs-title">
+    <h2 id="surahs-title" class="panel-title">Готовые суры</h2>
+
+    <ul class="surah-list">
+        @foreach (var surah in Surahs)
+        {
+            <li>
+                <button type="button" class="surah" @onclick="() => Chosen.InvokeAsync(surah)">
+                    <span class="surah-number">@surah.Number</span>
+                    <span class="surah-name">@surah.RussianName</span>
+                    <span class="surah-arabic" dir="rtl" lang="ar">@surah.ArabicName</span>
+                </button>
+            </li>
+        }
+    </ul>
+</section>
+
+@code {
+    /// <summary>
+    /// Суры корпуса по порядку. Разметка их не перечисляет: сура, добавленная
+    /// в корпус, появляется в панели сама.
+    /// </summary>
+    [Parameter, EditorRequired]
+    public IReadOnlyList<CorpusSurah> Surahs { get; set; } = Array.Empty<CorpusSurah>();
+
+    [Parameter]
+    public EventCallback<CorpusSurah> Chosen { get; set; }
+}

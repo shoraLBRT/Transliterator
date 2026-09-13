@@ -90,6 +90,14 @@ namespace Transliterator.Domain.Phonology
         /// <summary>Для <see cref="SegmentKind.Break"/>, <see cref="SegmentKind.Digit"/> и <see cref="SegmentKind.Other"/> — готовый текст.</summary>
         public string Literal { get; set; } = string.Empty;
 
+        /// <summary>
+        /// Граница слов, на которую в тексте пришёлся перевод строки. Для правил
+        /// она ничем не отличается от пробела; различает их только рендерер.
+        /// Слияние через такую границу (шов слова) пишет дефис, и перевод строки
+        /// при этом уходит вместе с пробелом.
+        /// </summary>
+        public const string LineBreakLiteral = "\n";
+
         public static Segment Break() =>
             new() { Kind = SegmentKind.Break, Literal = " " };
 

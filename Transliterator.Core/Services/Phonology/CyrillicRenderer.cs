@@ -104,7 +104,20 @@ namespace Transliterator.Core.Services.Phonology
                 return;
             }
 
-            if (result.Length > 0 && result[^1] != ' ')
+            // Перевод строки заменяет пробел, а не добавляется к нему: строка
+            // не должна кончаться пробелом.
+            if (literal == Segment.LineBreakLiteral)
+            {
+                if (result.Length > 0 && result[^1] == ' ')
+                    result.Length--;
+
+                if (result.Length > 0 && result[^1] != '\n')
+                    result.Append('\n');
+
+                return;
+            }
+
+            if (result.Length > 0 && result[^1] is not (' ' or '\n'))
                 result.Append(' ');
         }
 
@@ -112,7 +125,8 @@ namespace Transliterator.Core.Services.Phonology
         {
             // Слияние по васле и дефис артикля могут прийтись на одну границу.
             // Дефис в такой позиции нужен ровно один: "бисми-лляhи", а не "бисми-л-ляhи".
-            if (result.Length == 0 || result[^1] == '-')
+            // В начале строки дефису, как и в начале текста, не к чему прилегать.
+            if (result.Length == 0 || result[^1] is '-' or '\n')
                 return;
 
             result.Append('-');

@@ -1,4 +1,6 @@
+@using Transliterator.Core.Services
 @inject IProfileRepository Profiles
+@inject ICorpusRepository Corpus
 @inject ITransliterationService Transliteration
 @inject IJSRuntime JS
 @inject ILogger<App> Logger
@@ -6,15 +8,20 @@
 <div class="page">
     <aside class="settings">
         <ProfilePanel Profiles="_profiles" Selected="_profile" SelectedChanged="SelectAsync" />
+
+        @if (_surahs.Count > 0)
+        {
+            <SurahPanel Surahs="_surahs" Chosen="Choose" />
+        }
     </aside>
 
     <main class="work">
         <label for="arabic">Арабский текст</label>
-        <textarea id="arabic" class="arabic" dir="rtl" lang="ar" rows="6" spellcheck="false"
+        <textarea id="arabic" class="arabic" dir="rtl" lang="ar" rows="8" spellcheck="false"
                   value="@_arabic" @oninput="OnInput"></textarea>
 
         <label for="result">Транслитерация</label>
-        <textarea id="result" class="result" dir="ltr" rows="6" readonly
+        <textarea id="result" class="result" dir="ltr" rows="8" readonly
                   value="@_result"></textarea>
 
         @if (_error is not null)
@@ -34,6 +41,7 @@
     private const string SelectedProfileKey = "transliterator.selected-profile";
 
     private IReadOnlyList<TransliterationProfile> _profiles = Array.Empty<TransliterationProfile>();
+    private IReadOnlyList<CorpusSurah> _surahs = Array.Empty<CorpusSurah>();
     private TransliterationProfile? _profile;
     private string _arabic = string.Empty;
     private string _result = string.Empty;
@@ -41,6 +49,7 @@
 
     protected override async Task OnInitializedAsync()
     {
+        _surahs = await LoadSurahsAsync();
         _profiles = await LoadProfilesAsync();
 
         if (_profiles.Count == 0)
@@ -74,9 +83,37 @@
         return profiles;
     }
 
+    /// <summary>
+    /// Битый корпус — сломанная сборка, и тесты её не пропустят. Но если он всё же
+    /// доехал, страница остаётся рабочей без панели сур: ввести текст руками можно
+    /// и без неё.
+    /// </summary>
+    private async Task<IReadOnlyList<CorpusSurah>> LoadSurahsAsync()
+    {
+        try
+        {
+            return await Corpus.GetAllSurahsAsync();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Corpus could not be read");
+            return Array.Empty<CorpusSurah>();
+        }
+    }
+
     private void OnInput(ChangeEventArgs e)
     {
         _arabic = e.Value?.ToString() ?? string.Empty;
+        Calculate();
+    }
+
+    /// <summary>
+    /// Выбор суры заменяет текст в поле целиком — так же, как если бы его вставили
+    /// руками, — и сразу показывает результат.
+    /// </summary>
+    private void Choose(CorpusSurah surah)
+    {
+        _arabic = CorpusText.Arabic(surah);
         Calculate();
     }
 
