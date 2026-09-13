@@ -1,0 +1,4 @@
+#!/bin/sh
+# Rejects commit messages that are not in English (see CLAUDE.md).
+# Enable once per clone: git config core.hooksPath .githooks
+exec perl "$(git rev-parse --show-toplevel)/.github/scripts/check-commit-message.pl" "$1"

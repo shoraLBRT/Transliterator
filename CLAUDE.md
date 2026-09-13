@@ -10,6 +10,15 @@
 - Формат заголовка прежний — Conventional Commits с кодом пункта плана в скобках:
   `type(scope): summary (B3)`.
 
+Правило проверяется автоматически:
+
+- в PR — workflow `.github/workflows/commit-messages.yml` проверяет каждый коммит
+  и заголовок PR (он попадает в merge-коммит);
+- локально — хук `.githooks/commit-msg`, включается один раз на клон:
+  `git config core.hooksPath .githooks`.
+
+Оба используют один скрипт — `.github/scripts/check-commit-message.pl`.
+
 Пример:
 
 ```

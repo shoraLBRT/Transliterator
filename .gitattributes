@@ -3,6 +3,11 @@
 ###############################################################################
 * text=auto
 
+# Scripts run by git and CI break with CRLF line endings.
+.githooks/* text eol=lf
+*.pl        text eol=lf
+*.yml       text eol=lf
+
 ###############################################################################
 # Set default behavior for command prompt diff.
 #
