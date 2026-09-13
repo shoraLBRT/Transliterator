@@ -179,6 +179,32 @@ namespace Transliterator.Core.Services.Phonology
             'ه'  // ه
         };
 
+        /// <summary>
+        /// Однобуквенные приставки, которые пишутся слитно со словом: союзы و ف,
+        /// предлоги ب ك ل. Слово за ними остаётся тем же словом, и хамзат аль-васль
+        /// в его начале современная орфография пишет тем же голым алифом:
+        /// وَالْفَتْحُ, بِالْحَقِّ, فَاسْتَغْفِرْ.
+        /// </summary>
+        public static readonly HashSet<char> Proclitics = new()
+        {
+            Waw,
+            'ف', // ف
+            Ba,
+            'ك', // ك
+            Lam
+        };
+
+        /// <summary>
+        /// Приставки, которые бывают и у глагола: союзы و ف и лям подтверждения.
+        /// ب и ك стоят только перед именем.
+        /// </summary>
+        public static readonly HashSet<char> VerbProclitics = new()
+        {
+            Waw,
+            'ف', // ف
+            Lam
+        };
+
         /// <summary>Носители хамзы. Все сводятся к одному сегменту ء со своей огласовкой.</summary>
         public static readonly HashSet<char> HamzaCarriers = new()
         {
