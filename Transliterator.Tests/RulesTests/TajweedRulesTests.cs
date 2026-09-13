@@ -1036,7 +1036,7 @@ namespace Transliterator.Tests.RulesTests
         {
             // На ى написана фатха — значит согласная, а не долгота. С обычной ي
             // так и выходит; у максуры сегмента с ي не остаётся вовсе, и «й»
-            // из вывода пропадает. Багом это не заведено — запись, а не одобрение.
+            // из вывода пропадает. Запись, а не одобрение: заведено багом B10.
             Assert.Equal("уалий", TransliterationPipeline.Transliterate("وَلِيَ"));
             Assert.Equal("уали", TransliterationPipeline.Transliterate("وَلِىَ"));
             Assert.DoesNotContain(TransliterationPipeline.Consonants("وَلِىَ"), s => s.Letter == "ي");
