@@ -1,11 +1,8 @@
-﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Runtime.Versioning;
-using System.Text.Json;
 using Transliterator.Core.Models;
-using Transliterator.Core.Services.Phonology;
 using Transliterator.Domain.Entities;
-using Transliterator.Domain.Exceptions;
 using Transliterator.Domain.Interfaces;
 
 namespace Transliterator.Core.Repositories
@@ -24,9 +21,8 @@ namespace Transliterator.Core.Repositories
     /// </para>
     /// <para>
     /// Как и <see cref="JsonProfileRepository"/>, читает каталог рядом со сборкой
-    /// и потому в браузере неприменима. Корпус веб-версии (D3) придётся отдавать
-    /// откуда-то ещё; пока такого читателя нет, атрибут просто не даёт написать
-    /// его случайно поверх файловой системы.
+    /// и потому в браузере неприменима. Там корпус читает
+    /// <see cref="EmbeddedCorpusRepository"/> — из ресурсов сборки, тем же разбором.
     /// </para>
     /// </remarks>
     [UnsupportedOSPlatform("browser")]
@@ -53,7 +49,7 @@ namespace Transliterator.Core.Repositories
                 : Path.Combine(AppContext.BaseDirectory, configuredPath);
 
         /// <summary>Имя файла суры: номер тремя цифрами.</summary>
-        public static string FileNameFor(int number) => $"{number:000}.json";
+        public static string FileNameFor(int number) => CorpusReader.FileNameFor(number);
 
         public async Task<CorpusSurah?> GetSurahAsync(int number)
         {
@@ -83,72 +79,9 @@ namespace Transliterator.Core.Repositories
 
         private static async Task<CorpusSurah> ReadAsync(string filePath)
         {
-            CorpusSurah? surah;
+            await using var stream = File.OpenRead(filePath);
 
-            try
-            {
-                surah = JsonSerializer.Deserialize<CorpusSurah>(await File.ReadAllTextAsync(filePath));
-            }
-            catch (JsonException ex)
-            {
-                throw new TransliterationException($"Corpus file is not valid JSON: {filePath}", ex);
-            }
-
-            if (surah is null)
-                throw new TransliterationException($"Corpus file is empty: {filePath}");
-
-            Validate(surah, filePath);
-
-            return surah;
-        }
-
-        /// <summary>
-        /// Проверяет ровно то, на что опираются читатели корпуса: номер, по которому
-        /// сура ищется, названия для панели примеров, редакцию текста и сплошную
-        /// нумерацию аятов. Пропущенный аят — это не «корпус поменьше», а дыра
-        /// в покрытии, и увидеть её надо при чтении, а не в отчёте о прогоне.
-        /// <para>
-        /// Пару написаний проверяем с обеих сторон. Аят с васлей без современного
-        /// написания — молча непроверенная ветка <c>DetectImlaiWasl</c>; аят без
-        /// васли с современным написанием — лишний прогон, который выглядит как
-        /// покрытие, но ничего нового не разбирает.
-        /// </para>
-        /// </summary>
-        private static void Validate(CorpusSurah surah, string filePath)
-        {
-            void Require(bool condition, string message)
-            {
-                if (!condition)
-                    throw new TransliterationException($"{Path.GetFileName(filePath)}: {message}");
-            }
-
-            Require(surah.Number is >= 1 and <= 114, $"surah number {surah.Number} is out of range 1..114");
-            Require(Path.GetFileName(filePath) == FileNameFor(surah.Number),
-                    $"file name does not match surah number {surah.Number}");
-            Require(!string.IsNullOrWhiteSpace(surah.ArabicName), "arabic name is empty");
-            Require(!string.IsNullOrWhiteSpace(surah.RussianName), "russian name is empty");
-            Require(CorpusTextEdition.IsKnown(surah.TextEdition),
-                    $"unknown text edition '{surah.TextEdition}'");
-            Require(surah.Ayahs.Count > 0, "surah has no ayahs");
-
-            for (int i = 0; i < surah.Ayahs.Count; i++)
-            {
-                var ayah = surah.Ayahs[i];
-
-                Require(ayah.Number == i + 1, $"ayah #{i + 1} is numbered {ayah.Number}");
-                Require(!string.IsNullOrWhiteSpace(ayah.Arabic), $"ayah {ayah.Number} has no arabic text");
-                Require(!string.IsNullOrWhiteSpace(ayah.Expected), $"ayah {ayah.Number} has no expected transliteration");
-
-                bool hasWasl = ayah.Arabic.Contains(ArabicScript.AlefWasla);
-                bool hasImlai = !string.IsNullOrWhiteSpace(ayah.ArabicImlai);
-
-                Require(hasWasl || !hasImlai,
-                        $"ayah {ayah.Number} has no wasl sign but carries an imlai spelling");
-                Require(!hasWasl || hasImlai,
-                        $"ayah {ayah.Number} has a wasl sign but no imlai spelling");
-                Require(!hasImlai || !ayah.ArabicImlai.Contains(ArabicScript.AlefWasla),
-                        $"ayah {ayah.Number}: imlai spelling still contains the wasl sign");
-            }
+            return await CorpusReader.ReadAsync(stream, filePath, Path.GetFileName(filePath), "Corpus file");
         }
     }
 }

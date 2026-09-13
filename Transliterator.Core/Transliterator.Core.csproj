@@ -42,6 +42,11 @@
       <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
     </Content>
+
+    <!-- И так же вшивается в сборку — целиком, а не по одной суре: семь сур весят
+         около десяти килобайт. В браузере корпус читается только отсюда
+         (EmbeddedCorpusRepository), каталог рядом со сборкой остаётся CLI и тестам. -->
+    <EmbeddedResource Include="Resources\Corpus\*.json" />
   </ItemGroup>
 
   <ItemGroup>
