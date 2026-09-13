@@ -1,0 +1,35 @@
+<fieldset class="panel profiles">
+    <legend>Профиль</legend>
+
+    @foreach (var profile in Profiles)
+    {
+        <label class="profile">
+            <input type="radio" name="profile" value="@profile.Name"
+                   checked="@IsSelected(profile)"
+                   @onchange="() => SelectedChanged.InvokeAsync(profile)" />
+            @profile.Name
+        </label>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(Selected?.Description))
+    {
+        <p class="profile-description">@Selected.Description</p>
+    }
+</fieldset>
+
+@code {
+    /// <summary>Профили в порядке списка. Какие они — решает страница, панель только показывает.</summary>
+    [Parameter, EditorRequired]
+    public IReadOnlyList<TransliterationProfile> Profiles { get; set; } = Array.Empty<TransliterationProfile>();
+
+    [Parameter]
+    public TransliterationProfile? Selected { get; set; }
+
+    [Parameter]
+    public EventCallback<TransliterationProfile> SelectedChanged { get; set; }
+
+    // По имени, а не по ссылке: имя профиля уникально в хранилище, а экземпляр
+    // хранилище вправе отдавать каждый раз новый.
+    private bool IsSelected(TransliterationProfile profile) =>
+        Selected is not null && profile.Name == Selected.Name;
+}
