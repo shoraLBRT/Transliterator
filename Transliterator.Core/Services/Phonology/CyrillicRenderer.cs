@@ -30,6 +30,17 @@ namespace Transliterator.Core.Services.Phonology
         public const string QalqalahStrongVariant = "qalqalah-strong";
 
         /// <summary>
+        /// Все варианты, которые рендерер умеет искать. Вариант с другим именем
+        /// (<c>"ن|ghuna"</c>) профиль примет, но рендерер его не спросит никогда —
+        /// импорт профиля (E3) сверяется с этим списком.
+        /// </summary>
+        public static readonly IReadOnlySet<string> KnownVariants = new HashSet<string>(StringComparer.Ordinal)
+        {
+            HeavyVariant, SoftVariant, SukunVariant, WaqfVariant, InitialVariant,
+            HiatusVariant, GhunnaVariant, QalqalahVariant, QalqalahStrongVariant
+        };
+
+        /// <summary>
         /// Сколько раз повторить графему гласной для заданной длительности в харакатах.
         /// Три длительности мадда остаются различимы на письме.
         /// </summary>

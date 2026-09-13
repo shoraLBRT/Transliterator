@@ -103,6 +103,30 @@ namespace Transliterator.Core.Services
             await _profiles.SaveAsync(profile);
         }
 
+        /// <summary>
+        /// Импорт профиля из файла (E3). Имя занято — встроенным или своим профилем —
+        /// профиль сохраняется под свободным именем копии, и <see cref="ProfileImport.RenamedFrom"/>
+        /// говорит об этом: чужой файл не перезаписывает молча ни один профиль.
+        /// </summary>
+        /// <returns>Разобранный и сохранённый профиль или список того, что в файле не так.</returns>
+        /// <exception cref="TransliterationException">Файл разобран, но записать профиль не удалось.</exception>
+        public async Task<ProfileImport> ImportAsync(string? json)
+        {
+            var parsed = ProfileJson.Import(json);
+
+            if (parsed.Profile is not { } profile)
+                return parsed;
+
+            var original = profile.Name;
+
+            if (await CheckNameAsync(original) is not null)
+                profile.Name = await _profiles.FreeCopyNameAsync(original);
+
+            await _profiles.SaveAsync(profile);
+
+            return parsed with { RenamedFrom = profile.Name == original ? null : original };
+        }
+
         private async Task<string> RequireNameAsync(string? name, string? renaming = null)
         {
             if (await CheckNameAsync(name, renaming) is { } problem)
