@@ -20,6 +20,7 @@ namespace Transliterator.Core.Services.Phonology
         public const string SukunVariant = "sukun";
         public const string WaqfVariant = "waqf";
         public const string InitialVariant = "initial";
+        public const string HiatusVariant = "hiatus";
         public const string GhunnaVariant = "ghunna";
         public const string QalqalahVariant = "qalqalah";
         public const string QalqalahStrongVariant = "qalqalah-strong";
@@ -40,16 +41,22 @@ namespace Transliterator.Core.Services.Phonology
         {
             var result = new StringBuilder();
 
+            // Последний прозвучавший согласный этого слова: от его огласовки зависит,
+            // стоит ли хамза между гласными. Немые буквы звука не дают и не считаются.
+            Segment? previous = null;
+
             foreach (var segment in segments)
             {
                 switch (segment.Kind)
                 {
                     case SegmentKind.Break:
                         AppendBreak(result, segment.Literal);
+                        previous = null;
                         continue;
 
                     case SegmentKind.Digit:
                         result.Append(Lookup(profile, segment.Literal) ?? segment.Literal);
+                        previous = null;
                         continue;
 
                     case SegmentKind.Other:
@@ -59,7 +66,8 @@ namespace Transliterator.Core.Services.Phonology
 
                 if (!segment.Silent)
                 {
-                    var consonant = RenderConsonant(segment, profile);
+                    var consonant = RenderConsonant(segment, previous, profile);
+                    previous = segment;
                     result.Append(Repeat(consonant, GlideCount(segment)));
                     if (segment.Shadda)
                         result.Append(consonant);
@@ -99,7 +107,7 @@ namespace Transliterator.Core.Services.Phonology
             result.Append('-');
         }
 
-        private string RenderConsonant(Segment segment, TransliterationProfile profile)
+        private string RenderConsonant(Segment segment, Segment? previous, TransliterationProfile profile)
         {
             var letter = segment.Letter;
 
@@ -112,6 +120,18 @@ namespace Transliterator.Core.Services.Phonology
                 var initial = Lookup(profile, Variant(letter, InitialVariant));
                 if (initial is not null)
                     return initial;
+            }
+
+            // Хамза между гласными: на письме её роль — развести две гласные,
+            // и Standard пишет здесь разделитель: "уа-иййаака", "джааа-а".
+            // Только когда гласные есть с обеих сторон: в конце слова, после
+            // безгласного и перед сукуном разделять нечего, и дефис бы повис.
+            // Удвоенная хамза — уже не разрыв, а долгий согласный.
+            if (letter == ArabicScript.HamzaStr && IsBetweenVowels(segment, previous) && !segment.Shadda)
+            {
+                var hiatus = Lookup(profile, Variant(letter, HiatusVariant));
+                if (hiatus is not null)
+                    return hiatus;
             }
 
             // Та-марбута звучит как /t/ в соединении и как /h/ на паузе.
@@ -151,6 +171,14 @@ namespace Transliterator.Core.Services.Phonology
 
             return Lookup(profile, letter) ?? string.Empty;
         }
+
+        private static bool IsBetweenVowels(Segment segment, Segment? previous) =>
+            !segment.StartsWord
+            && IsVowelled(segment)
+            && previous is not null && IsVowelled(previous);
+
+        private static bool IsVowelled(Segment segment) =>
+            segment.Vowel is not (Harakah.None or Harakah.Sukun);
 
         /// <summary>
         /// Сколько раз повторить графему самого согласного. Больше одного — только
