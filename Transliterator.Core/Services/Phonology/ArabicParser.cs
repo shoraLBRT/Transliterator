@@ -351,8 +351,11 @@ namespace Transliterator.Core.Services.Phonology
                 || baseChar == ArabicScript.AlefWasla)
                 return ArabicScript.HamzaStr;
 
+            // Максура доходит сюда, только если долготой не стала: на ней своя
+            // огласовка (وَلِىَ). Тогда это та же согласная «й», что и ي в том же
+            // положении, — буквой ا звучащая согласная была бы немой (B10).
             if (baseChar == ArabicScript.AlefMaqsura)
-                return ArabicScript.AlefStr;
+                return ArabicScript.Yeh.ToString();
 
             return baseChar.ToString();
         }
