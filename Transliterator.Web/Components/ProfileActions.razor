@@ -1,6 +1,7 @@
 @using Transliterator.Core.Services
 @using Transliterator.Domain.Exceptions
 @inject ProfileEditor Editor
+@inject IJSRuntime JS
 
 <div class="profile-actions">
     @switch (_mode)
@@ -13,6 +14,13 @@
                     <button type="button" @onclick="StartRename">Переименовать</button>
                     <button type="button" class="danger" @onclick="StartDelete">Удалить</button>
                 }
+            </div>
+            <div class="buttons">
+                <button type="button" @onclick="ExportAsync">Экспорт JSON</button>
+                <label class="button-like">
+                    Импорт JSON
+                    <InputFile class="visually-hidden" accept=".json,application/json" OnChange="ImportAsync" />
+                </label>
             </div>
             break;
 
@@ -50,6 +58,24 @@
             break;
     }
 
+    @if (_info is not null)
+    {
+        <p class="field-info" role="status">@_info</p>
+    }
+
+    @if (_importProblems.Count > 0)
+    {
+        <div class="field-error" role="alert">
+            <p>Профиль не импортирован:</p>
+            <ul>
+                @foreach (var problem in _importProblems)
+                {
+                    <li>@problem</li>
+                }
+            </ul>
+        </div>
+    }
+
     @if (_error is not null)
     {
         <p class="field-error" role="alert">@_error</p>
@@ -60,16 +86,22 @@
     [Parameter, EditorRequired]
     public TransliterationProfile Profile { get; set; } = default!;
 
-    /// <summary>Встроенный профиль можно только скопировать.</summary>
+    /// <summary>Встроенный профиль можно только скопировать и выгрузить.</summary>
     [Parameter]
     public bool IsBuiltIn { get; set; }
 
     /// <summary>
     /// Список профилей изменился. Аргумент — имя профиля, который надо выбрать:
-    /// созданная копия, новое имя; <c>null</c> после удаления.
+    /// созданная копия, новое имя, импортированный профиль; <c>null</c> после удаления.
     /// </summary>
     [Parameter]
     public EventCallback<string?> Changed { get; set; }
+
+    /// <summary>
+    /// Файл больше этого не читается вовсе: в символах профиль ограничен
+    /// <see cref="ProfileJson.MaxLength"/>, а символ UTF-8 — не больше четырёх байт.
+    /// </summary>
+    private const long MaxFileBytes = ProfileJson.MaxLength * 4L;
 
     private enum Mode { None, Copy, Rename, Delete }
 
@@ -77,6 +109,8 @@
     private string _name = string.Empty;
     private string? _nameProblem;
     private string? _error;
+    private string? _info;
+    private IReadOnlyList<string> _importProblems = Array.Empty<string>();
     private string? _shownFor;
 
     // Выбрали другой профиль — начатая над прежним форма к нему уже не относится.
@@ -119,6 +153,8 @@
         _name = string.Empty;
         _nameProblem = null;
         _error = null;
+        _info = null;
+        _importProblems = Array.Empty<string>();
     }
 
     /// <summary>Имя проверяется на каждую букву: кнопка не нажимается, пока имя не годится.</summary>
@@ -149,6 +185,61 @@
             await Editor.DeleteAsync(Profile.Name);
             Reset();
             await Changed.InvokeAsync(null);
+        }
+        catch (TransliterationException ex)
+        {
+            _error = ex.Message;
+        }
+    }
+
+    /// <summary>Выгружает выбранный профиль файлом в формате <c>Standard.json</c>.</summary>
+    private async Task ExportAsync()
+    {
+        Reset();
+
+        try
+        {
+            await JS.InvokeVoidAsync("transliteratorFiles.download",
+                                     ProfileJson.FileNameFor(Profile.Name), ProfileJson.Export(Profile));
+        }
+        catch (JSException ex)
+        {
+            _error = $"Файл не выгружен: {ex.Message}";
+        }
+    }
+
+    /// <summary>
+    /// Импорт файла. Всё, что в файле не так, показывается списком; занятое имя
+    /// не перезаписывается, а профиль сохраняется копией — и это сказано.
+    /// </summary>
+    private async Task ImportAsync(InputFileChangeEventArgs e)
+    {
+        Reset();
+
+        try
+        {
+            using var reader = new StreamReader(e.File.OpenReadStream(MaxFileBytes));
+            var result = await Editor.ImportAsync(await reader.ReadToEndAsync());
+
+            if (result.Profile is null)
+            {
+                _importProblems = result.Problems;
+                return;
+            }
+
+            var message = result.RenamedFrom is null
+                ? $"Профиль «{result.Profile.Name}» импортирован."
+                : $"Профиль «{result.RenamedFrom}» уже есть — импортирован как «{result.Profile.Name}».";
+
+            // Импортированный профиль сейчас станет выбранным; сообщение о нём
+            // смена профиля стирать не должна.
+            _shownFor = result.Profile.Name;
+            await Changed.InvokeAsync(result.Profile.Name);
+            _info = message;
+        }
+        catch (IOException)
+        {
+            _error = "Файл слишком большой для профиля.";
         }
         catch (TransliterationException ex)
         {
