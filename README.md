@@ -2,6 +2,9 @@
 
 [Русская версия](README.ru.md)
 
+**Try it in the browser:** https://shoralbrt.github.io/Transliterator/ — the
+pipeline runs right on the page (Blazor WebAssembly), nothing is sent to a server.
+
 **Transliterator** turns vocalised Arabic text into extended Russian Cyrillic,
 applying the rules of tajweed.
 

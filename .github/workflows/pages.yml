@@ -1,0 +1,79 @@
+# Публикация веб-версии на GitHub Pages (F2).
+#
+# На push в master страница собирается и выкладывается. На PR — только
+# собирается: сломанная подготовка сборки видна до влития, а выкладывать
+# непроверенный код незачем.
+name: Pages
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Сборку PR можно отменить новой; выкладку с master — нет: прерванная
+# выкладка оставила бы сайт между двумя версиями.
+concurrency:
+  group: pages-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Publish
+        run: dotnet publish Transliterator.Web/Transliterator.Web.csproj --configuration Release --output publish
+
+      # Три правки, без которых Blazor на Pages не открывается:
+      # - сайт живёт в подкаталоге /<репозиторий>/, а не в корне домена, и base href
+      #   должен на него указывать. Строки для замены нет — падаем, а не выкладываем
+      #   страницу, которая не найдёт своих файлов;
+      # - .nojekyll: иначе Pages прячет папки с подчёркиванием, а среда Blazor — в _framework;
+      # - 404.html — копия index.html: неизвестный путь открывает приложение,
+      #   а не страницу ошибки GitHub.
+      - name: Prepare for GitHub Pages
+        env:
+          BASE_PATH: /${{ github.event.repository.name }}/
+        run: |
+          site=publish/wwwroot
+          if ! grep -q '<base href="/" />' "$site/index.html"; then
+            echo "::error file=Transliterator.Web/wwwroot/index.html::<base href=\"/\" /> not found; cannot point the site at $BASE_PATH"
+            exit 1
+          fi
+          sed -i "s|<base href=\"/\" />|<base href=\"$BASE_PATH\" />|" "$site/index.html"
+          touch "$site/.nojekyll"
+          cp "$site/index.html" "$site/404.html"
+
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: publish/wwwroot
+
+  deploy:
+    if: github.event_name != 'pull_request'
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    permissions:
+      pages: write
+      id-token: write
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5
