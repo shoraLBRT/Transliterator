@@ -129,6 +129,25 @@ namespace Transliterator.Tests.ServiceTests
             Assert.Equal("Draft", result.ProfileName);
         }
 
+        [Theory]
+        // Текст без огласовок — то, что чаще всего вставляют в поле веб-версии (D1):
+        // так пишут почти везде, кроме мусхафа. Чтение без харакатов неполное,
+        // но это не ошибка профиля и не повод ронять страницу.
+        [InlineData("بسم الله الرحمن الرحيم")]
+        [InlineData("قل هو الله أحد")]
+        [InlineData("الذي يوسوس في صدور الناس")]
+        // Огласовки через слово и знаки препинания между словами.
+        [InlineData("بِسْمِ الله، الرَّحْمَنِ الرحيم.")]
+        public void TextWithoutHarakat_IsTransliterated_NotRejected(string arabic)
+        {
+            foreach (var profile in TestProfiles.All)
+            {
+                var result = _service.Transliterate(arabic, profile);
+
+                Assert.False(string.IsNullOrWhiteSpace(result.TransliteratedText));
+            }
+        }
+
         [Fact]
         public void IncompleteProfile_WithoutVariants_FallsBackToBaseKeys()
         {
