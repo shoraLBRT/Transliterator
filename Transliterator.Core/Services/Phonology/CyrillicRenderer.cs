@@ -11,7 +11,11 @@ namespace Transliterator.Core.Services.Phonology
     /// Ни одно правило таджвида не должно стоять после неё — именно в этом состояла
     /// исходная ошибка архитектуры.
     /// </para>
-    /// <para>Порядок поиска ключа в профиле: вариант → базовая буква → пусто.</para>
+    /// <para>
+    /// Порядок поиска ключа в профиле: вариант → базовая буква → пусто. «Пусто» здесь
+    /// не решение, а тишина: какие ненайденные ключи считать ошибкой, решает
+    /// вызывающий, и для этого рендерер отдаёт их списком.
+    /// </para>
     /// </summary>
     public class CyrillicRenderer
     {
@@ -37,7 +41,14 @@ namespace Transliterator.Core.Services.Phonology
             _ => 4
         };
 
-        public string Render(IReadOnlyList<Segment> segments, TransliterationProfile profile)
+        /// <param name="missingKeys">
+        /// Куда сложить базовые ключи, которые понадобились и не нашлись. Без него
+        /// такой звук молча пишется пустой строкой. Вариант ключа сюда не попадает
+        /// никогда: у него есть откат на базовый. Цифры тоже: незаданная цифра
+        /// пишется как есть, и это не потеря.
+        /// </param>
+        public string Render(IReadOnlyList<Segment> segments, TransliterationProfile profile,
+                             ISet<string>? missingKeys = null)
         {
             var result = new StringBuilder();
 
@@ -66,7 +77,7 @@ namespace Transliterator.Core.Services.Phonology
 
                 if (!segment.Silent)
                 {
-                    var consonant = RenderConsonant(segment, previous, profile);
+                    var consonant = RenderConsonant(segment, previous, profile, missingKeys);
                     previous = segment;
                     result.Append(Repeat(consonant, GlideCount(segment)));
                     if (segment.Shadda)
@@ -75,7 +86,7 @@ namespace Transliterator.Core.Services.Phonology
                     // Отзвук кальканя идёт после согласного целиком, а не вместо него:
                     // удвоенная буква размыкается один раз, и отзвук у неё тоже один.
                     result.Append(RenderQalqalah(segment, profile));
-                    result.Append(RenderVowel(segment, profile));
+                    result.Append(RenderVowel(segment, profile, missingKeys));
                 }
 
                 if (segment.HyphenAfter)
@@ -107,7 +118,8 @@ namespace Transliterator.Core.Services.Phonology
             result.Append('-');
         }
 
-        private string RenderConsonant(Segment segment, Segment? previous, TransliterationProfile profile)
+        private string RenderConsonant(Segment segment, Segment? previous, TransliterationProfile profile,
+                                       ISet<string>? missingKeys)
         {
             var letter = segment.Letter;
 
@@ -169,7 +181,7 @@ namespace Transliterator.Core.Services.Phonology
                     return heavy;
             }
 
-            return Lookup(profile, letter) ?? string.Empty;
+            return LookupBase(profile, letter, missingKeys) ?? string.Empty;
         }
 
         private static bool IsBetweenVowels(Segment segment, Segment? previous) =>
@@ -205,7 +217,7 @@ namespace Transliterator.Core.Services.Phonology
             return strong ?? Lookup(profile, Variant(segment.Letter, QalqalahVariant)) ?? string.Empty;
         }
 
-        private string RenderVowel(Segment segment, TransliterationProfile profile)
+        private string RenderVowel(Segment segment, TransliterationProfile profile, ISet<string>? missingKeys)
         {
             if (segment.Vowel is Harakah.None or Harakah.Sukun)
                 return string.Empty;
@@ -216,7 +228,7 @@ namespace Transliterator.Core.Services.Phonology
                 VowelVariant.Heavy => Lookup(profile, Variant(key, HeavyVariant)),
                 VowelVariant.Soft => Lookup(profile, Variant(key, SoftVariant)),
                 _ => null
-            } ?? Lookup(profile, key);
+            } ?? LookupBase(profile, key, missingKeys);
 
             if (string.IsNullOrEmpty(grapheme))
                 return string.Empty;
@@ -236,6 +248,20 @@ namespace Transliterator.Core.Services.Phonology
         };
 
         private static string Variant(string key, string variant) => $"{key}|{variant}";
+
+        /// <summary>
+        /// Последняя ступень поиска: за базовым ключом откатываться некуда,
+        /// и ненайденный ключ записывается как недостающий.
+        /// </summary>
+        private static string? LookupBase(TransliterationProfile profile, string key, ISet<string>? missingKeys)
+        {
+            var value = Lookup(profile, key);
+
+            if (value is null && !string.IsNullOrEmpty(key))
+                missingKeys?.Add(key);
+
+            return value;
+        }
 
         private static string? Lookup(TransliterationProfile profile, string key)
         {

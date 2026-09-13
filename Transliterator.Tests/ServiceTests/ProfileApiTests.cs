@@ -96,6 +96,19 @@ namespace Transliterator.Tests.ServiceTests
         }
 
         [Fact]
+        public async Task Transliterate_StoredProfileMissingAKey_Throws()
+        {
+            // Профиль из хранилища проверяется так же, как переданный целиком:
+            // стёртая в файле строка давала вывод без звука и без сообщения.
+            WriteProfile(new TransliterationProfile("Draft", "неполный") { Rules = { ["ب"] = "b" } });
+
+            var error = await Assert.ThrowsAsync<TransliterationException>(
+                () => _service.TransliterateAsync("بِسْمِ", "Draft"));
+
+            Assert.Contains("U+0650", error.Message);
+        }
+
+        [Fact]
         public async Task UpdateRule_ChangesTransliteration()
         {
             await _service.UpdateRuleAsync("ب", "b");
