@@ -117,7 +117,7 @@ namespace Transliterator.Tests.RulesTests
 
         [Theory]
         [InlineData("ٱهْدِنَا", "иhдинаа")]   // третья буква с касрой
-        [InlineData("ٱدْخُلُوا", "удхъулуу")] // третья буква с даммой
+        [InlineData("ٱدْخُلُوا", "удхъулюю")] // третья буква с даммой
         [InlineData("ٱنظُرْ", "унзIур")]      // третья буква с даммой
         public void InitialWasl_TakesVowelFromThirdLetter(string arabic, string expected) =>
             Assert.Equal(expected, TransliterationPipeline.Transliterate(arabic));
@@ -389,7 +389,7 @@ namespace Transliterator.Tests.RulesTests
 
         [Theory]
         [InlineData("عَابِدٌۭ مَّا", "'аабидум-маа")]                 // танвин в мим
-        [InlineData("حَبْلٌۭ مِّن مَّسَدٍۢ", "хIаблум-мим-масад")]      // танвин в мим, затем написанный нун в мим
+        [InlineData("حَبْلٌۭ مِّن مَّسَدٍۢ", "хIаблюм-мим-масад")]      // танвин в мим, затем написанный нун в мим
         [InlineData("لَهَبٍۢ وَتَبَّ", "ляhабиу-уатабб")]              // танвин в вав
         public void IdghamWithGhunna_MergesAcrossTheWordBoundary(string arabic, string expected) =>
             // Стык слов — единственное место, где идгам вообще бывает: внутри слова
