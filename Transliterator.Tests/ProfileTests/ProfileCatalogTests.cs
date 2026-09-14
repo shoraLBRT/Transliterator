@@ -20,9 +20,9 @@ namespace Transliterator.Tests.ProfileTests
         /// </summary>
         private static readonly Dictionary<string, string[]> OmittedVariants = new()
         {
-            // Мягкость ляма кириллице приходится дописывать («ль», «ля»),
-            // латинице — нет: «l» и «a» пишутся одинаково в любом слоге.
-            ["Latin"] = new[] { "ل|sukun", "َ|soft" }
+            // Мягкость ляма кириллице приходится дописывать («ль», «ля», «лю»),
+            // латинице — нет: «l», «a» и «u» пишутся одинаково в любом слоге.
+            ["Latin"] = new[] { "ل|sukun", "َ|soft", "ُ|soft" }
         };
 
         public static TheoryData<string> Profiles()
