@@ -451,11 +451,18 @@ svg {
     }
 }
 
+/* Движение — сдвиг поля, всплытие карточек, пульс загрузки — снимается.
+   Мигание курсора подсказки остаётся: оно ничего не двигает, а без него печать
+   читается как застывший текст. */
 @media (prefers-reduced-motion: reduce) {
     *,
     *::before,
     *::after {
         animation: none !important;
         transition: none !important;
+    }
+
+    .hint-text.is-typing::after {
+        animation: caret 1s steps(1) infinite !important;
     }
 }

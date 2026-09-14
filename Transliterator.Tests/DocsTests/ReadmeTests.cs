@@ -28,7 +28,7 @@ namespace Transliterator.Tests.DocsTests
 
         public static TheoryData<string> Readmes() => new() { "README.md", "README.ru.md" };
 
-        private static string RepositoryRoot()
+        internal static string RepositoryRoot()
         {
             for (var dir = new DirectoryInfo(AppContext.BaseDirectory); dir is not null; dir = dir.Parent)
                 if (File.Exists(Path.Combine(dir.FullName, "Transliterator.sln")))
