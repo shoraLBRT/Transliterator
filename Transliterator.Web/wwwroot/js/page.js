@@ -1,22 +1,33 @@
 // Мелочи страницы, которых нет в Blazor: печать подсказки, высота поля по тексту
 // и буфер обмена. Всё здесь — удобство: без этого файла страница остаётся рабочей.
 window.page = (() => {
-    const reducedMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
     const TypeDelay = 45;
     const EraseDelay = 22;
     const HoldDelay = 3500; // успеть прочитать фразу
     const GapDelay = 450;
+    const PausedDelay = 500;
 
-    /** Фразы печатаются и стираются по кругу; без анимации стоит первая. */
-    function typewriter(element, phrases) {
+    /**
+     * Фразы печатаются и стираются по кругу.
+     *
+     * prefers-reduced-motion здесь не спрашивается. Печать меняет текст на месте
+     * и ничего не двигает по экрану, а флаг включается далеко не только
+     * по просьбе человека: в Windows его ставит выключенный параметр «Показывать
+     * анимацию», и из-за этой проверки подсказка у владельца не менялась вовсе.
+     *
+     * Пока в поле есть текст, подсказка замирает на дописанной фразе: человек
+     * уже работает, и меняющаяся строка над полем только отвлекала бы.
+     */
+    function typewriter(element, phrases, input) {
         if (!element || !phrases || phrases.length === 0)
             return;
 
-        if (reducedMotion() || phrases.length === 1) {
+        if (phrases.length === 1) {
             element.textContent = phrases[0];
             return;
         }
+
+        const busy = () => !!input && input.value.trim() !== "";
 
         let phrase = 0;
         let length = 0;
@@ -32,7 +43,7 @@ window.page = (() => {
 
                 if (length === text.length) {
                     erasing = true;
-                    setTimeout(tick, HoldDelay);
+                    setTimeout(hold, HoldDelay);
                 } else {
                     setTimeout(tick, TypeDelay);
                 }
@@ -49,6 +60,9 @@ window.page = (() => {
                 setTimeout(tick, EraseDelay);
             }
         };
+
+        // Дописанная фраза стоит, пока поле занято; стирается, когда оно опустело.
+        const hold = () => setTimeout(busy() ? hold : tick, busy() ? PausedDelay : 0);
 
         tick();
     }
