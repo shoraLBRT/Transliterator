@@ -1,4 +1,7 @@
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
+using Transliterator.Cli;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using Transliterator.Core.Repositories;
@@ -113,6 +116,34 @@ namespace Transliterator.Tests.DocsTests
 
         [Theory]
         [MemberData(nameof(Readmes))]
+        public async Task CliSurahExample_PrintsWhatTheCliGives(string name)
+        {
+            // Этот пример проверяется запуском CLI, а не конвейера: сура берётся
+            // из корпуса самим CLI, и показанный вывод — это его stdout целиком.
+            var readme = Readme(name);
+            var command = Block(readme, "cli-surah");
+            var separator = command.IndexOf(" -- ", StringComparison.Ordinal);
+
+            Assert.True(separator >= 0, "The CLI surah example has no ' -- ' before its arguments");
+
+            var args = command[(separator + 4)..].Split(' ', StringSplitOptions.RemoveEmptyEntries);
+
+            using var provider = new ServiceCollection()
+                .AddLogging()
+                .AddTransliteratorCli(new ConfigurationBuilder().Build())
+                .BuildServiceProvider();
+
+            var output = new StringWriter { NewLine = "\n" };
+            var error = new StringWriter { NewLine = "\n" };
+            var exitCode = await provider.GetRequiredService<CliApp>()
+                .RunAsync(args, new CliConsole(TextReader.Null, output, error, InputRedirected: false));
+
+            Assert.True(exitCode == CliApp.Success, error.ToString());
+            Assert.Equal(Block(readme, "cli-surah-output") + "\n", output.ToString());
+        }
+
+        [Theory]
+        [MemberData(nameof(Readmes))]
         public void ProfileExample_IsAnExcerptOfStandardJson(string name)
         {
             var excerpt = JsonSerializer.Deserialize<TransliterationProfile>(Block(Readme(name), "profile"))!;
@@ -135,7 +166,7 @@ namespace Transliterator.Tests.DocsTests
             var english = Readme("README.md");
             var russian = Readme("README.ru.md");
 
-            foreach (var example in new[] { "fatiha-input", "fatiha-output", "cli", "cli-output", "profile" })
+            foreach (var example in new[] { "fatiha-input", "fatiha-output", "cli", "cli-output", "cli-surah", "cli-surah-output", "profile" })
                 Assert.Equal(Block(english, example), Block(russian, example));
 
             Assert.Equal(Table(english, "runs"), Table(russian, "runs"));
