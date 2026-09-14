@@ -1,5 +1,4 @@
 using System.Reflection;
-using System.Text;
 using Transliterator.Core.Services.Phonology;
 using Transliterator.Domain.Entities;
 using Xunit;
@@ -10,9 +9,22 @@ namespace Transliterator.Tests.ProfileTests
     /// Инварианты, общие для всех профилей в ресурсах. Профиль правят руками,
     /// и опечатка в нём молча даёт пустую графему: рендерер ищет ключ, не находит
     /// и возвращает пустую строку. Здесь эта тишина превращается в упавший тест.
+    /// Как профили пишут весь корпус, проверяет <see cref="ProfileCorpusTests"/>.
     /// </summary>
     public class ProfileCatalogTests
     {
+        /// <summary>
+        /// Варианты, которые профиль не задаёт нарочно, с причиной. Откат на базовый
+        /// ключ у них — решение системы записи, а не забытая строка; проверен он
+        /// в <see cref="LatinProfileTests"/>.
+        /// </summary>
+        private static readonly Dictionary<string, string[]> OmittedVariants = new()
+        {
+            // Мягкость ляма кириллице приходится дописывать («ль», «ля»),
+            // латинице — нет: «l» и «a» пишутся одинаково в любом слоге.
+            ["Latin"] = new[] { "ل|sukun", "َ|soft" }
+        };
+
         public static TheoryData<string> Profiles()
         {
             var data = new TheoryData<string>();
@@ -28,6 +40,9 @@ namespace Transliterator.Tests.ProfileTests
         private static IEnumerable<string> BaseKeys(TransliterationProfile profile) =>
             profile.Rules.Keys.Where(k => !k.Contains('|'));
 
+        private static IEnumerable<string> VariantKeys(TransliterationProfile profile) =>
+            profile.Rules.Keys.Where(k => k.Contains('|'));
+
         [Theory]
         [MemberData(nameof(Profiles))]
         public void Profile_CoversEveryBaseKeyTheOthersCover(string name)
@@ -41,13 +56,31 @@ namespace Transliterator.Tests.ProfileTests
 
         [Theory]
         [MemberData(nameof(Profiles))]
+        public void Profile_DecidesEveryVariantTheOthersSet(string name)
+        {
+            // Незаданный вариант не ломает вывод — рендерер откатится к базовому
+            // ключу, — и потому забытый вариант не виден ни одним другим тестом.
+            // Вариант, появившийся в одном профиле, требует решения в каждом:
+            // задать его или записать сюда, почему не нужен. Запись, которая
+            // перестала быть правдой, роняет тест так же.
+            var missing = TestProfiles.All.SelectMany(VariantKeys).Distinct()
+                                          .Except(VariantKeys(Get(name)))
+                                          .Order(StringComparer.Ordinal);
+            var omitted = OmittedVariants.GetValueOrDefault(name, Array.Empty<string>())
+                                         .Order(StringComparer.Ordinal);
+
+            Assert.Equal(omitted, missing);
+        }
+
+        [Theory]
+        [MemberData(nameof(Profiles))]
         public void VariantKey_AlwaysHasItsBaseKey(string name)
         {
             // Вариант — это переопределение базовой графемы. Без базовой ему
             // не на что откатываться, и первое же неучтённое состояние даст пусто.
             var profile = Get(name);
 
-            Assert.All(profile.Rules.Keys.Where(k => k.Contains('|')),
+            Assert.All(VariantKeys(profile),
                 key => Assert.Contains(key[..key.IndexOf('|')], profile.Rules.Keys));
         }
 
@@ -63,65 +96,8 @@ namespace Transliterator.Tests.ProfileTests
                 .Select(f => (string)f.GetRawConstantValue()!)
                 .ToHashSet();
 
-            Assert.All(Get(name).Rules.Keys.Where(k => k.Contains('|')),
+            Assert.All(VariantKeys(Get(name)),
                 key => Assert.Contains(key[(key.IndexOf('|') + 1)..], known));
         }
-
-        [Theory]
-        [MemberData(nameof(Profiles))]
-        public void Profile_RendersTheWholeFatiha(string name)
-        {
-            // Профиль, забытый в csproj, до выходной папки не доезжает вовсе.
-            // А цифры и всё, чего рендерер не опознал, он отдаёт как есть —
-            // и незаданный ключ виден в выводе непереведённой арабской графемой.
-            var result = TransliterationPipeline.Transliterate(Fatiha, Get(name));
-
-            Assert.False(string.IsNullOrWhiteSpace(result));
-            Assert.DoesNotContain(result, c => c is >= '\u0600' and <= '\u06FF');
-        }
-
-        [Theory]
-        [MemberData(nameof(Profiles))]
-        public void Profile_ChangesTheLettersButNotTheStructure(string name)
-        {
-            // Тот самый инвариант проекта в виде проверки: где кончается слово,
-            // где стоит дефис слияния и где идёт номер аята — решает конвейер.
-            // Профиль вправе поменять каждую графему и не вправе сдвинуть ни одну
-            // границу. Всё, что не пробел и не дефис, здесь схлопнуто в «·».
-            //
-            // Разделитель хамзы между гласными — не граница, а графема: Standard
-            // пишет его дефисом, Latin — той же ʾ (B7). Чтобы он не сошёл здесь
-            // за структуру, вариант снят с обоих профилей и берётся базовый ключ.
-            Assert.Equal(Skeleton(TransliterationPipeline.Transliterate(Fatiha, WithoutHiatus(TestProfiles.Standard))),
-                         Skeleton(TransliterationPipeline.Transliterate(Fatiha, WithoutHiatus(Get(name)))));
-        }
-
-        private static TransliterationProfile WithoutHiatus(TransliterationProfile profile) =>
-            new(profile.Name, profile.Description)
-            {
-                Rules = profile.Rules
-                    .Where(rule => !rule.Key.EndsWith("|" + CyrillicRenderer.HiatusVariant))
-                    .ToDictionary(rule => rule.Key, rule => rule.Value)
-            };
-
-        private static string Skeleton(string rendered)
-        {
-            var skeleton = new StringBuilder();
-
-            foreach (var c in rendered)
-            {
-                if (c is ' ' or '-')
-                    skeleton.Append(c);
-                else if (skeleton.Length == 0 || skeleton[^1] != '·')
-                    skeleton.Append('·');
-            }
-
-            return skeleton.ToString();
-        }
-
-        private const string Fatiha =
-            "بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ ١ ٱلْحَمْدُ لِلَّهِ رَبِّ ٱلْعَـٰلَمِينَ ٢ " +
-            "ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ ٣ مَـٰلِكِ يَوْمِ ٱلدِّينِ ٤ إِيَّاكَ نَعْبُدُ وَإِيَّاكَ نَسْتَعِينُ ٥ " +
-            "ٱهْدِنَا ٱلصِّرَٰطَ ٱلْمُسْتَقِيمَ ٦ صِرَٰطَ ٱلَّذِينَ أَنْعَمْتَ عَلَيْهِمْ غَيْرِ ٱلْمَغْضُوبِ عَلَيْهِمْ وَلَا ٱلضَّآلِّينَ";
     }
 }
