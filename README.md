@@ -27,10 +27,10 @@ tajweed needs.
 * Rules operate on a segment stream, never on finished Cyrillic: there is not a
   single Cyrillic grapheme in the rule code — every one of them comes from
   a profile.
-* **Transliteration profiles** are JSON files. Two ship with the core; your own
-  can be made and edited in the browser.
-* **Web version**: input with a live result, ready-made surahs, the profile rules
-  as a table and a profile editor — a static page with no server.
+* **Transliteration profiles** are JSON files. Two ship with the core; the first
+  iteration of the web version writes with one — `Standard`.
+* **Web version**: one input field, the result under it and ready-made surahs —
+  a static page with no server.
 * **CLI**: text as an argument, from a file, from stdin or a ready-made surah
   from the corpus; the profiles are listed before choosing.
 * xUnit tests run the whole corpus of worked examples through the pipeline; the
@@ -92,29 +92,16 @@ A single page built with Blazor WebAssembly: the core is compiled to wasm and do
 all the work in the browser. There is no server, and the page is published from
 `master` to GitHub Pages automatically.
 
-* **Input and result.** Arabic text is typed right to left, and the result is
-  recalculated on every edit. Text without diacritics is accepted too, although
-  without harakat the reading is incomplete.
-* **Profiles.** `Standard` and `Latin` are built in; the chosen profile is
-  remembered across reloads.
-* **Ready-made surahs** from the corpus are one click away. The text goes in one
-  ayah per line, and the result keeps the lines.
-* **Profile rules** as a table: variants stand under their letter, with a search
-  by key.
-
-### Custom profiles
-
-* **Create** a profile as a copy of any existing one and change graphemes right in
-  the rules table — the result updates as you type.
-* **Rename and delete** your own profiles. Built-in profiles are only copied,
-  never changed: saving an edit of `Standard` creates `Standard (копия)`.
-* Profiles live in the browser's **localStorage**: they survive a reload and are
-  never sent anywhere. A damaged entry is skipped with a message instead of
-  breaking the page.
-* **Export and import** a profile as JSON in the same format as `Standard.json` —
-  this is how a profile is shared or brought into
-  `Transliterator.Core/Resources/Profiles/`. Import lists everything that is wrong
-  with a file and never overwrites an existing profile: a taken name gets a copy.
+* **One field.** Arabic text goes into the field in the centre, and the result
+  appears under it, recalculated on every edit. A button copies it. Text without
+  diacritics is accepted too, although without harakat the reading is incomplete.
+* **Ready-made surahs** from the corpus open with the "Выбрать суру" button. The
+  text goes in one ayah per line, and the result keeps the lines.
+* **One profile — `Standard`.** Profile selection, the rules table and the
+  custom profile editor are taken off the page in the first iteration. They stay
+  in the core: localStorage storage, the editor, JSON export and import
+  (`UserProfileRepository`, `ProfileEditor`, `ProfileJson`) are covered by tests
+  and will return to the page in the next iteration.
 
 To run the page locally:
 

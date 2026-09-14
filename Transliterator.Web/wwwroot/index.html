@@ -4,14 +4,19 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Transliterator</title>
+    <meta name="description" content="Транслитерация Корана кириллицей по правилам таджвида — прямо в браузере." />
+    <meta name="theme-color" content="#fbf7ef" />
+    <title>Транслитерация Корана</title>
     <base href="/" />
     <link rel="stylesheet" href="css/app.css" />
 </head>
 
 <body>
     <div id="app">
-        <p class="loading">Загрузка…</p>
+        <div class="boot" role="status">
+            <span class="boot-dot" aria-hidden="true"></span>
+            <span>Загрузка…</span>
+        </div>
     </div>
 
     <div id="blazor-error-ui">
@@ -19,8 +24,7 @@
         <a href="" class="reload">Перезагрузить</a>
     </div>
 
-    <script src="js/storage.js"></script>
-    <script src="js/files.js"></script>
+    <script src="js/page.js"></script>
     <script src="_framework/blazor.webassembly.js"></script>
 </body>
 
