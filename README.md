@@ -31,7 +31,8 @@ tajweed needs.
   can be made and edited in the browser.
 * **Web version**: input with a live result, ready-made surahs, the profile rules
   as a table and a profile editor — a static page with no server.
-* **CLI** with profile selection via the second argument.
+* **CLI**: text as an argument, from a file, from stdin or a ready-made surah
+  from the corpus; the profiles are listed before choosing.
 * xUnit tests run the whole corpus of worked examples through the pipeline; the
   build and the tests run on every pull request.
 
@@ -146,9 +147,39 @@ With an explicit profile:
 dotnet run --project Transliterator.Cli -- "بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ" Latin
 ```
 
-Running with no arguments starts an interactive mode: the application offers to
-take text typed by hand or the example from Al-Fatiha, then asks for a profile
-name.
+A ready-made surah from the corpus by its number, with the profile as an option:
+
+<!-- readme-example:cli-surah -->
+```bash
+dotnet run --project Transliterator.Cli -- --surah 112 --profile Latin
+```
+
+<!-- readme-example:cli-surah-output -->
+```
+qul huwa-llaahu aḥad 1
+al-laahu-ṣṣomad 2
+lam yalid walam yuulad 3
+walam yakul-lahuu kufuwan aḥad 4
+```
+
+Long text is easier to take from a file or from stdin:
+
+```bash
+dotnet run --project Transliterator.Cli -- --file text.txt
+dotnet run --project Transliterator.Cli -- --stdin < text.txt
+```
+
+* `--profiles` and `--surahs` show what there is to choose from; `--help` shows
+  every option.
+* Only the result goes to stdout; messages and errors go to stderr, so the output
+  can be redirected to a file.
+* The file and stdin are read as UTF-8. A file in another encoding is rejected
+  with an explanation instead of transliterating garbled text. Windows PowerShell 5
+  does not pipe text (`Get-Content … |`) as UTF-8 — use `--file` there.
+
+Running with no arguments starts an interactive mode: the application asks what
+to transliterate — typed text, a surah from the corpus or a file — then shows the
+profiles and asks which one to write with.
 
 ---
 
@@ -293,8 +324,8 @@ path the browser editor uses. The profile is validated before the calculation.
   pipeline: every ayah in both spellings, and every surah as a single line.
   The cases are built from the corpus files, so adding a surah adds its tests.
 * The examples in this file are checked too: the Al-Fatiha excerpt against the
-  corpus, the runs and the CLI output against the pipeline, and the profile
-  excerpt against `Standard.json`.
+  corpus, the runs and the CLI output against the pipeline, the surah example by
+  running the CLI itself, and the profile excerpt against `Standard.json`.
 * GitHub Actions builds the solution and runs the tests on every pull request to
   `master`.
 

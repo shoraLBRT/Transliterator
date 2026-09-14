@@ -1,99 +1,41 @@
-﻿// Transliterator.Cli/Program.cs
+// Transliterator.Cli/Program.cs
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Transliterator.Core.Models;
-using Transliterator.Core.Repositories;
-using Transliterator.Core.Services.Phonology;
-using Transliterator.Core.Services.Rules;
-using Transliterator.Domain.Interfaces;
+using Microsoft.Extensions.Logging;
 using System.Text;
+using Transliterator.Cli;
 
 Console.OutputEncoding = Encoding.UTF8;
-Console.InputEncoding = Encoding.UTF8;
 
-using IHost host = Host.CreateDefaultBuilder(args)
-    .ConfigureServices((context, services) =>
+// Аргументы в хост не передаются: командную строку разбирает CliArguments,
+// и "--file путь" не должен становиться ключом конфигурации. Корень — папка
+// сборки, а не текущая: иначе appsettings.json не находится, если CLI запущен
+// не из своей папки.
+using IHost host = Host.CreateDefaultBuilder()
+    .UseContentRoot(AppContext.BaseDirectory)
+    .ConfigureLogging(logging =>
     {
-        services.Configure<StorageSettings>(context.Configuration.GetSection("StorageSettings"));
-
-        services.AddTransient<IProfileRepository, JsonProfileRepository>();
-        services.AddTransient<ITransliterationService, TransliterationService>();
-
-        // Стадии конвейера
-        services.AddTransient<ArabicNormalizer>();
-        services.AddTransient<ArabicParser>();
-        services.AddTransient<CyrillicRenderer>();
-
-        // Правила таджвида
-        services.AddTransient<RulesService>();
-        services.AddTransient<WaqfRule>();
-        services.AddTransient<WaslRule>();
-        services.AddTransient<ArticleRule>();
-        services.AddTransient<AssimilationRule>();
-        services.AddTransient<NasalRule>();
-        services.AddTransient<EmphasisRule>();
-        services.AddTransient<MaddRule>();
-        services.AddTransient<QalqalahRule>();
+        // stdout занят результатом, и строка лога в нём была бы порчей вывода.
+        logging.ClearProviders();
+        logging.AddConsole(options => options.LogToStandardErrorThreshold = LogLevel.Trace);
+        logging.SetMinimumLevel(LogLevel.Warning);
     })
+    .ConfigureServices((context, services) => services.AddTransliteratorCli(context.Configuration))
     .Build();
 
-var transliterationService = host.Services.GetRequiredService<ITransliterationService>();
-
-string profileName = "Standard";
-string? textToTransliterate = null;
-
-if (args.Length > 0)
+// Перенаправленный ввод читается как UTF-8 явно. Console.In взял бы кодовую
+// страницу консоли, и арабица из файла пришла бы испорченной.
+TextReader input;
+if (Console.IsInputRedirected)
 {
-    textToTransliterate = args[0];
-    if (args.Length > 1)
-    {
-        profileName = args[1];
-    }
+    input = new StreamReader(Console.OpenStandardInput(), new UTF8Encoding(false));
 }
 else
 {
-    Console.WriteLine("No input arguments detected.");
-    Console.WriteLine("Choose input mode:");
-    Console.WriteLine("1. Enter Arabic text manually");
-    Console.WriteLine("2. Use example text from Al-Fatiha");
-    Console.Write("Select an option (1/2): ");
-
-    var choice = Console.ReadLine()?.Trim();
-    if (choice == "1")
-    {
-        Console.Write("Enter Arabic text: ");
-        textToTransliterate = Console.ReadLine();
-    }
-    else if (choice == "2")
-    {
-        textToTransliterate = "بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ ١ ٱلْحَمْدُ لِلَّهِ رَبِّ ٱلْعَـٰلَمِينَ ٢ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ ٣ مَـٰلِكِ يَوْمِ ٱلدِّينِ ٤ إِيَّاكَ نَعْبُدُ وَإِيَّاكَ نَسْتَعِينُ ٥ ٱهْدِنَا ٱلصِّرَٰطَ ٱلْمُسْتَقِيمَ ٦ صِرَٰطَ ٱلَّذِينَ أَنْعَمْتَ عَلَيْهِمْ غَيْرِ ٱلْمَغْضُوبِ عَلَيْهِمْ وَلَا ٱلضَّآلِّينَ ";
-        Console.WriteLine("Loaded example text from Al-Fatiha.");
-    }
-    else
-    {
-        Console.WriteLine("Invalid option. Exiting.");
-        return;
-    }
-
-    Console.Write($"Enter profile name (default: {profileName}): ");
-    var profileInput = Console.ReadLine()?.Trim();
-    if (!string.IsNullOrWhiteSpace(profileInput))
-    {
-        profileName = profileInput;
-    }
+    Console.InputEncoding = Encoding.UTF8;
+    input = Console.In;
 }
 
-try
-{
-    Console.WriteLine($"\nUsing profile: {profileName}");
-    Console.WriteLine($"Input text: {textToTransliterate}");
+var console = new CliConsole(input, Console.Out, Console.Error, Console.IsInputRedirected);
 
-    var result = await transliterationService.TransliterateAsync(textToTransliterate!, profileName);
-
-    Console.WriteLine($"\n=== Transliteration Result ===");
-    Console.WriteLine(result.TransliteratedText);
-}
-catch (Exception ex)
-{
-    Console.WriteLine($"Error: {ex.Message}");
-}
+return await host.Services.GetRequiredService<CliApp>().RunAsync(args, console);

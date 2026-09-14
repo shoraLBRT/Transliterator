@@ -17,6 +17,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Transliterator.Core\Transliterator.Core.csproj" />
+    <ProjectReference Include="..\Transliterator.Cli\Transliterator.Cli.csproj" />
   </ItemGroup>
 
   <ItemGroup>
