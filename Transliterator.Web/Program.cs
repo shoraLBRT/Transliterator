@@ -1,32 +1,22 @@
 // Transliterator.Web/Program.cs
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Transliterator.Core.Repositories;
-using Transliterator.Core.Services;
 using Transliterator.Core.Services.Phonology;
 using Transliterator.Core.Services.Rules;
 using Transliterator.Domain.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using Transliterator.Web;
-using Transliterator.Web.Storage;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 
 builder.RootComponents.Add<App>("#app");
 
-// Встроенные профили — из ресурсов сборки: каталога рядом со сборкой в браузере нет (C1).
-// Свои — из localStorage (E1). Страница видит их одним хранилищем: встроенный
-// профиль там не перезаписывается, а правка его сохраняется копией.
-builder.Services.AddSingleton<EmbeddedProfileRepository>();
-builder.Services.AddSingleton<IKeyValueStore, LocalStorageStore>();
-builder.Services.AddSingleton(services => new UserProfileRepository(
-    services.GetRequiredService<EmbeddedProfileRepository>(),
-    services.GetRequiredService<IKeyValueStore>(),
-    services.GetRequiredService<ILogger<UserProfileRepository>>()));
-builder.Services.AddSingleton<IProfileRepository>(services => services.GetRequiredService<UserProfileRepository>());
-builder.Services.AddSingleton<ProfileEditor>();
+// Первая итерация пишет одним встроенным профилем (D5), и профили берутся только
+// из ресурсов сборки: каталога рядом со сборкой в браузере нет (C1). Хранилище
+// своих профилей в localStorage (E1) остаётся в ядре и вернётся со следующей итерацией.
+builder.Services.AddSingleton<IProfileRepository, EmbeddedProfileRepository>();
 
-// Корпус — тоже из ресурсов (C3): панель сур и прогон тестов читают одни и те же файлы.
+// Корпус — тоже из ресурсов (C3): готовые суры и прогон тестов читают одни и те же файлы.
 builder.Services.AddSingleton<ICorpusRepository, EmbeddedCorpusRepository>();
 builder.Services.AddTransient<ITransliterationService, TransliterationService>();
 

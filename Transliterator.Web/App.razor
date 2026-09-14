@@ -1,135 +1,153 @@
-@using Transliterator.Core.Repositories
 @using Transliterator.Core.Services
-@using Transliterator.Domain.Exceptions
 @inject IProfileRepository Profiles
-@inject UserProfileRepository UserProfiles
-@inject ProfileEditor Editor
 @inject ICorpusRepository Corpus
 @inject ITransliterationService Transliteration
 @inject IJSRuntime JS
 @inject ILogger<App> Logger
 
-<div class="page">
-    <aside class="settings">
-        <ProfilePanel Profiles="_profiles" BuiltIn="_builtIn" Selected="_profile" SelectedChanged="SelectAsync" />
+<div class="shell @(HasText ? "is-active" : null)">
+    <main class="stage">
+        <h1 class="visually-hidden">Транслитерация Корана кириллицей</h1>
 
-        @if (_profile is not null)
-        {
-            <ProfileActions Profile="_profile" IsBuiltIn="_builtIn.Contains(_profile.Name)" Changed="OnProfilesChangedAsync" />
-        }
+        @* Подсказка печатается скриптом и сменяет себя. Экранному диктору она не
+           читается: для него у поля есть постоянная подпись, а текст, меняющийся
+           каждые несколько секунд, мешал бы. *@
+        <p class="hint" aria-hidden="true"><span class="hint-text" @ref="_hint"></span></p>
 
-        @if (_notices.Count > 0)
-        {
-            <ul class="notices" role="status">
-                @foreach (var notice in _notices)
+        <div class="composer">
+            <label for="arabic" class="visually-hidden">Арабский текст для транслитерации</label>
+            <textarea id="arabic" class="composer-input" dir="rtl" lang="ar" rows="1"
+                      spellcheck="false" autocomplete="off" placeholder="@_placeholder"
+                      value="@_arabic" @oninput="OnInput" @ref="_input"></textarea>
+
+            <div class="composer-bar">
+                @if (_surahs.Count > 0)
                 {
-                    <li>@notice</li>
+                    <SurahPicker Surahs="_surahs" Chosen="ChooseAsync" />
                 }
-            </ul>
-        }
 
-        @if (_surahs.Count > 0)
-        {
-            <SurahPanel Surahs="_surahs" Chosen="Choose" />
-        }
-    </aside>
-
-    <main class="work">
-        <label for="arabic">Арабский текст</label>
-        <textarea id="arabic" class="arabic" dir="rtl" lang="ar" rows="8" spellcheck="false"
-                  value="@_arabic" @oninput="OnInput"></textarea>
-
-        <label for="result">Транслитерация</label>
-        <textarea id="result" class="result" dir="ltr" rows="8" readonly
-                  value="@_result"></textarea>
+                @if (HasText)
+                {
+                    <button type="button" class="icon-button" title="Очистить" aria-label="Очистить поле" @onclick="ClearAsync">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" /></svg>
+                    </button>
+                }
+            </div>
+        </div>
 
         @if (_error is not null)
         {
             <p class="error" role="alert">@_error</p>
         }
-
-        @if (_editError is not null)
+        else if (_result.Length > 0)
         {
-            <p class="error" role="alert">@_editError</p>
-        }
+            <section class="result" aria-labelledby="result-title">
+                <h2 id="result-title" class="visually-hidden">Транслитерация</h2>
+                <p class="result-text">@_result</p>
 
-        @if (_profile is not null)
-        {
-            <RulesPanel Profile="_profile" Editable="!_builtIn.Contains(_profile.Name)" RuleChanged="ChangeRuleAsync" />
+                <button type="button" class="copy-button" @onclick="CopyAsync">
+                    @if (_copyState == CopyState.Copied)
+                    {
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>
+                        <span>Скопировано</span>
+                    }
+                    else if (_copyState == CopyState.Failed)
+                    {
+                        <span>Выделите текст вручную</span>
+                    }
+                    else
+                    {
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2" /><path d="M5 15V6a2 2 0 0 1 2-2h9" /></svg>
+                        <span>Копировать</span>
+                    }
+                </button>
+            </section>
         }
     </main>
+
+    <footer class="footer">
+        <span>Кириллица по правилам таджвида</span>
+        <span aria-hidden="true">·</span>
+        <a href="https://github.com/shoraLBRT/Transliterator" target="_blank" rel="noopener">GitHub</a>
+    </footer>
 </div>
 
 @code {
-    private const string DefaultProfileName = "Standard";
+    /// <summary>
+    /// Первая итерация пишет одним профилем. Выбор профиля, редактор и импорт
+    /// сняты со страницы (D5), но в ядре остаются и вернутся следующей итерацией.
+    /// </summary>
+    private const string ProfileName = "Standard";
+
+    /// <summary>Первый аят Аль-Фатихи — на случай, если корпус не прочитался.</summary>
+    private const string FallbackPlaceholder = "بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ";
 
     /// <summary>
-    /// Ключ localStorage с именем выбранного профиля. Хранится только имя:
-    /// сами профили лежат в хранилище, и копия профиля здесь разошлась бы с ним.
+    /// Короткие, чтобы на телефоне помещаться в две строки и успевать прочитаться
+    /// за паузу: подсказка — не инструкция, а первое знакомство со страницей.
     /// </summary>
-    private const string SelectedProfileKey = "transliterator.selected-profile";
+    private static readonly string[] Hints =
+    {
+        "Вставьте арабский текст — получите чтение кириллицей",
+        "Учтены правила таджвида: идгам, мадд, кальканя",
+        "Нужен пример? Выберите суру под полем ввода"
+    };
 
-    private IReadOnlyList<TransliterationProfile> _profiles = Array.Empty<TransliterationProfile>();
+    private enum CopyState { Idle, Copied, Failed }
+
     private IReadOnlyList<CorpusSurah> _surahs = Array.Empty<CorpusSurah>();
-    private IReadOnlySet<string> _builtIn = new HashSet<string>();
-    private IReadOnlyList<string> _notices = Array.Empty<string>();
     private TransliterationProfile? _profile;
+    private string _placeholder = FallbackPlaceholder;
     private string _arabic = string.Empty;
     private string _result = string.Empty;
     private string? _error;
-    private string? _editError;
+
+    private ElementReference _hint;
+    private ElementReference _input;
+    private bool _resizePending;
+    private CopyState _copyState;
+    private int _copyStamp;
+
+    private bool HasText => !string.IsNullOrWhiteSpace(_arabic);
 
     protected override async Task OnInitializedAsync()
     {
         _surahs = await LoadSurahsAsync();
-        _profiles = await LoadProfilesAsync();
+        _placeholder = _surahs.FirstOrDefault(s => s.Number == 1)?.Ayahs.FirstOrDefault()?.Arabic ?? FallbackPlaceholder;
 
-        if (_profiles.Count == 0)
-        {
-            _error = "Нет ни одного профиля.";
-            return;
-        }
-
-        // Сохранённого профиля может уже не быть: его удалили или переименовали.
-        // Тогда — Standard, а без него первый по списку, но не пустая страница.
-        var stored = await ReadStoredProfileNameAsync();
-
-        _profile = _profiles.FirstOrDefault(p => p.Name == stored)
-                ?? _profiles.FirstOrDefault(p => p.Name == DefaultProfileName)
-                ?? _profiles[0];
+        _profile = await Profiles.GetProfileAsync(ProfileName);
+        if (_profile is null)
+            _error = $"Профиль {ProfileName} не загрузился. Перезагрузите страницу.";
     }
 
-    /// <summary>
-    /// Список — из <see cref="ITransliterationService.GetAvailableProfilesAsync"/>,
-    /// а не из разметки: профиль, добавленный в хранилище, появляется в панели сам.
-    /// Сами профили — из хранилища: панели нужно описание, а не только имя.
-    /// </summary>
-    private async Task<IReadOnlyList<TransliterationProfile>> LoadProfilesAsync()
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        var profiles = new List<TransliterationProfile>();
+        // Подсказка и высота поля — удобство, а не работа страницы: не загрузился
+        // скрипт — поле остаётся полем, и транслитерация работает.
+        try
+        {
+            if (firstRender)
+            {
+                await JS.InvokeVoidAsync("page.typewriter", _hint, Hints);
+                await JS.InvokeVoidAsync("page.autosize", _input);
+            }
 
-        foreach (var name in await Transliteration.GetAvailableProfilesAsync())
-            if (await Profiles.GetProfileAsync(name) is { } profile)
-                profiles.Add(profile);
-
-        var builtIn = new HashSet<string>(StringComparer.Ordinal);
-        foreach (var profile in profiles)
-            if (await UserProfiles.IsBuiltInAsync(profile.Name))
-                builtIn.Add(profile.Name);
-
-        _builtIn = builtIn;
-
-        // Битая запись в localStorage список не роняет: профиль пропущен,
-        // и страница говорит, какой и почему.
-        _notices = UserProfiles.Problems.ToList();
-
-        return profiles;
+            if (_resizePending)
+            {
+                _resizePending = false;
+                await JS.InvokeVoidAsync("page.resize", _input);
+            }
+        }
+        catch (JSException ex)
+        {
+            Logger.LogWarning(ex, "Page script is unavailable");
+        }
     }
 
     /// <summary>
     /// Битый корпус — сломанная сборка, и тесты её не пропустят. Но если он всё же
-    /// доехал, страница остаётся рабочей без панели сур: ввести текст руками можно
-    /// и без неё.
+    /// доехал, страница остаётся рабочей без готовых сур: ввести текст руками можно
+    /// и без них.
     /// </summary>
     private async Task<IReadOnlyList<CorpusSurah>> LoadSurahsAsync()
     {
@@ -151,66 +169,48 @@
     }
 
     /// <summary>
-    /// Выбор суры заменяет текст в поле целиком — так же, как если бы его вставили
-    /// руками, — и сразу показывает результат.
+    /// Сура заменяет текст в поле целиком — так же, как если бы его вставили
+    /// руками, — и сразу показывает результат. Аят на строке (D3).
     /// </summary>
-    private void Choose(CorpusSurah surah)
+    private void ChooseAsync(CorpusSurah surah)
     {
         _arabic = CorpusText.Arabic(surah);
+        _resizePending = true;
         Calculate();
     }
 
-    /// <summary>Смена профиля пересчитывает вывод; введённый текст не трогается.</summary>
-    private async Task SelectAsync(TransliterationProfile profile)
+    private async Task ClearAsync()
     {
-        _profile = profile;
-        _editError = null;
+        _arabic = string.Empty;
+        _resizePending = true;
         Calculate();
 
-        await StoreProfileNameAsync(profile.Name);
+        await _input.FocusAsync();
     }
 
-    /// <summary>
-    /// Профиль создан, переименован или удалён (E2): список перечитывается, и выбирается
-    /// тот профиль, с которым только что работали, — после удаления Standard.
-    /// </summary>
-    private async Task OnProfilesChangedAsync(string? selectName)
+    private async Task CopyAsync()
     {
-        _profiles = await LoadProfilesAsync();
-
-        var next = _profiles.FirstOrDefault(p => p.Name == selectName)
-                ?? _profiles.FirstOrDefault(p => p.Name == DefaultProfileName)
-                ?? _profiles.FirstOrDefault();
-
-        if (next is null)
-        {
-            _profile = null;
-            return;
-        }
-
-        await SelectAsync(next);
-    }
-
-    /// <summary>
-    /// Правка графемы: сразу на тексте и сразу в хранилище. Не записалось — правка
-    /// всё равно видна, а под полем результата сказано, что она не сохранена.
-    /// </summary>
-    private async Task ChangeRuleAsync(KeyValuePair<string, string> edit)
-    {
-        if (_profile is null)
-            return;
+        var copied = false;
 
         try
         {
-            await Editor.SetRuleAsync(_profile, edit.Key, edit.Value);
-            _editError = null;
+            copied = await JS.InvokeAsync<bool>("page.copy", _result);
         }
-        catch (TransliterationException ex)
+        catch (JSException ex)
         {
-            _editError = ex.Message;
+            Logger.LogWarning(ex, "Clipboard is unavailable");
         }
 
-        Calculate();
+        _copyState = copied ? CopyState.Copied : CopyState.Failed;
+
+        // Отметка гаснет сама. Второе нажатие раньше срока продлевает её, а не
+        // гасит на полпути: гасит только последнее.
+        var stamp = ++_copyStamp;
+        StateHasChanged();
+        await Task.Delay(TimeSpan.FromSeconds(2));
+
+        if (stamp == _copyStamp)
+            _copyState = CopyState.Idle;
     }
 
     /// <summary>
@@ -223,6 +223,8 @@
         if (_profile is null)
             return;
 
+        _copyState = CopyState.Idle;
+
         try
         {
             _result = Transliteration.Transliterate(_arabic, _profile).TransliteratedText;
@@ -233,39 +235,9 @@
             // Ловится всё, а не только TransliterationException: текст вставляют
             // откуда придётся, и необработанное исключение в WebAssembly гасит
             // страницу целиком — до перезагрузки она больше не отвечает.
-            // Ошибка разбора на одном вводе не должна отнимать поле у следующего.
             Logger.LogError(ex, "Transliteration failed");
             _result = string.Empty;
             _error = ex.Message;
-        }
-    }
-
-    // localStorage бывает недоступен: приватный режим, запрет сайтам хранить данные.
-    // Выбор профиля — удобство, а не данные, и без хранилища страница просто
-    // забудет его при перезагрузке, а не перестанет работать.
-
-    private async Task<string?> ReadStoredProfileNameAsync()
-    {
-        try
-        {
-            return await JS.InvokeAsync<string?>("localStorage.getItem", SelectedProfileKey);
-        }
-        catch (JSException ex)
-        {
-            Logger.LogWarning(ex, "Selected profile could not be read from localStorage");
-            return null;
-        }
-    }
-
-    private async Task StoreProfileNameAsync(string name)
-    {
-        try
-        {
-            await JS.InvokeVoidAsync("localStorage.setItem", SelectedProfileKey, name);
-        }
-        catch (JSException ex)
-        {
-            Logger.LogWarning(ex, "Selected profile could not be saved to localStorage");
         }
     }
 }
