@@ -11,7 +11,7 @@ namespace Transliterator.Tests.RulesTests
     public class WaqfRuleTests
     {
         [Theory]
-        [InlineData("ٱلرَّحِيمِ", "ар-рохIииим")] // касра
+        [InlineData("ٱلرَّحِيمِ", "ар-рохIиим")] // касра
         [InlineData("ٱلْحَمْدُ", "аль-хIамд")]     // дамма
         [InlineData("أُنزِلَ", "унзиль")]          // фатха
         public void FinalShortVowel_IsDropped(string arabic, string expected) =>
@@ -34,7 +34,7 @@ namespace Transliterator.Tests.RulesTests
 
         [Theory]
         [InlineData("رَحْمَةٌ", "рохIмаh")] // дамматан
-        [InlineData("شَيْءٍ", "щайййъ")]    // касратан; ي при этом получает мадд лин
+        [InlineData("شَيْءٍ", "щаййъ")]    // касратан; ي при этом получает мадд лин
         public void DammatanAndKasratan_AreDropped(string arabic, string expected) =>
             Assert.Equal(expected, TransliterationPipeline.Transliterate(arabic));
 
@@ -63,21 +63,22 @@ namespace Transliterator.Tests.RulesTests
         }
 
         [Fact]
-        public void MaddArid_LengthensNaturalMadd()
+        public void MaddArid_KeepsTheNaturalLength()
         {
             // ī в ٱلْمُسْتَقِيمَ — естественный мадд в 2 хараката. Пауза обеззвучила م,
-            // и слог удлиняется до среднего из трёх дозволенных чтений.
+            // и слог стал маддом арид лис-сукун — но счёт у него самый короткий
+            // из трёх дозволенных, тот же, что у естественного мадда.
             var qaf = TransliterationPipeline.Consonants("ٱلْمُسْتَقِيمَ").First(s => s.Letter == "ق");
 
-            Assert.Equal(4, qaf.VowelLength);
-            Assert.Equal("аль-мустаqииим", TransliterationPipeline.Transliterate("ٱلْمُسْتَقِيمَ"));
+            Assert.Equal(2, qaf.VowelLength);
+            Assert.Equal("аль-мустаqиим", TransliterationPipeline.Transliterate("ٱلْمُسْتَقِيمَ"));
         }
 
         [Fact]
-        public void MaddArid_ExistsOnlyAtThePause() =>
-            // Тот же مَـٰنِ в середине высказывания остаётся естественным маддом:
-            // удлиняет его остановка, а не написание.
-            Assert.Equal("ар-рохIмаани-ррохIииим",
+        public void MaddArid_ReadsTheSameConnectedAndAtThePause() =>
+            // Тот же مَـٰنِ в середине высказывания и ī на паузе пишутся одинаково:
+            // при коротком счёте мадд арид от естественного мадда неотличим.
+            Assert.Equal("ар-рохIмаани-ррохIиим",
                 TransliterationPipeline.Transliterate("ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ"));
 
         [Theory]
@@ -86,7 +87,7 @@ namespace Transliterator.Tests.RulesTests
         public void StopMarks_StartANewUtterance(string mark) =>
             // После остановки читают с нуля: конечная дамма снята, а хамзат аль-васль
             // следующего слова снова звучит — "ар-", а не проглоченное "-рр".
-            Assert.Equal("аль-хIамд ар-рохIмааан",
+            Assert.Equal("аль-хIамд ар-рохIмаан",
                 TransliterationPipeline.Transliterate($"ٱلْحَمْدُ {mark} ٱلرَّحْمَـٰنِ"));
 
         [Theory]
@@ -96,7 +97,7 @@ namespace Transliterator.Tests.RulesTests
         public void NonStopMarks_KeepReadingConnected(string mark) =>
             // По умолчанию конвейер читает слитно везде, где текст этого не запрещает,
             // и такой знак ничего не меняет: результат тот же, что и без знака.
-            Assert.Equal("аль-хIамду-ррохIмааан",
+            Assert.Equal("аль-хIамду-ррохIмаан",
                 TransliterationPipeline.Transliterate($"ٱلْحَمْدُ {mark} ٱلرَّحْمَـٰنِ"));
     }
 
@@ -105,8 +106,8 @@ namespace Transliterator.Tests.RulesTests
         [Theory]
         // Имя Аллаха записано без надстрочного алифа, но читается с долгой ā и так:
         // её восстанавливает нормализация, а на паузе её тянет ещё и мадд арид.
-        [InlineData("بِسْمِ ٱللَّهِ", "бисми-лляяяh")]
-        [InlineData("بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ", "бисми-лляяhи-ррохIмааан")]
+        [InlineData("بِسْمِ ٱللَّهِ", "бисми-лляяh")]
+        [InlineData("بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ", "бисми-лляяhи-ррохIмаан")]
         public void ConnectedWasl_MergesWordsWithHyphen(string arabic, string expected) =>
             Assert.Equal(expected, TransliterationPipeline.Transliterate(arabic));
 
@@ -161,16 +162,16 @@ namespace Transliterator.Tests.RulesTests
             Assert.Equal(expected, TransliterationPipeline.Transliterate(arabic));
 
         [Theory]
-        [InlineData("ٱلرَّحْمَـٰنِ", "ар-рохIмааан")]
+        [InlineData("ٱلرَّحْمَـٰنِ", "ар-рохIмаан")]
         [InlineData("ٱلسَّمَآءِ", "ас-самаааъ")]
-        [InlineData("ٱلَّذِينَ", "аллязъииин")]
+        [InlineData("ٱلَّذِينَ", "аллязъиин")]
         public void SunLetter_AssimilatesLam(string arabic, string expected) =>
             Assert.Equal(expected, TransliterationPipeline.Transliterate(arabic));
 
         [Fact]
         public void MoonLam_SurvivesWaslMerge() =>
             // Прежде стадия васли съедала лям артикля целиком: "робби-'аалямиина".
-            Assert.Equal("робби-ль-'аалямииин",
+            Assert.Equal("робби-ль-'аалямиин",
                 TransliterationPipeline.Transliterate("رَبِّ ٱلْعَـٰلَمِينَ"));
 
         [Fact]
@@ -179,8 +180,8 @@ namespace Transliterator.Tests.RulesTests
             Assert.DoesNotContain("ьь", TransliterationPipeline.Transliterate("ٱلْحَمْدُ"));
 
         [Theory]
-        [InlineData("صُدُورِ ٱلنَّاسِ", "сIудуури-ннааас")]
-        [InlineData("فِي ٱلنَّاسِ", "фи-ннааас")]
+        [InlineData("صُدُورِ ٱلنَّاسِ", "сIудуури-ннаас")]
+        [InlineData("فِي ٱلنَّاسِ", "фи-ннаас")]
         public void SunLam_AfterASeparateWord_KeepsTheHyphen(string arabic, string expected) =>
             // Дефис берёт шов слова и приходится перед обеими копиями, а своего
             // дефиса у солнечного ляма тут нет: иначе вышло бы «сIудуури-н-нааас»
@@ -193,7 +194,7 @@ namespace Transliterator.Tests.RulesTests
             // и шва в письме нет — взять дефису нечего, и его нет вовсе. Артикль
             // виден только удвоением. Признано верным при ревизии B3, записано
             // пунктом стадии 5 в docs/ROADMAP.md.
-            Assert.Equal("уаннааас", TransliterationPipeline.Transliterate("وَٱلنَّاسِ"));
+            Assert.Equal("уаннаас", TransliterationPipeline.Transliterate("وَٱلنَّاسِ"));
 
         [Fact]
         public void MoonLam_RightAfterWasl_KeepsItsHyphen() =>
@@ -220,7 +221,7 @@ namespace Transliterator.Tests.RulesTests
         public void BothHyphenationsMeet_InOneVerse() =>
             // 114:6 целиком: лунный лям после отдельного слова — с дефисом,
             // солнечный сразу за приросшей васлей — без.
-            Assert.Equal("мина-ль-джиннати уаннааас",
+            Assert.Equal("мина-ль-джиннати уаннаас",
                 TransliterationPipeline.Transliterate("مِنَ ٱلْجِنَّةِ وَٱلنَّاسِ"));
     }
 
@@ -274,7 +275,7 @@ namespace Transliterator.Tests.RulesTests
         {
             // Стадия стоит после артикля: шадда солнечной буквы к этому моменту снята,
             // и за отметку нового слияния больше не сойдёт.
-            Assert.Equal("ан-нааас", TransliterationPipeline.Transliterate("ٱلنَّاسِ"));
+            Assert.Equal("ан-наас", TransliterationPipeline.Transliterate("ٱلنَّاسِ"));
             Assert.Single(TransliterationPipeline.Consonants("ٱلنَّاسِ"), s => s.IsGeminateFirstHalf);
         }
 
@@ -459,9 +460,9 @@ namespace Transliterator.Tests.RulesTests
         }
 
         [Theory]
-        [InlineData("نَصْرُ ٱللَّهِ", "насIру-ллаааh")]      // 110:1
+        [InlineData("نَصْرُ ٱللَّهِ", "насIру-ллааh")]      // 110:1
         [InlineData("وَٱسْتَغْفِرْهُ", "уастагъфирh")]       // 110:3
-        [InlineData("ٱلْمَغْضُوبِ", "аль-магъдIуууб")]       // 1:7
+        [InlineData("ٱلْمَغْضُوبِ", "аль-магъдIууб")]       // 1:7
         [InlineData("سَيَصْلَىٰ", "сайасIляя")]             // 111:3
         [InlineData("مِن شَرِّ مَا خَلَقَ", "мин щарри маа хъоляq")] // 113:2
         public void SakinEmphatic_ColoursOnlyItsOwnVowel(string arabic, string expected) =>
@@ -474,7 +475,7 @@ namespace Transliterator.Tests.RulesTests
             // Удвоение здесь разложено на два сегмента: лям артикля слился со вторым
             // лямом. Решает та половина, что несёт огласовку, — иначе безгласная
             // первая половина отдала бы имени мягкий лям: "ал-ляяяh".
-            Assert.Equal("qооля-ллаааh", TransliterationPipeline.Transliterate("قَالَ ٱللَّٰهُ"));
+            Assert.Equal("qооля-ллааh", TransliterationPipeline.Transliterate("قَالَ ٱللَّٰهُ"));
 
         [Theory]
         [InlineData("ٱرْحَمْ")]        // в начале высказывания васля звучит
@@ -511,9 +512,9 @@ namespace Transliterator.Tests.RulesTests
 
         [Fact]
         public void LamOfAllah_IsLightAfterKasra() =>
-            // "лилляяяh", а не "лиллаааh". Прежний хак искал в кириллице "Аллах"
+            // "лилляяh", а не "лиллаааh". Прежний хак искал в кириллице "Аллах"
             // и не срабатывал никогда, потому что ه отображается в "h".
-            Assert.Equal("лилляяяh", TransliterationPipeline.Transliterate("لِلَّهِ"));
+            Assert.Equal("лилляяh", TransliterationPipeline.Transliterate("لِلَّهِ"));
     }
 
     /// <summary>
@@ -543,10 +544,11 @@ namespace Transliterator.Tests.RulesTests
         public void MaddLin_LengthensGlideAtPause(string arabic, string glide)
         {
             // Пауза обеззвучивает последний согласный, слог закрывается внезапно —
-            // и голос отыгрывается на глайде, а не на фатхе перед ним.
+            // и голос отыгрывается на глайде, а не на фатхе перед ним. Счёт тот же,
+            // что у мадда арид: длиннее арида мадд лин быть не может.
             var segment = TransliterationPipeline.Consonants(arabic).First(s => s.Letter == glide);
 
-            Assert.Equal(4, segment.VowelLength);
+            Assert.Equal(2, segment.VowelLength);
         }
 
         [Fact]
@@ -562,7 +564,7 @@ namespace Transliterator.Tests.RulesTests
         [Fact]
         public void MaddLin_ReachesTheOutput() =>
             // Долгота на глайде выражается повтором его же графемы: тянется و, а не фатха.
-            Assert.Equal("хъоуууф", TransliterationPipeline.Transliterate("خَوْفٌ"));
+            Assert.Equal("хъоууф", TransliterationPipeline.Transliterate("خَوْفٌ"));
 
         [Fact]
         public void MaddSilaSughra_LengthensPronounHa() =>
@@ -671,7 +673,7 @@ namespace Transliterator.Tests.RulesTests
 
             Assert.Equal(1, MaddOfFirstWord(segments).VowelLength);
             Assert.Equal(6, segments.Last(s => s.Letter == "ض").VowelLength);
-            Assert.Equal("уаля-дIдIооооллииин", TransliterationPipeline.Transliterate(arabic));
+            Assert.Equal("уаля-дIдIооооллиин", TransliterationPipeline.Transliterate(arabic));
         }
 
         /// <summary>Последний звучащий согласный первого слова — носитель долготы на стыке.</summary>
@@ -767,7 +769,7 @@ namespace Transliterator.Tests.RulesTests
             Assert.Equal(Qalqalah.None, first.Qalqalah);
 
             // И профиль, который отзвук пишет, между двумя د ничего не ставит.
-            Assert.Equal("ад-дииин",
+            Assert.Equal("ад-диин",
                 TransliterationPipeline.Transliterate("ٱلدِّينِ", WithQalqalah("э", strong: null)));
         }
 
@@ -894,9 +896,9 @@ namespace Transliterator.Tests.RulesTests
     {
         [Theory]
         [InlineData("الْحَمْدُ", "ٱلْحَمْدُ", "аль-хIамд")]   // сукун на ляме
-        [InlineData("النَّاسِ", "ٱلنَّاسِ", "ан-нааас")]      // шадда на следующей букве
-        [InlineData("الَّذِينَ", "ٱلَّذِينَ", "аллязъииин")] // шадда на самом ляме
-        [InlineData("الَّيْلِ", "ٱلَّيْلِ", "алляйййль")]     // она же, но лям солнечный не в местоимении
+        [InlineData("النَّاسِ", "ٱلنَّاسِ", "ан-наас")]      // шадда на следующей букве
+        [InlineData("الَّذِينَ", "ٱلَّذِينَ", "аллязъиин")] // шадда на самом ляме
+        [InlineData("الَّيْلِ", "ٱلَّيْلِ", "алляййль")]     // она же, но лям солнечный не в местоимении
         public void RecognisedBranches_ReadLikeTheWaslSpelling(string imlai, string uthmani, string expected)
         {
             // Написания два, чтение одно: иначе про орфографию пришлось бы знать
@@ -919,8 +921,8 @@ namespace Transliterator.Tests.RulesTests
 
         [Theory]
         [InlineData("وَالْفَتْحُ", "وَٱلْفَتْحُ", "уаль-фатхI")]       // 110:1, лунный лям за союзом
-        [InlineData("وَالنَّاسِ", "وَٱلنَّاسِ", "уаннааас")]           // 114:6, солнечный
-        [InlineData("وَالَّذِينَ", "وَٱلَّذِينَ", "уаллязъииин")]     // шадда на самом ляме
+        [InlineData("وَالنَّاسِ", "وَٱلنَّاسِ", "уаннаас")]           // 114:6, солнечный
+        [InlineData("وَالَّذِينَ", "وَٱلَّذِينَ", "уаллязъиин")]     // шадда на самом ляме
         [InlineData("بِالْحَقِّ", "بِٱلْحَقِّ", "биль-хIаqq")]         // предлог с касрой
         [InlineData("كَالْعِهْنِ", "كَٱلْعِهْنِ", "каль-'иhн")]
         [InlineData("وَبِالْحَقِّ", "وَبِٱلْحَقِّ", "уабиль-хIаqq")]   // две приставки подряд
@@ -998,7 +1000,7 @@ namespace Transliterator.Tests.RulesTests
     public class AlefMaqsuraTests
     {
         [Theory]
-        [InlineData("فِى دِينِ", "фии дииин")]
+        [InlineData("فِى دِينِ", "фии диин")]
         [InlineData("ٱلَّذِى يُوَسْوِسُ", "аллязъии йууасуис")]
         [InlineData("أَبِى لَهَبٍ", "абии ляhаб")]
         public void Bare_AfterKasra_LengthensIt(string arabic, string expected) =>
@@ -1034,7 +1036,7 @@ namespace Transliterator.Tests.RulesTests
         [Theory]
         [InlineData("وَلِيَ", "уалий")]
         [InlineData("وَلِىَ", "уалий")]
-        [InlineData("وَلِىَ دِينِ", "уалийа дииин")]  // 109:6
+        [InlineData("وَلِىَ دِينِ", "уалийа диин")]  // 109:6
         public void WithItsOwnVowel_IsTheConsonantYa_InBothSpellings(string arabic, string expected)
         {
             // На ى написана фатха — значит согласная, а не долгота, и та же «й»,
@@ -1072,7 +1074,7 @@ namespace Transliterator.Tests.RulesTests
     public class GlideTests
     {
         [Theory]
-        [InlineData("هُوَ ٱللَّهُ", "hууа-ллаааh")]
+        [InlineData("هُوَ ٱللَّهُ", "hууа-ллааh")]
         [InlineData("كُفُوًا أَحَدٌ", "куфууан ахIад")]
         [InlineData("يُوَسْوِسُ", "йууасуис")]
         public void BetweenVowels_ItKeepsItsOwnSegment(string arabic, string expected)
@@ -1085,7 +1087,7 @@ namespace Transliterator.Tests.RulesTests
 
         [Theory]
         [InlineData("يُولَدْ", "йууляд", "ي")]
-        [InlineData("صُدُورِ ٱلنَّاسِ", "сIудуури-ннааас", "د")]
+        [InlineData("صُدُورِ ٱلنَّاسِ", "сIудуури-ннаас", "د")]
         public void InALongVowel_ItLeavesNoSegmentAtAll(string arabic, string expected, string carrier)
         {
             // Долгота живёт в харакате предыдущей буквы: тянется она, а не و.
@@ -1109,8 +1111,8 @@ namespace Transliterator.Tests.RulesTests
 
         [Theory]
         [InlineData("جَآءَ مَا", "джааа-а маа")]                  // после долгой
-        [InlineData("وَرَأَيْتَ ٱلنَّاسَ", "уаро-айта-ннааас")]      // после огласованной согласной
-        [InlineData("وَإِيَّاكَ نَسْتَعِينُ", "уа-иййаака наста'ииин")] // под алифом, за приросшей буквой
+        [InlineData("وَرَأَيْتَ ٱلنَّاسَ", "уаро-айта-ннаас")]      // после огласованной согласной
+        [InlineData("وَإِيَّاكَ نَسْتَعِينُ", "уа-иййаака наста'иин")] // под алифом, за приросшей буквой
         [InlineData("يَٰٓأَيُّهَا", "йааа-аййуhаа")]               // 109:1, после мадда
         [InlineData("وَٱمْرَأَتُهُۥ", "уамро-атуhуу")]              // 111:4
         public void BetweenVowels_IsWrittenAsASeparator(string arabic, string expected) =>
@@ -1126,12 +1128,12 @@ namespace Transliterator.Tests.RulesTests
             Assert.Equal("уаль-хIамд", TransliterationPipeline.Transliterate("وَٱلْحَمْدُ"));
 
         [Theory]
-        [InlineData("شَيْءٍ", "щайййъ")]          // в конце слова, после безгласного глайда
+        [InlineData("شَيْءٍ", "щаййъ")]          // в конце слова, после безгласного глайда
         [InlineData("جَآءَ", "джаааъ")]           // в конце слова после долгой: огласовку сняла пауза
         [InlineData("ٱلسَّمَآءِ", "ас-самаааъ")]
-        [InlineData("قُرْءَانِ", "qуръааан")]      // после безгласной согласной
+        [InlineData("قُرْءَانِ", "qуръаан")]      // после безгласной согласной
         [InlineData("وَٱلْأَرْضِ", "уаль-ъардI")]  // после ляма артикля
-        [InlineData("يُؤْمِنُونَ", "йуъминууун")]  // с сукуном: гласная только перед ней
+        [InlineData("يُؤْمِنُونَ", "йуъминуун")]  // с сукуном: гласная только перед ней
         public void WithoutAVowelOnBothSides_KeepsItsLetter(string arabic, string expected)
         {
             // Разделять нечего, пока гласная есть лишь с одной стороны. Поэтому
@@ -1149,7 +1151,7 @@ namespace Transliterator.Tests.RulesTests
     {
         [Fact]
         public void Hamza_IsNotDropped() =>
-            Assert.Equal("qуръааан", TransliterationPipeline.Transliterate("قُرْءَانِ"));
+            Assert.Equal("qуръаан", TransliterationPipeline.Transliterate("قُرْءَانِ"));
 
         [Fact]
         public void TaMarbutaAndTanwin_AreNotDropped() =>

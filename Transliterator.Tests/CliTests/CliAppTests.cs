@@ -17,8 +17,8 @@ namespace Transliterator.Tests.CliTests
     public class CliAppTests : IDisposable
     {
         private const string Basmala = "بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ";
-        private const string BasmalaStandard = "бисми-лляяhи-ррохIмаани-ррохIииим";
-        private const string BasmalaLatin = "bismi-llaahi-rroḥmaani-rroḥiiim";
+        private const string BasmalaStandard = "бисми-лляяhи-ррохIмаани-ррохIиим";
+        private const string BasmalaLatin = "bismi-llaahi-rroḥmaani-rroḥiim";
 
         private readonly string _directory = Path.Combine(Path.GetTempPath(), "transliterator-cli-" + Guid.NewGuid().ToString("N"));
 

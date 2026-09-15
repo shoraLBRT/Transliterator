@@ -40,8 +40,8 @@ namespace Transliterator.Tests.RulesTests
 
         [Theory]
         [InlineData("ٱلْحَمْدُ", "الْحَمْدُ", "аль-хIамд")]           // лунный лям
-        [InlineData("ٱلرَّحْمَٰنِ", "الرَّحْمَٰنِ", "ар-рохIмааан")]  // солнечный лям
-        [InlineData("بِسْمِ ٱللَّهِ", "بِسْمِ اللَّهِ", "бисми-лляяяh")] // васля в соединении
+        [InlineData("ٱلرَّحْمَٰنِ", "الرَّحْمَٰنِ", "ар-рохIмаан")]  // солнечный лям
+        [InlineData("بِسْمِ ٱللَّهِ", "بِسْمِ اللَّهِ", "бисми-лляяh")] // васля в соединении
         public void ImlaiArticle_ReadsLikeUthmani(string uthmani, string imlai, string expected)
         {
             // Артикль через обычный алиф и артикль через васлевый — одно и то же слово.
