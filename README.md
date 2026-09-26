@@ -325,12 +325,3 @@ dotnet test
 In Visual Studio: `Test → Test Explorer`, build the solution, then `Run All`.
 
 ---
-
-## Further development
-
-The pipeline — open items, the "Открытые решения" section (unsettled questions
-about the writing system itself) and the "Не в конвейере" section — lives in
-[docs/ROADMAP.md](docs/ROADMAP.md). Everything else — the corpus, the web version,
-profiles and infrastructure — lives in [docs/BACKLOG.md](docs/BACKLOG.md).
-
----
