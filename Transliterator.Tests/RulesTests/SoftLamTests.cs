@@ -21,7 +21,7 @@ namespace Transliterator.Tests.RulesTests
 
         [Theory]
         [InlineData("هُوَ ٱللَّهُ أَحَدٌ", "hууа-ллааhу ахIад")] // лям имени Аллаха после фатхи — твёрдый
-        [InlineData("رَسُولُ ٱللَّهِ", "росуулю-ллаааh")]        // после даммы — тоже
+        [InlineData("رَسُولُ ٱللَّهِ", "росуулю-ллааh")]        // после даммы — тоже
         public void LamOfAllah_AfterFathaOrDamma_StaysHard(string arabic, string expected) =>
             // Его гласная не смягчается ни в «я», ни в «ю»: B12 касается только
             // мягкого ляма. Во втором случае лямов два: у самого رَسُولُ лям

@@ -172,7 +172,7 @@ namespace Transliterator.Core.Services.Rules
         /// <summary>
         /// Согласный, чья огласовка решает судьбу ляма имени Аллаха. Немая васля
         /// и первая половина удвоения пропускаются: своей огласовки у них нет,
-        /// а решает именно она — "qооля-ллаааh", но "бисми-лляяяh".
+        /// а решает именно она — "qооля-ллааh", но "бисми-лляяh".
         /// </summary>
         private static int PrecedingVowelCarrier(IList<Segment> segments, int index)
         {

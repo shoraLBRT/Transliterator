@@ -12,16 +12,16 @@ namespace Transliterator.Tests.ProfileTests
     public class LatinProfileTests
     {
         [Theory]
-        [InlineData("بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ", "bismi-llaahi-rroḥmaani-rroḥiiim")]
-        [InlineData("ٱلْحَمْدُ لِلَّهِ رَبِّ ٱلْعَـٰلَمِينَ", "al-ḥamdu lillaahi robbi-l-ʿaalamiiin")]
-        [InlineData("مَـٰلِكِ يَوْمِ ٱلدِّينِ", "maaliki yawmi-ddiiin")]
+        [InlineData("بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ", "bismi-llaahi-rroḥmaani-rroḥiim")]
+        [InlineData("ٱلْحَمْدُ لِلَّهِ رَبِّ ٱلْعَـٰلَمِينَ", "al-ḥamdu lillaahi robbi-l-ʿaalamiin")]
+        [InlineData("مَـٰلِكِ يَوْمِ ٱلدِّينِ", "maaliki yawmi-ddiin")]
         [InlineData("قُلْ هُوَ ٱللَّهُ أَحَدٌ", "qul huwa-llaahu aḥad")]
         public void Pipeline_WritesTheSameReadingInLatin(string arabic, string expected) =>
             Assert.Equal(expected, TransliterationPipeline.Transliterate(arabic, TestProfiles.Latin));
 
         [Theory]
         [InlineData("أُنزِلَ", "унзиль", "unzil")]        // Standard: "ل|sukun" = "ль"
-        [InlineData("ٱلَّذِينَ", "аллязъииин", "allaḏiiin")] // Standard: "َ|soft" = "я"
+        [InlineData("ٱلَّذِينَ", "аллязъиин", "allaḏiin")] // Standard: "َ|soft" = "я"
         public void OmittedVariant_FallsBackToTheBaseKey(string arabic, string cyrillic, string latin)
         {
             // Мягкость ляма кириллице приходится дописывать, латинице — нет.
@@ -36,7 +36,7 @@ namespace Transliterator.Tests.ProfileTests
             // В Standard хамза — "ъ", и "з + хамза" неотличимо от диграфа "зъ" (ذ):
             // это открытое решение проекта. Латиница ту же задачу решает диакритикой
             // вместо диграфов, поэтому ʾ рядом с любой буквой читается однозначно.
-            Assert.Equal("qurʾaaan", TransliterationPipeline.Transliterate("قُرْءَانِ", TestProfiles.Latin));
+            Assert.Equal("qurʾaan", TransliterationPipeline.Transliterate("قُرْءَانِ", TestProfiles.Latin));
 
             Assert.All(TestProfiles.Latin.Rules.Values.Where(v => v.Length > 0),
                 grapheme => Assert.Equal(1, new StringInfo(grapheme).LengthInTextElements));
@@ -65,7 +65,7 @@ namespace Transliterator.Tests.ProfileTests
         [Theory]
         [InlineData("رَحْمَةٌ", "roḥmah")]   // та-марбута на паузе — вариант "ة|waqf"
         [InlineData("لَهُ مَا", "lahuu maa")] // мадд силя сугра — два хараката
-        [InlineData("خَوْفٌ", "ḫowwwf")]     // мадд лин на паузе — четыре, и лежат на глайде
+        [InlineData("خَوْفٌ", "ḫowwf")]     // мадд лин на паузе — четыре, и лежат на глайде
         public void MaddAndWaqf_ReachLatinUnchanged(string arabic, string expected) =>
             Assert.Equal(expected, TransliterationPipeline.Transliterate(arabic, TestProfiles.Latin));
     }
