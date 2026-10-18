@@ -3,8 +3,10 @@
 Единственный источник правды о том, что сделано и что нет. Артефакты, промпты
 и doc-комментарии — вторичны; расходятся с этим файлом — прав этот файл.
 
-Этот файл — только про конвейер. Корпус примеров, тесты по нему, веб-версия,
-профили пользователя и инфраструктура живут в [`BACKLOG.md`](BACKLOG.md).
+Этот файл — про конвейер. Корпус примеров, тесты по нему, веб-версия,
+профили пользователя, инфраструктура и решения о системе записи ведутся
+в [GitHub issues](https://github.com/shoraLBRT/Transliterator/issues) — см. раздел
+«Бэклог: issues и доска» ниже.
 
 ## Как пользоваться
 
@@ -24,6 +26,101 @@
 > Файл заведён после того, как стадии 1–5, 8, 9 и 11 уже влиты в `master`
 > (PR #1, PR #3). Их чекбоксы проставлены задним числом по факту сверки с кодом,
 > а не по описаниям PR. Дальше действует правило «чекбокс в том же PR».
+
+## Бэклог: issues и доска
+
+Всё, что не стадии конвейера, ведётся в GitHub issues: они — источник правды
+о том, что сделано. Доска — <https://github.com/users/shoraLBRT/projects/6>.
+Здесь только то, чего в списке issues нет: правила работы, порядок и предложения.
+До переноса бэклог жил в `docs/BACKLOG.md`; его тексты целиком перенесены
+в issues, у выполненных — в раздел «Как сделано».
+
+### Как пользоваться
+
+- **Один issue — одна ветка — один PR.** PR закрывает issue строкой `Closes #N`
+  в описании, и закрытие попадает в `master` вместе с кодом — то же правило,
+  что «чекбокс в том же PR» для стадий.
+- Issue закрыт, только если выполнены **все** пункты «Готово, когда».
+  Частично сделанный остаётся открытым с комментарием, что именно осталось.
+- **Порядок** задают milestone, приоритет и строка «Зависит от» в описании issue,
+  а не номер эпика. Берётся открытый issue текущей итерации с наивысшим
+  приоритетом, у которого закрыты зависимости.
+- **Код пункта** (`A1`, `B13`…) стоит в начале заголовка issue. На коды ссылаются
+  этот файл, комментарии в коде и тесты, поэтому коды не переиспользуются и не
+  перенумеровываются. Новый пункт получает следующий свободный номер своего
+  эпика. Отменённый закрывается как not planned с причиной.
+- **`BA`** — бизнес-анализ: issue ждёт решения владельца, в работу не брать.
+
+| Что | Как |
+|---|---|
+| Итерация | milestone: «Итерация 1 · Первая страница» (закрыт), «Итерация 2 · Обратная связь и правила» |
+| Приоритет | `priority:P1` — взять следующим, `P2` — нужно, но может подождать, `P3` — низкий; дублируется полем Priority на доске |
+| Вид работы | `type:bug`, `type:feature`, `type:infra`, `type:docs`, `type:qa`, `BA` |
+| Эпик | `epic:*` — таблица ниже |
+
+### Эпики
+
+| Эпик | Метка | Пункты |
+|---|---|---|
+| A. Корпус примеров и тесты | `epic:corpus` | [A1](https://github.com/shoraLBRT/Transliterator/issues/69) · [A2](https://github.com/shoraLBRT/Transliterator/issues/70) · [A3](https://github.com/shoraLBRT/Transliterator/issues/71) · [A4](https://github.com/shoraLBRT/Transliterator/issues/72) · [A5](https://github.com/shoraLBRT/Transliterator/issues/73) |
+| B. Баги конвейера, найденные прогоном | `epic:pipeline` | [B1](https://github.com/shoraLBRT/Transliterator/issues/74) · [B2](https://github.com/shoraLBRT/Transliterator/issues/75) · [B3](https://github.com/shoraLBRT/Transliterator/issues/76) · [B4](https://github.com/shoraLBRT/Transliterator/issues/77) · [B5](https://github.com/shoraLBRT/Transliterator/issues/78) · [B6](https://github.com/shoraLBRT/Transliterator/issues/79) · [B7](https://github.com/shoraLBRT/Transliterator/issues/80) · [B8](https://github.com/shoraLBRT/Transliterator/issues/81) · [B9](https://github.com/shoraLBRT/Transliterator/issues/82) · [B10](https://github.com/shoraLBRT/Transliterator/issues/51) · [B11](https://github.com/shoraLBRT/Transliterator/issues/83) · [B12](https://github.com/shoraLBRT/Transliterator/issues/64) · [B13](https://github.com/shoraLBRT/Transliterator/issues/84) |
+| C. Готовность ядра к браузеру | `epic:core-browser` | [C1](https://github.com/shoraLBRT/Transliterator/issues/85) · [C2](https://github.com/shoraLBRT/Transliterator/issues/86) · [C3](https://github.com/shoraLBRT/Transliterator/issues/29) |
+| D. Веб-интерфейс | `epic:web` | [D1](https://github.com/shoraLBRT/Transliterator/issues/31) · [D2](https://github.com/shoraLBRT/Transliterator/issues/33) · [D3](https://github.com/shoraLBRT/Transliterator/issues/35) · [D4](https://github.com/shoraLBRT/Transliterator/issues/36) · [D5](https://github.com/shoraLBRT/Transliterator/issues/60) |
+| E. Свои профили в браузере | `epic:custom-profiles` | [E1](https://github.com/shoraLBRT/Transliterator/issues/39) · [E2](https://github.com/shoraLBRT/Transliterator/issues/41) · [E3](https://github.com/shoraLBRT/Transliterator/issues/43) |
+| F. Инфраструктура | `epic:infra` | [F1](https://github.com/shoraLBRT/Transliterator/issues/45) · [F2](https://github.com/shoraLBRT/Transliterator/issues/49) · [F3](https://github.com/shoraLBRT/Transliterator/issues/53) · [F4](https://github.com/shoraLBRT/Transliterator/issues/55) · [F5](https://github.com/shoraLBRT/Transliterator/issues/57) · [F6](https://github.com/shoraLBRT/Transliterator/issues/87) |
+| G. Система записи: графемы `Standard` | `epic:writing-system` | [G1](https://github.com/shoraLBRT/Transliterator/issues/88) · [G2](https://github.com/shoraLBRT/Transliterator/issues/92) · [G3](https://github.com/shoraLBRT/Transliterator/issues/93) · [G4](https://github.com/shoraLBRT/Transliterator/issues/94) · [G5](https://github.com/shoraLBRT/Transliterator/issues/95) · [G6](https://github.com/shoraLBRT/Transliterator/issues/96) |
+| H. Связь с пользователями | `epic:feedback` | [H1](https://github.com/shoraLBRT/Transliterator/issues/89) · [H2](https://github.com/shoraLBRT/Transliterator/issues/90) |
+| I. Правила таджвида для пользователя | `epic:tajweed-rules` | [I1](https://github.com/shoraLBRT/Transliterator/issues/91) |
+
+Корпус (A) шёл первым, и не из вежливости. Веб-версии нужны готовые суры
+для панели примеров, багфиксам нужен эталон, чтобы «починил» не значило «поменял
+вывод в другую сторону». Один и тот же корпус кормит и тесты, и интерфейс —
+иначе примеры на странице и примеры в тестах разъедутся.
+
+Веб-версия (C, D) — Blazor WebAssembly: `Transliterator.Core` компилируется
+в wasm и считает прямо в браузере. Бэкенда нет вообще — ни API, ни CORS,
+ни хостинга, страница выкладывается статикой. Это ограничивает всё, что хочет
+отправить данные наружу, — например, обратную связь (H1).
+
+### Итерация 2
+
+| Порядок | Issue | Зависит от |
+|---|---|---|
+| 1 | [B13](https://github.com/shoraLBRT/Transliterator/issues/84) — хамза на татвиле пропадает | — |
+| 2 | [I1](https://github.com/shoraLBRT/Transliterator/issues/91) — каталог правил таджвида | — |
+| 3 | [H1](https://github.com/shoraLBRT/Transliterator/issues/89) — кнопка обратной связи | способ отправки выбрать при выполнении |
+| — | [H2](https://github.com/shoraLBRT/Transliterator/issues/90) — контакты владельца, `BA` | выбор канала владельцем |
+
+Вне итераций, ждут решения владельца: G1–G6 (система записи) и F6 (обязательный
+набор ключей профиля).
+
+Интерфейс своих профилей (D2, D4, E1–E3) снят со страницы в D5, ядро и тесты
+на месте. Возвращать его будет отдельный issue — он пока не заведён.
+
+### Предложения, не взятые в работу
+
+Не задачи. Записаны, чтобы не всплывали заново. Становятся issues, когда их
+планируют в итерацию.
+
+- **Подсветка сработавших правил.** Показывать, какое правило таджвида сработало
+  на каком месте, — учебная ценность выше, чем у самой транслитерации. Требует,
+  чтобы сегменты помнили происхождение: сейчас они этого не хранят.
+- **Аудио.** Сопоставление транслитерации с чтением. Ломает «минималистичную
+  страничку», требует прав на записи чтецов.
+- **Полный Коран в корпусе.** 114 сур — это мегабайты в wasm-сборке. Нужна либо
+  ленивая подгрузка, либо внешний источник текста. Пока корпус — это примеры
+  и тесты, а не библиотека.
+- **Другие целевые языки.** Латиница профилем проверена задачей F4 (`Latin`);
+  МФА и другие языки — нет.
+- **Выбор правил таджвида.** Включать и выключать отдельные правила. Например,
+  удлинение гласной на паузе в конце строки (мадд арид, B11): кому-то нужна
+  запись чтения нараспев, кому-то слово как в словаре. Записано по просьбе
+  владельца как возможная доработка. Правила уже отдельные стадии конвейера
+  (`RulesService`), но выключить можно не каждую. Стадии опираются друг на друга:
+  васля, артикль и идгам меняют то, что видят следующие, и отключение такой стадии
+  ломает чтение, а не упрощает его. Безопасные кандидаты — длительность мадда
+  и кальканя: они только помечают звук. Выбор хранился бы рядом с профилем
+  пользователя (E1). Первый шаг — каталог правил с описаниями и примерами (I1).
 
 ## Архитектурные инварианты
 
@@ -276,27 +373,17 @@
 ## Открытые решения
 
 Не «чинить» молча — сначала согласовать. Это выбор системы записи, а не баг.
+Каждое решение ведётся issue эпика G с меткой `BA`; там же примеры вывода
+и позиция владельца.
 
-- [ ] **Графема хамзы конфликтует с диграфами.** `ء` = `"ъ"`, а `ذ`/`خ`/`غ` — это
-      `зъ`/`хъ`/`гъ`. Значит «з + хамза» неотличимо от `ذ`. Прямо противоречит
-      главному принципу проекта: разные звуки — разные графемы. Варианты: числовые
-      пометы (`з2`), другая графема для хамзы, пересмотр диграфов. В `Latin`
-      этой развилки нет: там диакритика вместо диграфов — но выбор для
-      кириллицы это не делает. Частично снимается B7: между гласными хамза
-      становится разделителем и с диграфами больше не спорит — но в конце слова
-      и после согласной вопрос остаётся
-- [ ] **`ع` = `"'"`** — апостроф слабо различим и конфликтует с типографикой
-- [ ] **`"ء|initial": ""`** — хамза в начале слова не рендерится. Убедиться, что
-      это осознанный выбор, а не обход проблемы выше
-- [ ] **`ق` = `"q"`** — латиница в кириллическом профиле
-- [ ] **Отзвук кальканя в `Standard` не пишется.** Ключи `"буква|qalqalah"` заданы
-      пустыми: смыслоразличительным отзвук не является (это размыкание смычки,
-      а не отдельный звук), и графему для него надо выбирать вместе с графемой
-      гунны — обе пометки про то, как звучит согласный, а не про то, какой он
-- [ ] **Гунна не различима на письме.** `"ن|ghunna"` и `"م|ghunna"` в `Standard`
-      совпадают с обычными `н` и `м`, поэтому ихфа и чистый нун пишутся одинаково.
-      До профиля помета доходит — решить, нужна ли назализации своя графема.
-      Разбирается задачей G1 в `BACKLOG.md`
+- [G2](https://github.com/shoraLBRT/Transliterator/issues/92) — **графема хамзы `ъ` конфликтует с диграфами** (`зъ`/`хъ`/`гъ`):
+  «з + хамза» неотличимо от `ذ`. Между гласными снято B7
+- [G3](https://github.com/shoraLBRT/Transliterator/issues/93) — **`ع` = `'`**: апостроф слабо различим и спорит с типографикой
+- [G4](https://github.com/shoraLBRT/Transliterator/issues/94) — **`"ء|initial": ""`**: хамза в начале слова не пишется
+- [G5](https://github.com/shoraLBRT/Transliterator/issues/95) — **`ق` = `q`**: латиница в кириллическом профиле
+- [G6](https://github.com/shoraLBRT/Transliterator/issues/96) — **отзвук кальканя в `Standard` не пишется**
+- [G1](https://github.com/shoraLBRT/Transliterator/issues/88) — **гунна не различима на письме**: ихфа и чистый нун пишутся
+  одинаково
 
 ## Не в конвейере
 

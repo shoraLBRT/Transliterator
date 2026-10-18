@@ -55,7 +55,7 @@ namespace Transliterator.Tests.CorpusTests
             // разрешать расхождение, которого больше нет.
             if (actual == corpusCase.Expected)
                 Assert.Fail($"{id}: вывод сошёлся с ожиданием корпуса — {known.Bug} починен. " +
-                            "Удалите запись из KnownDivergences и отметьте баг в docs/BACKLOG.md.");
+                            "Удалите запись из KnownDivergences и закройте issue бага.");
 
             if (actual != known.Actual)
                 Assert.Fail(Compare(id, $"с ожиданием корпуса не сошлось ({known.Bug}), но и записанный вывод изменился",
