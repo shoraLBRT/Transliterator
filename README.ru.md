@@ -329,6 +329,7 @@ dotnet test
 Конвейер — открытые пункты, раздел «Открытые решения» (нерешённые вопросы системы
 записи) и раздел «Не в конвейере» — в [docs/ROADMAP.md](docs/ROADMAP.md).
 Всё остальное — корпус, веб-версия, профили и инфраструктура — в
-[docs/BACKLOG.md](docs/BACKLOG.md).
+[GitHub issues](https://github.com/shoraLBRT/Transliterator/issues) и на
+[доске проекта](https://github.com/users/shoraLBRT/projects/6).
 
 ---
