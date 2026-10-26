@@ -1,12 +1,13 @@
-using System.Text;
+using static Transliterator.Core.Services.FeedbackMessage;
 
 namespace Transliterator.Core.Services
 {
     /// <summary>
-    /// Ссылка на форму нового issue на GitHub с заполненными заголовком и текстом —
-    /// так страница отправляет обратную связь (H1). Сервера у страницы нет, а токен
-    /// GitHub в статике забрал бы любой, кто откроет её код. Поэтому страница
-    /// только собирает ссылку, а отправляет сам человек — на GitHub, своим аккаунтом.
+    /// Ссылка на форму нового issue на GitHub с заполненными заголовком и текстом (H1).
+    /// Токен GitHub в статике забрал бы любой, кто откроет код страницы, поэтому
+    /// страница только собирает ссылку, а отправляет сам человек — своим аккаунтом.
+    /// Это путь по умолчанию, пока не настроена функция обратной связи (H3), и запасной,
+    /// когда отправка через неё не удалась.
     /// </summary>
     public static class FeedbackLink
     {
@@ -18,13 +19,6 @@ namespace Transliterator.Core.Services
         /// помещается чуть больше тысячи букв на всё сообщение.
         /// </summary>
         public const int MaxUrlLength = 7500;
-
-        /// <summary>Заголовок issue — начало первой строки сообщения, не длиннее этого.</summary>
-        public const int TitleLength = 60;
-
-        public const string TitlePrefix = "Отзыв со страницы";
-
-        private const string Ellipsis = "…";
 
         /// <summary>
         /// Собирает ссылку. Вход и вывод транслитерации прикладываются, только если
@@ -83,49 +77,8 @@ namespace Transliterator.Core.Services
             return low;
         }
 
-        private static string Title(string message)
-        {
-            var line = message.Split('\n', 2)[0].Trim();
-            if (line.Length == 0)
-                return TitlePrefix;
-
-            return $"{TitlePrefix}: {Clip(line, TitleLength)}";
-        }
-
-        private static string Body(string message, string? arabic, string? transliteration)
-        {
-            var body = new StringBuilder(message);
-
-            if (arabic is not null && transliteration is not null)
-            {
-                if (body.Length > 0)
-                    body.Append("\n\n");
-
-                body.Append("**Текст из поля**\n\n```text\n").Append(arabic).Append("\n```\n\n")
-                    .Append("**Транслитерация**\n\n```text\n").Append(transliteration).Append("\n```");
-            }
-
-            body.Append("\n\n<sub>Отправлено кнопкой обратной связи на странице транслитерации.</sub>");
-            return body.ToString();
-        }
-
         private static string Url(string title, string body) =>
             $"{RepositoryUrl}/issues/new?title={Uri.EscapeDataString(title)}&body={Uri.EscapeDataString(body)}";
-
-        /// <summary>
-        /// Обрезает до <paramref name="cap"/> знаков с многоточием. Суррогатную пару
-        /// не рвёт: половинка эмодзи в ссылке — неверный UTF-8, и кодирование падает.
-        /// </summary>
-        private static string Clip(string text, int cap)
-        {
-            if (text.Length <= cap)
-                return text;
-
-            if (cap > 0 && char.IsHighSurrogate(text[cap - 1]))
-                cap--;
-
-            return text[..cap].TrimEnd() + Ellipsis;
-        }
     }
 
     /// <summary>Готовая ссылка и признак, что в неё вошло не всё.</summary>

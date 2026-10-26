@@ -37,7 +37,7 @@ namespace Transliterator.Tests.ServiceTests
             var line = new string('а', 100);
             var (title, body) = Fields(FeedbackLink.Build(line));
 
-            Assert.Equal($"Отзыв со страницы: {new string('а', FeedbackLink.TitleLength)}…", title);
+            Assert.Equal($"Отзыв со страницы: {new string('а', FeedbackMessage.TitleLength)}…", title);
             Assert.StartsWith(line, body);
         }
 
@@ -63,7 +63,7 @@ namespace Transliterator.Tests.ServiceTests
         {
             var (title, body) = Fields(FeedbackLink.Build("", Arabic, Output));
 
-            Assert.Equal(FeedbackLink.TitlePrefix, title);
+            Assert.Equal(FeedbackMessage.TitlePrefix, title);
             Assert.Contains(Arabic, body);
         }
 

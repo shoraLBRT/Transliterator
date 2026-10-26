@@ -119,5 +119,78 @@ window.page = (() => {
         }
     }
 
-    return { typewriter, autosize, resize, copy };
+    /**
+     * Проверка «не робот» перед отправкой отзыва (H3) — Cloudflare Turnstile.
+     * Скрипт чужой, и грузится он только при открытии панели обратной связи:
+     * кто панель не открывает, тот к Cloudflare и не обращается. В режиме
+     * interaction-only виджет невидим, пока проверке хватает фона браузера.
+     */
+    const TurnstileScript = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
+    const TokenWait = 250;
+    const TokenAttempts = 40; // десять секунд: проверка обычно укладывается в одну-две
+
+    let turnstileLoading = null;
+
+    function loadTurnstile() {
+        if (window.turnstile)
+            return Promise.resolve(window.turnstile);
+
+        turnstileLoading ??= new Promise((resolve, reject) => {
+            const script = document.createElement("script");
+            script.src = TurnstileScript;
+            script.async = true;
+            script.onload = () => resolve(window.turnstile);
+            script.onerror = () => {
+                // Блокировщик рекламы или нет сети: следующая попытка грузит заново.
+                turnstileLoading = null;
+                script.remove();
+                reject(new Error("Turnstile did not load"));
+            };
+            document.head.appendChild(script);
+        });
+
+        return turnstileLoading;
+    }
+
+    /** Ставит виджет в элемент и возвращает его номер. */
+    async function guard(element, siteKey) {
+        const turnstile = await loadTurnstile();
+        return turnstile.render(element, {
+            sitekey: siteKey,
+            language: "ru",
+            theme: "light",
+            appearance: "interaction-only",
+        });
+    }
+
+    /**
+     * Токен проверки. Человек может нажать «Отправить» раньше, чем проверка
+     * закончилась, — тогда токен дожидается, а не приходит пустым.
+     */
+    async function guardToken(id) {
+        for (let attempt = 0; attempt < TokenAttempts; attempt++) {
+            const token = window.turnstile?.getResponse(id);
+            if (token)
+                return token;
+
+            await new Promise(resolve => setTimeout(resolve, TokenWait));
+        }
+
+        return "";
+    }
+
+    /** Токен одноразовый: после каждой отправки проверка начинается заново. */
+    function guardReset(id) {
+        window.turnstile?.reset(id);
+    }
+
+    function guardRemove(id) {
+        try {
+            window.turnstile?.remove(id);
+        } catch {
+            // Элемент уже убран со страницы — убирать нечего.
+        }
+    }
+
+    return { typewriter, autosize, resize, copy, guard, guardToken, guardReset, guardRemove };
 })();

@@ -1,7 +1,13 @@
 @using Transliterator.Core.Services
+@inject FeedbackSettings Settings
+@inject FeedbackClient Client
+@inject IJSRuntime JS
+@inject ILogger<FeedbackButton> Logger
 
-@* Обратная связь (H1). Сервера у страницы нет, и сообщение уходит ссылкой: форма
-   нового issue на GitHub открывается уже заполненной, а отправляет её человек.
+@* Обратная связь. Когда настроена функция обратной связи (H3), сообщение уходит
+   прямо отсюда и становится issue, аккаунт GitHub не нужен. Пока не настроена —
+   и запасным путём, когда отправка не удалась, — ссылка на форму нового issue
+   на GitHub, уже заполненную (H1).
    Кнопка не спорит с полем за внимание: на широком экране — значок в углу,
    на узком — своя строка подвала, чтобы не перекрывать поле и результат. *@
 
@@ -25,62 +31,93 @@
             <h2 id="feedback-title" class="feedback-title">Ошибка в транслитерации или отзыв</h2>
 
             <label for="feedback-message" class="visually-hidden">Сообщение</label>
-            <textarea id="feedback-message" class="feedback-message" rows="4" maxlength="@MessageLength"
+            <textarea id="feedback-message" class="feedback-message" rows="4" maxlength="@FeedbackMessage.MessageLength"
                       placeholder="Что не так или что хотелось бы видеть"
-                      @bind="_message" @bind:event="oninput" @ref="_messageInput"></textarea>
+                      @bind="_message" @bind:event="oninput" @bind:after="OnEdited" @ref="_messageInput"></textarea>
 
             @if (CanAttach)
             {
                 <label class="feedback-attach">
-                    <input type="checkbox" @bind="_attach" />
+                    <input type="checkbox" @bind="_attach" @bind:after="OnEdited" />
                     <span>Приложить текст из поля и транслитерацию — так ошибку проще повторить</span>
                 </label>
             }
 
-            @if (Draft is { Truncated: true })
+            @if (Settings.Direct)
             {
                 <p class="feedback-note">
-                    Текст длинный, и в форму попадёт только его начало. Оставьте в поле
-                    только место с ошибкой.
+                    Сообщение станет открытой задачей на GitHub, его увидят все — не пишите
+                    личных данных. Аккаунт не нужен.
                 </p>
-            }
 
-            @if (_opened)
-            {
-                <p class="feedback-note feedback-done" role="status">
-                    Форма открылась в новой вкладке — отправьте её там. Написанное здесь
-                    остаётся, пока страница открыта.
-                </p>
+                @* Виджет Turnstile: обычно невидим, появляется, только если проверке
+                   нужно действие человека. *@
+                <div class="feedback-guard" @ref="_guard"></div>
+
+                <p class="feedback-note @StatusClass" role="status">@StatusText</p>
+
+                @if (OffersLink && Draft is { } fallback)
+                {
+                    <p class="feedback-note">
+                        Написанное сохранено.
+                        <a href="@fallback.Url" target="_blank" rel="noopener">Отправить через форму на GitHub</a>
+                        — для неё нужен аккаунт.
+                    </p>
+                }
+
+                @if (_sent is { IssueUrl: { } issue })
+                {
+                    <p class="feedback-note">
+                        <a href="@issue" target="_blank" rel="noopener">Посмотреть на GitHub</a>
+                    </p>
+                }
+
+                <button type="button" class="feedback-send" disabled="@(!CanSend || _sending || _guardId is null)"
+                        @onclick="SendAsync">
+                    @(_sending ? "Отправляется…" : "Отправить")
+                </button>
             }
             else
             {
-                <p class="feedback-note">
-                    Откроется форма на GitHub: там сообщение можно поправить и отправить.
-                    Нужен аккаунт GitHub.
-                </p>
-            }
+                @if (Draft is { Truncated: true })
+                {
+                    <p class="feedback-note">
+                        Текст длинный, и в форму попадёт только его начало. Оставьте в поле
+                        только место с ошибкой.
+                    </p>
+                }
 
-            @if (Draft is { } draft)
-            {
-                <a class="feedback-send" href="@draft.Url" target="_blank" rel="noopener" @onclick="OnOpened">
-                    Открыть форму на GitHub
-                </a>
-            }
-            else
-            {
-                <button type="button" class="feedback-send" disabled>Открыть форму на GitHub</button>
+                @if (_opened)
+                {
+                    <p class="feedback-note feedback-done" role="status">
+                        Форма открылась в новой вкладке — отправьте её там. Написанное здесь
+                        остаётся, пока страница открыта.
+                    </p>
+                }
+                else
+                {
+                    <p class="feedback-note">
+                        Откроется форма на GitHub: там сообщение можно поправить и отправить.
+                        Нужен аккаунт GitHub.
+                    </p>
+                }
+
+                @if (Draft is { } draft)
+                {
+                    <a class="feedback-send" href="@draft.Url" target="_blank" rel="noopener" @onclick="OnOpened">
+                        Открыть форму на GitHub
+                    </a>
+                }
+                else
+                {
+                    <button type="button" class="feedback-send" disabled>Открыть форму на GitHub</button>
+                }
             }
         </div>
     }
 </div>
 
 @code {
-    /// <summary>
-    /// Потолок сообщения. С ним ссылка помещается в <see cref="FeedbackLink.MaxUrlLength"/>
-    /// даже целиком кириллицей, и обрезать приходится только приложенный текст.
-    /// </summary>
-    private const int MessageLength = 1000;
-
     /// <summary>Текст из поля ввода. Прикладывается только с согласия.</summary>
     [Parameter]
     public string Arabic { get; set; } = string.Empty;
@@ -97,23 +134,59 @@
     private ElementReference _toggle;
     private ElementReference _messageInput;
 
+    private ElementReference _guard;
+    private bool _renderGuard;
+    private string? _guardId;
+    private bool _guardFailed;
+    private bool _sending;
+    private FeedbackResult? _sent;
+    private FeedbackOutcome? _failure;
+
     private bool CanAttach => !string.IsNullOrWhiteSpace(Arabic) && !string.IsNullOrWhiteSpace(Transliteration);
 
-    /// <summary>
-    /// Ссылка, собранная из того, что написано сейчас. Пустую форму открывать
-    /// незачем: нет ни сообщения, ни приложенного текста — нет и ссылки.
-    /// </summary>
+    private bool Attaching => _attach && CanAttach;
+
+    /// <summary>Пустое не отправляется: нет ни сообщения, ни приложенного текста.</summary>
+    private bool CanSend => !string.IsNullOrWhiteSpace(_message) || Attaching;
+
+    /// <summary>Ссылка на форму GitHub из того, что написано сейчас.</summary>
     private FeedbackDraft? Draft
     {
         get
         {
-            var attach = _attach && CanAttach;
-            if (string.IsNullOrWhiteSpace(_message) && !attach)
+            if (!CanSend)
                 return null;
 
-            return attach
+            return Attaching
                 ? FeedbackLink.Build(_message, Arabic, Transliteration)
                 : FeedbackLink.Build(_message);
+        }
+    }
+
+    /// <summary>Ссылка на форму предлагается, когда прямая отправка не удалась или невозможна.</summary>
+    private bool OffersLink => _guardFailed || _failure is not null;
+
+    private string? StatusClass => _sent is not null ? "feedback-done" : OffersLink ? "feedback-failed" : null;
+
+    private string StatusText
+    {
+        get
+        {
+            if (_sending)
+                return "Отправляется…";
+            if (_sent is not null)
+                return "Спасибо, сообщение получено.";
+            if (_guardFailed)
+                return "Проверка «не робот» не загрузилась — возможно, её блокирует расширение браузера.";
+
+            return _failure switch
+            {
+                FeedbackOutcome.NotVerified => "Проверка «не робот» не прошла. Попробуйте отправить ещё раз.",
+                FeedbackOutcome.TooMany => "Слишком много сообщений подряд. Попробуйте через минуту.",
+                FeedbackOutcome.Unreachable => "Сообщение не отправилось: нет связи с сервером.",
+                FeedbackOutcome.Failed => "Сообщение не отправилось: сервер ответил ошибкой.",
+                _ => string.Empty,
+            };
         }
     }
 
@@ -123,6 +196,27 @@
         {
             _focusMessage = false;
             await _messageInput.FocusAsync();
+        }
+
+        if (_renderGuard)
+        {
+            _renderGuard = false;
+            await RenderGuardAsync();
+        }
+    }
+
+    private async Task RenderGuardAsync()
+    {
+        try
+        {
+            _guardId = await JS.InvokeAsync<string>("page.guard", _guard, Settings.TurnstileSiteKey);
+            _guardFailed = false;
+        }
+        catch (JSException ex)
+        {
+            Logger.LogWarning(ex, "Turnstile is unavailable");
+            _guardFailed = true;
+            StateHasChanged();
         }
     }
 
@@ -136,7 +230,10 @@
 
         _open = true;
         _opened = false;
+        _sent = null;
+        _failure = null;
         _focusMessage = true;
+        _renderGuard = Settings.Direct;
     }
 
     /// <summary>
@@ -146,7 +243,26 @@
     private async Task CloseAsync()
     {
         _open = false;
+        await RemoveGuardAsync();
         await _toggle.FocusAsync();
+    }
+
+    private async Task RemoveGuardAsync()
+    {
+        if (_guardId is null)
+            return;
+
+        var id = _guardId;
+        _guardId = null;
+
+        try
+        {
+            await JS.InvokeVoidAsync("page.guardRemove", id);
+        }
+        catch (JSException ex)
+        {
+            Logger.LogWarning(ex, "Turnstile widget could not be removed");
+        }
     }
 
     private async Task OnKeyDownAsync(KeyboardEventArgs e)
@@ -155,10 +271,63 @@
             await CloseAsync();
     }
 
+    /// <summary>Новое сообщение — прежнее «получено» к нему уже не относится.</summary>
+    private void OnEdited() => _sent = null;
+
     /// <summary>
-    /// Дошло ли сообщение, страница узнать не может: отправка идёт на GitHub,
-    /// в другой вкладке. Она говорит только, что форма открыта, и сообщение
+    /// Дошло ли сообщение по ссылке, страница узнать не может: отправка идёт на
+    /// GitHub, в другой вкладке. Она говорит только, что форма открыта, и сообщение
     /// не стирает — не открылась вкладка, его можно отправить ещё раз.
     /// </summary>
     private void OnOpened() => _opened = true;
+
+    /// <summary>
+    /// Прямая отправка. Получилось — поле очищается, и панель говорит «получено».
+    /// Нет — написанное остаётся, и рядом появляется ссылка на форму GitHub.
+    /// </summary>
+    private async Task SendAsync()
+    {
+        if (!CanSend || _sending || _guardId is null)
+            return;
+
+        _sending = true;
+        _sent = null;
+        _failure = null;
+
+        var (title, body) = Attaching
+            ? FeedbackMessage.Compose(_message, Arabic, Transliteration)
+            : FeedbackMessage.Compose(_message);
+
+        try
+        {
+            var token = await JS.InvokeAsync<string>("page.guardToken", _guardId);
+            var result = string.IsNullOrEmpty(token)
+                ? new FeedbackResult(FeedbackOutcome.NotVerified)
+                : await Client.SendAsync(Settings.Endpoint!, title, body, token);
+
+            if (result.Outcome == FeedbackOutcome.Sent)
+            {
+                _sent = result;
+                _message = string.Empty;
+                _attach = false;
+            }
+            else
+            {
+                _failure = result.Outcome;
+            }
+
+            await JS.InvokeVoidAsync("page.guardReset", _guardId);
+        }
+        catch (Exception ex)
+        {
+            // Ловится всё: необработанное исключение в WebAssembly гасит страницу
+            // целиком, а отзыв того не стоит.
+            Logger.LogError(ex, "Feedback could not be sent");
+            _failure ??= FeedbackOutcome.Failed;
+        }
+        finally
+        {
+            _sending = false;
+        }
+    }
 }
