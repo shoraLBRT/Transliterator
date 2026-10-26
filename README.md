@@ -98,6 +98,11 @@ all the work in the browser. There is no server, and the page is published from
   diacritics is accepted too, although without harakat the reading is incomplete.
 * **Ready-made surahs** from the corpus open with the "Выбрать суру" button. The
   text goes in one ayah per line, and the result keeps the lines.
+* **Feedback** — an icon in the corner of the page (a footer line on a phone).
+  With no server the message is not sent from the page: it opens a pre-filled
+  new-issue form on GitHub, and the person submits it with their own GitHub
+  account. The text from the field and its transliteration are attached only
+  when the person ticks the box.
 * **One profile — `Standard`.** Profile selection, the rules table and the
   custom profile editor are taken off the page in the first iteration. They stay
   in the core: localStorage storage, the editor, JSON export and import
