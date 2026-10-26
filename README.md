@@ -298,31 +298,3 @@ profile for everyone already holding it.
 
 `Transliterate(text, profile)` takes a profile that is not saved anywhere — the
 path the browser editor uses. The profile is validated before the calculation.
-
----
-
-## Unit tests
-
-* **xUnit** tests cover phonology, every tajweed stage, profiles and their
-  storages, the corpus and the web-facing services.
-* The tests load the real profiles from resources rather than copies in code —
-  a hardcoded copy once drifted from the original, and the tests were verifying
-  behaviour the application no longer had.
-* A data-driven run takes the whole corpus of worked examples through the
-  pipeline: every ayah in both spellings, and every surah as a single line.
-  The cases are built from the corpus files, so adding a surah adds its tests.
-* The examples in this file are checked too: the Al-Fatiha excerpt against the
-  corpus, the runs and the CLI output against the pipeline, the surah example by
-  running the CLI itself, and the profile excerpt against `Standard.json`.
-* GitHub Actions builds the solution and runs the tests on every pull request to
-  `master`.
-
-From the command line:
-
-```bash
-dotnet test
-```
-
-In Visual Studio: `Test → Test Explorer`, build the solution, then `Run All`.
-
----
