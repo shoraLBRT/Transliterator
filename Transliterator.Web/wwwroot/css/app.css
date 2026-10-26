@@ -376,6 +376,190 @@ svg {
     text-underline-offset: 2px;
 }
 
+/* ---- Обратная связь ---- */
+
+/* На узком экране кнопка — своя строка подвала: в углу поверх страницы она закрыла бы
+   поле или результат. В угол она уходит там, где по бокам от колонки есть место
+   (см. медиазапрос ниже). Панель всегда поверх страницы: её открыли нарочно. */
+.feedback {
+    display: flex;
+    flex-basis: 100%;
+    justify-content: center;
+}
+
+.feedback-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--foam-700);
+    font-size: inherit;
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.feedback-toggle svg {
+    width: 0.95rem;
+    height: 0.95rem;
+}
+
+.feedback-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 12;
+}
+
+.feedback-panel {
+    position: fixed;
+    right: 1rem;
+    bottom: 1rem;
+    left: 1rem;
+    z-index: 13;
+    display: grid;
+    gap: 0.75rem;
+    padding: 1.1rem 1.25rem 1.25rem;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 1.25rem;
+    box-shadow: var(--shadow);
+    color: var(--ink);
+    font-size: 0.9rem;
+    text-align: start;
+    animation: rise 0.18s ease-out;
+}
+
+.feedback-title {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.feedback-message {
+    width: 100%;
+    min-height: 6.5rem;
+    padding: 0.7rem 0.85rem;
+    border: 1px solid var(--line);
+    border-radius: 0.85rem;
+    background: var(--paper);
+    color: var(--ink);
+    font: inherit;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    resize: vertical;
+}
+
+.feedback-message:focus-visible {
+    outline: none;
+    border-color: var(--foam-300);
+    box-shadow: 0 0 0 3px var(--foam-50);
+}
+
+.feedback-attach {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    line-height: 1.4;
+    cursor: pointer;
+}
+
+.feedback-attach input {
+    flex: none;
+    width: 1rem;
+    height: 1rem;
+    margin: 0.15rem 0 0;
+    accent-color: var(--foam-700);
+}
+
+.feedback-note {
+    margin: 0;
+    color: var(--ink-muted);
+    line-height: 1.45;
+}
+
+.feedback-done {
+    color: var(--foam-700);
+}
+
+/* Через .feedback: иначе ссылку перекрашивает правило .footer a. */
+.feedback .feedback-send {
+    justify-self: start;
+    padding: 0.55rem 1.1rem;
+    border: 0;
+    border-radius: 999px;
+    background: var(--foam-700);
+    color: var(--paper);
+    font-size: 0.9rem;
+    font-weight: 500;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.feedback .feedback-send:hover {
+    background: var(--ink);
+}
+
+.feedback .feedback-send:disabled {
+    background: var(--foam-100);
+    color: var(--ink-muted);
+    cursor: default;
+}
+
+/* Колонка — 46rem; с 56rem по бокам от неё остаётся место под значок,
+   и в углу он уже ничего не перекрывает. */
+@media (min-width: 56rem) {
+    .feedback {
+        display: block;
+        position: fixed;
+        right: 1.25rem;
+        bottom: 1.25rem;
+        z-index: 11;
+    }
+
+    .feedback-label {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+        white-space: nowrap;
+    }
+
+    .feedback-toggle {
+        display: inline-grid;
+        place-items: center;
+        width: 2.75rem;
+        height: 2.75rem;
+        border: 1px solid var(--line);
+        border-radius: 50%;
+        background: var(--paper);
+        box-shadow: var(--shadow);
+        color: var(--ink-muted);
+        text-decoration: none;
+        transition: color 0.15s ease, border-color 0.15s ease;
+    }
+
+    .feedback-toggle:hover,
+    .feedback-toggle[aria-expanded="true"] {
+        border-color: var(--foam-300);
+        color: var(--foam-700);
+    }
+
+    .feedback-toggle svg {
+        width: 1.2rem;
+        height: 1.2rem;
+    }
+
+    .feedback-panel {
+        right: 1.25rem;
+        bottom: 4.75rem;
+        left: auto;
+        width: 22rem;
+    }
+}
+
 /* ---- Загрузка и сбой среды ---- */
 
 .boot {

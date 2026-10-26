@@ -1,0 +1,164 @@
+@using Transliterator.Core.Services
+
+@* Обратная связь (H1). Сервера у страницы нет, и сообщение уходит ссылкой: форма
+   нового issue на GitHub открывается уже заполненной, а отправляет её человек.
+   Кнопка не спорит с полем за внимание: на широком экране — значок в углу,
+   на узком — своя строка подвала, чтобы не перекрывать поле и результат. *@
+
+<div class="feedback">
+    <button type="button" class="feedback-toggle" title="Обратная связь"
+            aria-expanded="@(_open ? "true" : "false")" aria-controls="feedback-panel"
+            @onclick="ToggleAsync" @ref="_toggle">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 5.5A1.5 1.5 0 0 1 5.5 4h13A1.5 1.5 0 0 1 20 5.5v9a1.5 1.5 0 0 1-1.5 1.5H10l-4.5 4v-4h0A1.5 1.5 0 0 1 4 14.5z" />
+            <path d="M8.5 9h7M8.5 12h4.5" />
+        </svg>
+        <span class="feedback-label">Обратная связь</span>
+    </button>
+
+    @if (_open)
+    {
+        <div class="feedback-backdrop" @onclick="CloseAsync"></div>
+
+        <div id="feedback-panel" class="feedback-panel" role="dialog" aria-labelledby="feedback-title"
+             @onkeydown="OnKeyDownAsync">
+            <h2 id="feedback-title" class="feedback-title">Ошибка в транслитерации или отзыв</h2>
+
+            <label for="feedback-message" class="visually-hidden">Сообщение</label>
+            <textarea id="feedback-message" class="feedback-message" rows="4" maxlength="@MessageLength"
+                      placeholder="Что не так или что хотелось бы видеть"
+                      @bind="_message" @bind:event="oninput" @ref="_messageInput"></textarea>
+
+            @if (CanAttach)
+            {
+                <label class="feedback-attach">
+                    <input type="checkbox" @bind="_attach" />
+                    <span>Приложить текст из поля и транслитерацию — так ошибку проще повторить</span>
+                </label>
+            }
+
+            @if (Draft is { Truncated: true })
+            {
+                <p class="feedback-note">
+                    Текст длинный, и в форму попадёт только его начало. Оставьте в поле
+                    только место с ошибкой.
+                </p>
+            }
+
+            @if (_opened)
+            {
+                <p class="feedback-note feedback-done" role="status">
+                    Форма открылась в новой вкладке — отправьте её там. Написанное здесь
+                    остаётся, пока страница открыта.
+                </p>
+            }
+            else
+            {
+                <p class="feedback-note">
+                    Откроется форма на GitHub: там сообщение можно поправить и отправить.
+                    Нужен аккаунт GitHub.
+                </p>
+            }
+
+            @if (Draft is { } draft)
+            {
+                <a class="feedback-send" href="@draft.Url" target="_blank" rel="noopener" @onclick="OnOpened">
+                    Открыть форму на GitHub
+                </a>
+            }
+            else
+            {
+                <button type="button" class="feedback-send" disabled>Открыть форму на GitHub</button>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    /// <summary>
+    /// Потолок сообщения. С ним ссылка помещается в <see cref="FeedbackLink.MaxUrlLength"/>
+    /// даже целиком кириллицей, и обрезать приходится только приложенный текст.
+    /// </summary>
+    private const int MessageLength = 1000;
+
+    /// <summary>Текст из поля ввода. Прикладывается только с согласия.</summary>
+    [Parameter]
+    public string Arabic { get; set; } = string.Empty;
+
+    /// <summary>Транслитерация этого текста — пара к нему.</summary>
+    [Parameter]
+    public string Transliteration { get; set; } = string.Empty;
+
+    private bool _open;
+    private bool _focusMessage;
+    private bool _opened;
+    private bool _attach;
+    private string _message = string.Empty;
+    private ElementReference _toggle;
+    private ElementReference _messageInput;
+
+    private bool CanAttach => !string.IsNullOrWhiteSpace(Arabic) && !string.IsNullOrWhiteSpace(Transliteration);
+
+    /// <summary>
+    /// Ссылка, собранная из того, что написано сейчас. Пустую форму открывать
+    /// незачем: нет ни сообщения, ни приложенного текста — нет и ссылки.
+    /// </summary>
+    private FeedbackDraft? Draft
+    {
+        get
+        {
+            var attach = _attach && CanAttach;
+            if (string.IsNullOrWhiteSpace(_message) && !attach)
+                return null;
+
+            return attach
+                ? FeedbackLink.Build(_message, Arabic, Transliteration)
+                : FeedbackLink.Build(_message);
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_focusMessage)
+        {
+            _focusMessage = false;
+            await _messageInput.FocusAsync();
+        }
+    }
+
+    private async Task ToggleAsync()
+    {
+        if (_open)
+        {
+            await CloseAsync();
+            return;
+        }
+
+        _open = true;
+        _opened = false;
+        _focusMessage = true;
+    }
+
+    /// <summary>
+    /// Закрытие не стирает написанное: панель закрывают и щелчком мимо, случайно,
+    /// и потерять из-за этого сообщение было бы обидно.
+    /// </summary>
+    private async Task CloseAsync()
+    {
+        _open = false;
+        await _toggle.FocusAsync();
+    }
+
+    private async Task OnKeyDownAsync(KeyboardEventArgs e)
+    {
+        if (e.Key == "Escape")
+            await CloseAsync();
+    }
+
+    /// <summary>
+    /// Дошло ли сообщение, страница узнать не может: отправка идёт на GitHub,
+    /// в другой вкладке. Она говорит только, что форма открыта, и сообщение
+    /// не стирает — не открылась вкладка, его можно отправить ещё раз.
+    /// </summary>
+    private void OnOpened() => _opened = true;
+}
