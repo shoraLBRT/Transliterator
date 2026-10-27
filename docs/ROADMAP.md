@@ -69,7 +69,7 @@
 | E. Свои профили в браузере | `epic:custom-profiles` | [E1](https://github.com/shoraLBRT/Transliterator/issues/39) · [E2](https://github.com/shoraLBRT/Transliterator/issues/41) · [E3](https://github.com/shoraLBRT/Transliterator/issues/43) |
 | F. Инфраструктура | `epic:infra` | [F1](https://github.com/shoraLBRT/Transliterator/issues/45) · [F2](https://github.com/shoraLBRT/Transliterator/issues/49) · [F3](https://github.com/shoraLBRT/Transliterator/issues/53) · [F4](https://github.com/shoraLBRT/Transliterator/issues/55) · [F5](https://github.com/shoraLBRT/Transliterator/issues/57) · [F6](https://github.com/shoraLBRT/Transliterator/issues/87) |
 | G. Система записи: графемы `Standard` | `epic:writing-system` | [G1](https://github.com/shoraLBRT/Transliterator/issues/88) · [G2](https://github.com/shoraLBRT/Transliterator/issues/92) · [G3](https://github.com/shoraLBRT/Transliterator/issues/93) · [G4](https://github.com/shoraLBRT/Transliterator/issues/94) · [G5](https://github.com/shoraLBRT/Transliterator/issues/95) · [G6](https://github.com/shoraLBRT/Transliterator/issues/96) |
-| H. Связь с пользователями | `epic:feedback` | [H1](https://github.com/shoraLBRT/Transliterator/issues/89) · [H2](https://github.com/shoraLBRT/Transliterator/issues/90) |
+| H. Связь с пользователями | `epic:feedback` | [H1](https://github.com/shoraLBRT/Transliterator/issues/89) · [H2](https://github.com/shoraLBRT/Transliterator/issues/90) · [H3](https://github.com/shoraLBRT/Transliterator/issues/99) |
 | I. Правила таджвида для пользователя | `epic:tajweed-rules` | [I1](https://github.com/shoraLBRT/Transliterator/issues/91) |
 
 Корпус (A) шёл первым, и не из вежливости. Веб-версии нужны готовые суры
@@ -80,7 +80,9 @@
 Веб-версия (C, D) — Blazor WebAssembly: `Transliterator.Core` компилируется
 в wasm и считает прямо в браузере. Бэкенда нет вообще — ни API, ни CORS,
 ни хостинга, страница выкладывается статикой. Это ограничивает всё, что хочет
-отправить данные наружу, — например, обратную связь (H1).
+отправить данные наружу, — например, обратную связь: её принимает отдельная
+маленькая функция на Cloudflare Workers (H3, `feedback-worker/`), а страница
+остаётся статикой.
 
 ### Итерация 2
 
@@ -89,6 +91,7 @@
 | 1 | [B13](https://github.com/shoraLBRT/Transliterator/issues/84) — хамза на татвиле пропадает | — |
 | 2 | [I1](https://github.com/shoraLBRT/Transliterator/issues/91) — каталог правил таджвида | — |
 | 3 | [H1](https://github.com/shoraLBRT/Transliterator/issues/89) — кнопка обратной связи | — (отправка — ссылкой на форму issue, выбрано владельцем) |
+| 4 | [H3](https://github.com/shoraLBRT/Transliterator/issues/99) — обратная связь без аккаунта GitHub | H1; развёртывание функции — руками владельца |
 | — | [H2](https://github.com/shoraLBRT/Transliterator/issues/90) — контакты владельца, `BA` | выбор канала владельцем |
 
 Вне итераций, ждут решения владельца: G1–G6 (система записи) и F6 (обязательный
@@ -105,12 +108,6 @@
 - **Подсветка сработавших правил.** Показывать, какое правило таджвида сработало
   на каком месте, — учебная ценность выше, чем у самой транслитерации. Требует,
   чтобы сегменты помнили происхождение: сейчас они этого не хранят.
-- **Обратная связь без аккаунта GitHub.** Кнопка H1 отправляет ссылкой на форму
-  нового issue: сервер не нужен, но без аккаунта GitHub сообщение не отправить,
-  и дошло ли оно, страница не знает. Владелец выбрал этот способ для начала.
-  Следующий шаг — маленький прокси (облачная функция с токеном GitHub App),
-  который заводит issue сам. Цена — бэкенд: хранение секрета, защита от спама,
-  лимит запросов.
 - **Аудио.** Сопоставление транслитерации с чтением. Ломает «минималистичную
   страничку», требует прав на записи чтецов.
 - **Полный Коран в корпусе.** 114 сур — это мегабайты в wasm-сборке. Нужна либо

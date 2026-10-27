@@ -1,0 +1,24 @@
+# Функция обратной связи (H3) на Cloudflare Workers. Развёртывание — README.md рядом.
+name = "transliterator-feedback"
+main = "src/feedback.js"
+compatibility_date = "2025-09-01"
+
+[vars]
+# Откуда принимаются сообщения: выложенная страница и локальный запуск.
+ALLOWED_ORIGINS = "https://shoralbrt.github.io,http://localhost:5080"
+GITHUB_REPOSITORY = "shoraLBRT/Transliterator"
+# Номер приложения со страницы настроек GitHub App (App ID) — вписать при развёртывании.
+GITHUB_APP_ID = ""
+
+# Секреты задаются командой `npx wrangler secret put`, не здесь:
+#   GITHUB_APP_PRIVATE_KEY — закрытый ключ GitHub App (.pem целиком);
+#   TURNSTILE_SECRET       — секретный ключ виджета Turnstile.
+
+# Не больше пяти сообщений в минуту с одного адреса — сверх проверки Turnstile.
+[[ratelimits]]
+name = "FEEDBACK_LIMITER"
+namespace_id = "1001"
+
+  [ratelimits.simple]
+  limit = 5
+  period = 60

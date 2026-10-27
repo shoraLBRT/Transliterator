@@ -361,3 +361,11 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# Функция обратной связи (feedback-worker): локальные секреты, кеш wrangler
+# и ключ GitHub App — не в репозиторий. Локальные настройки страницы с адресом
+# локальной функции — тоже: на выложенной странице они не нужны.
+feedback-worker/.dev.vars
+feedback-worker/.wrangler/
+*.pem
+Transliterator.Web/wwwroot/appsettings.Development.json

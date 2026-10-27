@@ -99,8 +99,11 @@ all the work in the browser. There is no server, and the page is published from
 * **Ready-made surahs** from the corpus open with the "Выбрать суру" button. The
   text goes in one ayah per line, and the result keeps the lines.
 * **Feedback** — an icon in the corner of the page (a footer line on a phone).
-  With no server the message is not sent from the page: it opens a pre-filled
-  new-issue form on GitHub, and the person submits it with their own GitHub
+  The message goes to a small Cloudflare Workers function
+  ([`feedback-worker/`](feedback-worker/README.md)) that checks Turnstile and
+  opens an issue in this repository, so no GitHub account is needed. Until the
+  function is configured, and as a fallback when sending fails, the page opens a
+  pre-filled new-issue form on GitHub that the person submits with their own
   account. The text from the field and its transliteration are attached only
   when the person ticks the box.
 * **One profile — `Standard`.** Profile selection, the rules table and the

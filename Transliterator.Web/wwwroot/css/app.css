@@ -483,6 +483,24 @@ svg {
     color: var(--foam-700);
 }
 
+.feedback-failed {
+    color: var(--error);
+}
+
+.feedback-note:empty {
+    display: none;
+}
+
+.feedback-note a {
+    color: var(--foam-700);
+    text-underline-offset: 2px;
+}
+
+/* Виджет Turnstile обычно невидим; появился — занимает своё место в панели. */
+.feedback-guard:empty {
+    display: none;
+}
+
 /* Через .feedback: иначе ссылку перекрашивает правило .footer a. */
 .feedback .feedback-send {
     justify-self: start;

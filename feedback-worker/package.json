@@ -1,0 +1,10 @@
+{
+  "name": "transliterator-feedback",
+  "private": true,
+  "type": "module",
+  "description": "Функция обратной связи страницы транслитерации: заводит issue на GitHub (H3).",
+  "scripts": {
+    "test": "node --test",
+    "deploy": "npx wrangler@4 deploy"
+  }
+}

@@ -48,6 +48,16 @@ jobs:
           --logger "trx;LogFileName=test-results.trx"
           --results-directory TestResults
 
+      # Функция обратной связи (H3) — JavaScript без зависимостей: тесты идут
+      # встроенным в Node раннером, npm install не нужен.
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - name: Test feedback worker
+        working-directory: feedback-worker
+        run: node --test
+
       # Упавший тест виден в PR красной проверкой и в журнале шага Test;
       # полный отчёт — артефактом, чтобы не искать падение в прокрутке.
       - name: Upload test results
