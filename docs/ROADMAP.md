@@ -91,7 +91,7 @@
 | 1 | [B13](https://github.com/shoraLBRT/Transliterator/issues/84) — хамза на татвиле пропадает | — |
 | 2 | [I1](https://github.com/shoraLBRT/Transliterator/issues/91) — каталог правил таджвида | — |
 | 3 | [H1](https://github.com/shoraLBRT/Transliterator/issues/89) — кнопка обратной связи | — (отправка — ссылкой на форму issue, выбрано владельцем) |
-| 4 | [H3](https://github.com/shoraLBRT/Transliterator/issues/99) — обратная связь без аккаунта GitHub | H1; развёртывание функции — руками владельца |
+| 4 | [H3](https://github.com/shoraLBRT/Transliterator/issues/99) — обратная связь без аккаунта GitHub | H1; функция развёрнута владельцем |
 | — | [H2](https://github.com/shoraLBRT/Transliterator/issues/90) — контакты владельца, `BA` | выбор канала владельцем |
 
 Вне итераций, ждут решения владельца: G1–G6 (система записи) и F6 (обязательный
