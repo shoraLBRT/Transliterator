@@ -7,8 +7,8 @@ compatibility_date = "2025-09-01"
 # Откуда принимаются сообщения: выложенная страница и локальный запуск.
 ALLOWED_ORIGINS = "https://shoralbrt.github.io,http://localhost:5080"
 GITHUB_REPOSITORY = "shoraLBRT/Transliterator"
-# Номер приложения со страницы настроек GitHub App (App ID) — вписать при развёртывании.
-GITHUB_APP_ID = ""
+# Номер приложения со страницы настроек GitHub App (App ID) — не секрет.
+GITHUB_APP_ID = "5514770"
 
 # Секреты задаются командой `npx wrangler secret put`, не здесь:
 #   GITHUB_APP_PRIVATE_KEY — закрытый ключ GitHub App (.pem целиком);
