@@ -1,0 +1,15 @@
+{
+  "Stages": [ { "Number": 3, "Name": "Разметка пауз (вакф)", "Class": "WaqfRule" } ],
+  "Rules": [
+    {
+      "Id": "waqf",
+      "Stage": 3,
+      "Name": "Вакф",
+      "ArabicName": "الوقف",
+      "Description": "Неотключаемое правило без причины.",
+      "Examples": [ { "Arabic": "أَحَدٌ", "Transliteration": "ахIад" } ],
+      "CanDisable": false,
+      "WhyNotDisable": ""
+    }
+  ]
+}
