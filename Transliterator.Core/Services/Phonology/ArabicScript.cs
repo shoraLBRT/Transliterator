@@ -19,6 +19,13 @@ namespace Transliterator.Core.Services.Phonology
         public const char SuperscriptAlef = 'ٰ'; // ٰ
         public const char Tatweel = 'ـ';  // ـ
 
+        /// <summary>
+        /// ٔ  Надстрочная хамза. На алифе, вав и йа NFC собирает её в букву-носитель
+        /// (أ ؤ ئ); на татвиле собирать не во что — так усмани пишет хамзу без
+        /// носителя внутри слова: شَيْـًٔا, يَسْـَٔلُونَ.
+        /// </summary>
+        public const char HamzaAbove = 'ٔ';
+
         // --- кораническая разметка ---
         public const char QuranicSukun = 'ۡ';          // ۡ  сукун в некоторых мусхафах
         public const char SmallHighRoundedZero = '۟';  // ۟  буква не читается
