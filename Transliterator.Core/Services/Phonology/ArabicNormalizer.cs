@@ -6,7 +6,8 @@ namespace Transliterator.Core.Services.Phonology
     /// Стадия 1 конвейера: нормализация орфографии.
     /// <para>
     /// Приводит текст к одному представлению до того, как его начнут разбирать:
-    /// NFC, снятие татвиля, сведение вариантов сукуна, разворачивание малых
+    /// NFC, снятие татвиля (хамза на нём становится буквой ء), сведение вариантов
+    /// сукуна, разворачивание малых
     /// восстановительных букв и удаление знаков, не несущих звука.
     /// </para>
     /// </summary>
@@ -17,7 +18,7 @@ namespace Transliterator.Core.Services.Phonology
             if (string.IsNullOrEmpty(text))
                 return string.Empty;
 
-            var source = text.Normalize(NormalizationForm.FormC);
+            var source = UnfoldHamzaOnTatweel(text.Normalize(NormalizationForm.FormC));
             var result = new StringBuilder(source.Length);
 
             foreach (var c in source)
@@ -65,6 +66,56 @@ namespace Transliterator.Core.Services.Phonology
             }
 
             return RestoreNameOfAllah(CollapseWhitespace(result.ToString()));
+        }
+
+        /// <summary>
+        /// Хамза на татвиле становится буквой ء: «ـَٔ» → «ءَ». Так усмани пишет хамзу
+        /// без носителя внутри слова — татвиль, огласовка, надстрочная хамза
+        /// (<c>شَيْـًٔا</c>, <c>يَسْـَٔلُونَ</c>, <c>ٱلْـَٔاخِرَةِ</c>).
+        /// <para>
+        /// Снять татвиль как обычно нельзя (B13): огласовка и хамза, которые он нёс,
+        /// прирастают к предыдущей букве, и звука в выводе нет вовсе — «йасалююн»
+        /// вместо «йасъалююн». Татвиль здесь не соединительная черта, а место буквы.
+        /// Огласовка остаётся при хамзе: NFC ставит её перед надстрочной хамзой,
+        /// в каком бы порядке их ни набрали, и порядок знаков после замены канонический.
+        /// </para>
+        /// <para>
+        /// Разбору достаётся та же ء, что и у <c>شَيْءًا</c>: одно написание, а не два.
+        /// </para>
+        /// </summary>
+        private static string UnfoldHamzaOnTatweel(string text)
+        {
+            if (!text.Contains(ArabicScript.HamzaAbove))
+                return text;
+
+            var result = new StringBuilder(text.Length);
+
+            for (int i = 0; i < text.Length; i++)
+            {
+                if (text[i] != ArabicScript.Tatweel)
+                {
+                    result.Append(text[i]);
+                    continue;
+                }
+
+                int marksEnd = i + 1;
+                while (marksEnd < text.Length && ArabicScript.IsDiacritic(text[marksEnd]))
+                    marksEnd++;
+
+                var marks = text.Substring(i + 1, marksEnd - i - 1);
+                if (!marks.Contains(ArabicScript.HamzaAbove))
+                {
+                    // Обычный татвиль снимет основной проход.
+                    result.Append(text[i]);
+                    continue;
+                }
+
+                result.Append(ArabicScript.Hamza);
+                result.Append(marks.Replace(ArabicScript.HamzaAbove.ToString(), string.Empty));
+                i = marksEnd - 1;
+            }
+
+            return result.ToString();
         }
 
         /// <summary>
