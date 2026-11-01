@@ -50,6 +50,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- Каталог правил таджвида (I1) — только ресурс: рядом со сборкой его
+         никто не правит, и читается он одинаково в браузере и в CLI. -->
+    <EmbeddedResource Include="Resources\TajweedRules.json" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Folder Include="Extensions\" />
   </ItemGroup>
 
