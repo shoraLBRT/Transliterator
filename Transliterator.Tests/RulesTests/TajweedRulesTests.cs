@@ -402,7 +402,7 @@ namespace Transliterator.Tests.RulesTests
         {
             // ل в списке идгама без гунны стоит рядом с ر, и ведёт себя так же:
             // нун становится лямом целиком, носового призвука не остаётся.
-            Assert.Equal("йакул-ляhуу", TransliterationPipeline.Transliterate("يَكُن لَّهُۥ"));
+            Assert.Equal("йакул-ляh", TransliterationPipeline.Transliterate("يَكُن لَّهُۥ"));
 
             var merged = Assert.Single(TransliterationPipeline.Consonants("يَكُن لَّهُۥ"),
                                        s => s.IsGeminateFirstHalf);
@@ -598,17 +598,43 @@ namespace Transliterator.Tests.RulesTests
         public void MaddSila_MeetsHamzaAndPause_InOneAyah()
         {
             // 104:3. Первая ه стоит перед хамзой соседнего слова — силя кубра
-            // в четыре хараката. Вторая приходится на конец высказывания: пауза
-            // снимает конечные краткие гласные, но эту долготу оставляет, и силя
-            // сугра доживает до тишины. Решения об этом нигде нет — тест
-            // закрепляет вывод, а не одобряет его.
+            // в четыре хараката. Вторая приходится на конец высказывания: за паузой
+            // второго движения голоса нет, и силя уходит вместе с гласной ه —
+            // она читается с сукуном (B14, решено владельцем).
             var ha = TransliterationPipeline.Consonants("يَحْسَبُ أَنَّ مَالَهُۥٓ أَخْلَدَهُۥ")
                                             .Where(s => s.Letter == "ه").ToList();
 
             Assert.Equal(2, ha.Count);
             Assert.Equal(4, ha[0].VowelLength);
-            Assert.Equal(2, ha[1].VowelLength);
+            Assert.Equal(Harakah.Sukun, ha[1].Vowel);
+            Assert.Equal(1, ha[1].VowelLength);
         }
+
+        [Theory]
+        [InlineData("بِهِۦ", "биh")]
+        [InlineData("يَحْسَبُ أَنَّ مَالَهُۥٓ أَخْلَدَهُۥ", "йахIсабу анна мааляhууу ахълядаh")]   // 104:3
+        [InlineData("فَمَن يَعْمَلْ مِثْقَالَ ذَرَّةٍ خَيْرًا يَرَهُۥ", "фамай-йа'маль мис́qооля зъарротин хъойрой-йароh")]   // 99:7
+        public void MaddSila_IsDroppedAtPause(string arabic, string expected) =>
+            // Пауза снимает долготу силя так же, как любую конечную краткую гласную:
+            // ه читается с сукуном — тем же «h», что и с написанным сукуном.
+            Assert.Equal(expected, TransliterationPipeline.Transliterate(arabic));
+
+        [Theory]
+        [InlineData("أَخْلَدَهُۥ", "أَخْلَدَهْ")]
+        [InlineData("يَرَهُۥ", "يَرَهْ")]
+        public void MaddSila_AtPause_ReadsLikeWrittenSukun(string sila, string sukun) =>
+            Assert.Equal(TransliterationPipeline.Transliterate(sukun), TransliterationPipeline.Transliterate(sila));
+
+        [Theory]
+        [InlineData("إِنَّهُۥ كَانَ", "иннаhуу каан")]          // сугра в соединении
+        [InlineData("مَالَهُۥٓ أَخْلَدَ", "мааляhууу ахъляд")]   // кубра перед хамзой
+        public void MaddSila_InConnection_IsUnchanged(string arabic, string expected) =>
+            Assert.Equal(expected, TransliterationPipeline.Transliterate(arabic));
+
+        [Fact]
+        public void PausalLongVowelOnHa_ThatIsNotSila_Stays() =>
+            // Долгая ā на ه — не силя: местоимение «её» тянется и на паузе.
+            Assert.Equal(2, TransliterationPipeline.Consonants("عَلَيْهَا").Last(s => s.Letter == "ه").VowelLength);
 
         [Fact]
         public void MaddSila_HasItsExceptions()
@@ -941,7 +967,7 @@ namespace Transliterator.Tests.RulesTests
         [InlineData("اتَّقُوا", "ٱتَّقُوا", "уттаqуу")]                   // удвоение вместо сукуна
         [InlineData("رَبِّ ارْحَمْ", "رَبِّ ٱرْحَمْ", "робби-рхIам")]      // в соединении
         [InlineData("وَاسْتَغْفِرْهُ", "وَٱسْتَغْفِرْهُ", "уастагъфирh")]   // 110:3, за приросшей буквой
-        [InlineData("وَامْرَأَتُهُۥ", "وَٱمْرَأَتُهُۥ", "уамро-атуhуу")]     // 111:4
+        [InlineData("وَامْرَأَتُهُۥ", "وَٱمْرَأَتُهُۥ", "уамро-атуh")]     // 111:4, на паузе без сили (B14)
         [InlineData("فَاتَّقُوا", "فَٱتَّقُوا", "фаттаqуу")]               // удвоение за союзом
         [InlineData("لَاسْتَكْثَرْتُ", "لَٱسْتَكْثَرْتُ", "лястакс́арт")]    // за лямом подтверждения
         public void WaslOutsideTheArticle_ReadsLikeTheWaslSpelling(string imlai, string uthmani, string expected)
@@ -1114,7 +1140,7 @@ namespace Transliterator.Tests.RulesTests
         [InlineData("وَرَأَيْتَ ٱلنَّاسَ", "уаро-айта-ннаас")]      // после огласованной согласной
         [InlineData("وَإِيَّاكَ نَسْتَعِينُ", "уа-иййаака наста'иин")] // под алифом, за приросшей буквой
         [InlineData("يَٰٓأَيُّهَا", "йааа-аййуhаа")]               // 109:1, после мадда
-        [InlineData("وَٱمْرَأَتُهُۥ", "уамро-атуhуу")]              // 111:4
+        [InlineData("وَٱمْرَأَتُهُۥ", "уамро-атуh")]              // 111:4, на паузе без сили (B14)
         public void BetweenVowels_IsWrittenAsASeparator(string arabic, string expected) =>
             // Хамза здесь разводит две гласные, и на письме это разрыв, а не буква:
             // решение владельца при сверке корпуса (B7). Графему выбирает профиль —
