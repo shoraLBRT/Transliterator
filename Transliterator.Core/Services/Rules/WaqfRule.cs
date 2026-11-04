@@ -88,7 +88,31 @@ namespace Transliterator.Core.Services.Rules
                 return;
             }
 
+            DropPausalSila(segments[last]);
             StripFinalVowel(segments[last]);
+        }
+
+        /// <summary>
+        /// Мадд силя на паузе не звучит: بِهِۦ → «биh», أَخْلَدَهُۥ → «ахълядаh» (B14).
+        /// Силя живёт между двумя движениями голоса, а за паузой второго нет —
+        /// и долгота местоименной ه уходит вместе с её гласной, как уходит любая
+        /// конечная краткая. Сама она краткая и есть: долготу ей дописала малая
+        /// ۥ или ۦ, которую нормализация развернула в букву мадда.
+        /// <para>
+        /// Признак — ه, долгая дамма или касра и конец слова. Коренная ه с долгой
+        /// гласной на конце слова не встречается: долгота после неё — всегда силя.
+        /// Без малой буквы ه приходит сюда краткой, силю ей даёт лишь стадия 9,
+        /// и перед паузой она её не даёт. Долгая ā на ه — не силя: عَلَيْهَا
+        /// на паузе остаётся «'аляйhаа».
+        /// </para>
+        /// </summary>
+        private static void DropPausalSila(Segment segment)
+        {
+            if (segment.Letter != ArabicScript.HaStr || segment.Shadda)
+                return;
+
+            if (segment.Vowel is Harakah.Damma or Harakah.Kasra && segment.VowelLength > 1)
+                segment.VowelLength = 1;
         }
 
         /// <summary>
