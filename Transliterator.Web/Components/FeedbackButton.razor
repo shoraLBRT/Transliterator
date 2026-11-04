@@ -32,7 +32,7 @@
 
             <label for="feedback-message" class="visually-hidden">Сообщение</label>
             <textarea id="feedback-message" class="feedback-message" rows="4" maxlength="@FeedbackMessage.MessageLength"
-                      placeholder="Что не так или что хотелось бы видеть"
+                      placeholder="Что понравилось, что не так?"
                       @bind="_message" @bind:event="oninput" @bind:after="OnEdited" @ref="_messageInput"></textarea>
 
             @if (CanAttach)
@@ -45,10 +45,9 @@
 
             @if (Settings.Direct)
             {
-                <p class="feedback-note">
-                    Сообщение станет открытой задачей на GitHub, его увидят все — не пишите
-                    личных данных. Аккаунт не нужен.
-                </p>
+                @* Под полем при прямой отправке предупреждений нет — ни о публичности,
+                   ни об аккаунте: форма как можно проще (H4, решено владельцем). Об аккаунте
+                   говорит только запасной путь — там он действительно нужен. *@
 
                 @* Виджет Turnstile: обычно невидим, появляется, только если проверке
                    нужно действие человека. *@
