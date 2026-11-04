@@ -28,7 +28,13 @@ namespace Transliterator.Core.Services.Rules
     /// </summary>
     public class NasalRule
     {
-        public void Apply(IList<Segment> segments)
+        /// <param name="tajweed">
+        /// В обычном чтении (I2) нун и мим читаются как написаны — изхар перед
+        /// всем, кроме такой же буквы: нун с нуном и мим с мимом сливаются в любом
+        /// чтении. Шадда, которой мусхаф отметил идгам на стыке слов, снимается:
+        /// <c>مِن رَّبِّهِمْ</c> → «мин роббиhим».
+        /// </param>
+        public void Apply(IList<Segment> segments, bool tajweed = true)
         {
             for (int i = 0; i < segments.Count; i++)
             {
@@ -36,7 +42,9 @@ namespace Transliterator.Core.Services.Rules
                 if (!IsSakin(segment))
                     continue;
 
-                if (segment.Letter == ArabicScript.NunStr)
+                if (!tajweed)
+                    ApplyPlain(segments, i);
+                else if (segment.Letter == ArabicScript.NunStr)
                     ApplyNunSakina(segments, i);
                 else if (segment.Letter == ArabicScript.MeemStr)
                     ApplyMeemSakina(segments, i);
@@ -148,6 +156,37 @@ namespace Transliterator.Core.Services.Rules
             // Ихфа шафави: перед ب губы смыкаются не до конца, и мим назализуется.
             // Перед всем остальным — изхар шафави, чистый мим без призвука.
             segments[index].Ghunna = next == ArabicScript.Ba;
+        }
+
+        // ------------------------------------------------------------------
+        // Обычное чтение
+        // ------------------------------------------------------------------
+
+        /// <summary>
+        /// Без таджвида у носового два исхода: слиться с такой же буквой или
+        /// прозвучать целиком. Ни икляба, ни ихфы, ни назализации.
+        /// </summary>
+        private static void ApplyPlain(IList<Segment> segments, int index)
+        {
+            var nasal = segments[index];
+            nasal.Ghunna = false;
+
+            int nextIndex = SegmentNavigator.NextPronouncedConsonant(segments, index);
+            if (nextIndex < 0)
+                return;
+
+            var next = segments[nextIndex];
+
+            if (next.Letter == nasal.Letter && (next.Shadda || SeparatedByBreak(segments, index, nextIndex)))
+            {
+                Idgham.Merge(segments, index, nextIndex, ghunna: false);
+                return;
+            }
+
+            // Шадда после безгласного носового — помета слияния, а не удвоение:
+            // после закрытого слога удвоенному согласному места нет.
+            if (next.Shadda)
+                next.Shadda = false;
         }
 
         // ------------------------------------------------------------------
