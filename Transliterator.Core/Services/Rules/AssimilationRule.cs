@@ -28,7 +28,13 @@ namespace Transliterator.Core.Services.Rules
     /// </summary>
     public class AssimilationRule
     {
-        public void Apply(IList<Segment> segments)
+        /// <param name="tajweed">
+        /// В обычном чтении (I2) сливаются только одинаковые буквы — так звучит
+        /// и сам язык. Разные остаются каждая собой, и шадда, которой мусхаф отметил
+        /// слияние, снимается: <c>عَبَدتُّمْ</c> → «'абадтум». Настоящим удвоением она
+        /// быть не может — после безгласного согласного удвоенному места нет.
+        /// </param>
+        public void Apply(IList<Segment> segments, bool tajweed = true)
         {
             for (int i = 0; i < segments.Count; i++)
             {
@@ -40,6 +46,12 @@ namespace Transliterator.Core.Services.Rules
                     continue;
 
                 var target = segments[nextIndex];
+
+                if (!tajweed && target.Letter != segments[i].Letter)
+                {
+                    target.Shadda = false;
+                    continue;
+                }
 
                 // Слияние в носовой назализовано независимо от того, что слилось:
                 // гунну даёт принимающая буква, а не источник.

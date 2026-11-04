@@ -1,5 +1,6 @@
 using Transliterator.Domain.Entities;
 using Transliterator.Domain.Exceptions;
+using Transliterator.Domain.Phonology;
 
 namespace Transliterator.Domain.Interfaces
 {
@@ -28,11 +29,16 @@ namespace Transliterator.Domain.Interfaces
         /// недостающие ключи разом, а не первый попавшийся.
         /// </para>
         /// </summary>
+        /// <param name="reading">
+        /// Ступень чтения и выбранные счёты (I2). Без него — полный таджвид со счётами
+        /// по умолчанию.
+        /// </param>
         /// <exception cref="ArgumentNullException">Профиль не передан.</exception>
         /// <exception cref="TransliterationException">
         /// Профиль не прошёл проверку или в нём нет ключа, нужного тексту.
         /// </exception>
-        TransliterationResult Transliterate(string arabicText, TransliterationProfile profile);
+        TransliterationResult Transliterate(string arabicText, TransliterationProfile profile,
+                                            ReadingOptions? reading = null);
 
         Task UpdateRuleAsync(string arabicLetter, string cyrillicMapping, string? profile = null);
         Task<Dictionary<string, string>> GetRulesAsync(string? profile = null);

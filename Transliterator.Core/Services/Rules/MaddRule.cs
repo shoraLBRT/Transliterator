@@ -66,8 +66,21 @@ namespace Transliterator.Core.Services.Rules
 
         private const string SilaAfterMaddNextWord = "مهن";
 
-        public void Apply(IList<Segment> segments)
+        /// <param name="reading">
+        /// Ступень чтения и выбранные счёты (I2). Мадд арид и мадд лин — основа:
+        /// они есть в любом чтении, и счёт их выбирается. Мадд лязим, муттасиль,
+        /// мунфасиль и силя — только таджвид: в обычном чтении долгая гласная
+        /// тянется свои два счёта, сколько бы её ни удлинял мусхаф.
+        /// </param>
+        public void Apply(IList<Segment> segments, ReadingOptions? reading = null)
         {
+            reading ??= ReadingOptions.FullTajweed;
+
+            int arid = reading.Count(TajweedRuleIds.MaddArid, Arid);
+            int lin = reading.Count(TajweedRuleIds.MaddLin, Arid);
+            int muttasil = reading.Count(TajweedRuleIds.MaddMuttasil, Obligatory);
+            int munfasil = reading.Count(TajweedRuleIds.MaddMunfasil, Obligatory);
+
             for (int i = 0; i < segments.Count; i++)
             {
                 var segment = segments[i];
@@ -79,14 +92,14 @@ namespace Transliterator.Core.Services.Rules
                 // уже не относятся — своей гласной у него нет.
                 if (IsLinGlide(segments, i))
                 {
-                    segment.VowelLength = Arid;
+                    segment.VowelLength = lin;
                     continue;
                 }
 
                 // Мадд силя сугра. Силя кубра (4 хараката перед хамзой) отдельной
                 // ветки не требует: силя делает ه долгой, а дальше её удлиняет
                 // общее правило мунфасиля — оно и так стоит ниже.
-                if (IsSila(segments, i))
+                if (reading.Tajweed && IsSila(segments, i))
                     segment.VowelLength = Math.Max(segment.VowelLength, Natural);
 
                 if (segment.VowelLength < Natural)
@@ -98,6 +111,15 @@ namespace Transliterator.Core.Services.Rules
                 if (MeetsSakinAcrossWords(segments, i))
                 {
                     segment.VowelLength = Short;
+                    continue;
+                }
+
+                // Обычное чтение: долгота, которую мусхаф отметил маддой (ٓ), —
+                // мера таджвида, а не языка. Остаются два счёта и мадд арид.
+                if (!reading.Tajweed)
+                {
+                    segment.VowelLength = IsWrittenSila(segments, i) ? Short : Natural;
+                    LengthenBeforePause(segments, i, arid);
                     continue;
                 }
 
@@ -114,11 +136,58 @@ namespace Transliterator.Core.Services.Rules
                     continue;
                 }
 
-                // Мадд муттасиль и мунфасиль: за долгой гласной идёт хамза.
-                if (next.Letter == ArabicScript.HamzaStr && !next.Silent
-                                                         && segment.VowelLength < Obligatory)
-                    segment.VowelLength = Obligatory;
+                // Мадд муттасиль и мунфасиль: за долгой гласной идёт хамза — своего
+                // слова или следующего. Счёт у каждого свой, выбирается (4 или 5).
+                if (next.Letter == ArabicScript.HamzaStr && !next.Silent && segment.VowelLength < Lazim)
+                    segment.VowelLength = Math.Max(segment.VowelLength,
+                                                   SeparatedByBreak(segments, i, nextIndex) ? munfasil : muttasil);
+
+                LengthenBeforePause(segments, i, arid);
             }
+        }
+
+        /// <summary>
+        /// Мадд арид лис-сукун: долгая гласная перед последней буквой слова, которую
+        /// обеззвучила пауза, — ٱلرَّحِيمِ, نَسْتَعِينُ. При двух счётах (по умолчанию,
+        /// B11) он совпадает с естественным маддом и ничего не меняет; при четырёх
+        /// и шести тянется дальше. Короче, чем уже есть, не делает: ٱلسَّمَآءِ на паузе —
+        /// муттасиль, и арид его не укорачивает.
+        /// </summary>
+        private static void LengthenBeforePause(IList<Segment> segments, int index, int arid)
+        {
+            int next = SegmentNavigator.NextConsonantInWord(segments, index);
+            if (next < 0)
+                return;
+
+            var last = segments[next];
+            if (last.Silent || last.Vowel != Harakah.Sukun || last.OriginalVowel == Harakah.None)
+                return;
+
+            segments[index].VowelLength = Math.Max(segments[index].VowelLength, arid);
+        }
+
+        /// <summary>
+        /// Силя, которую мусхаф разметил малой ۥ или ۦ: долготу местоименной ه дал
+        /// уже разбор, а не <see cref="IsSila"/>. Признак тот же, что у вакфа
+        /// (B14): ه с долгой даммой или касрой в конце слова. Коренная ه с долгой
+        /// гласной на конце слова не встречается.
+        /// </summary>
+        private static bool IsWrittenSila(IList<Segment> segments, int index)
+        {
+            var segment = segments[index];
+
+            return segment.Letter == ArabicScript.HaStr && !segment.Shadda
+                   && segment.Vowel is Harakah.Damma or Harakah.Kasra
+                   && SegmentNavigator.NextConsonantInWord(segments, index) < 0;
+        }
+
+        private static bool SeparatedByBreak(IList<Segment> segments, int from, int to)
+        {
+            for (int i = from + 1; i < to; i++)
+                if (segments[i].Kind == SegmentKind.Break)
+                    return true;
+
+            return false;
         }
 
         /// <summary>

@@ -8,14 +8,15 @@ namespace Transliterator.Tests
     /// <summary>Сборка конвейера без DI и без обращения к хранилищу профилей.</summary>
     public static class TransliterationPipeline
     {
-        public static string Transliterate(string arabicText, TransliterationProfile? profile = null)
+        public static string Transliterate(string arabicText, TransliterationProfile? profile = null,
+                                           ReadingOptions? reading = null)
         {
-            var segments = Parse(arabicText);
+            var segments = Parse(arabicText, reading);
             return new CyrillicRenderer().Render(segments, profile ?? TestProfiles.Standard);
         }
 
         /// <summary>Разбор с применением правил, но без рендеринга — для проверок самого слоя фонем.</summary>
-        public static List<Segment> Parse(string arabicText)
+        public static List<Segment> Parse(string arabicText, ReadingOptions? reading = null)
         {
             var normalized = new ArabicNormalizer().Normalize(arabicText);
             var segments = new ArabicParser().Parse(normalized);
@@ -23,7 +24,7 @@ namespace Transliterator.Tests
             new RulesService(new WaqfRule(), new WaslRule(), new ArticleRule(),
                              new AssimilationRule(), new NasalRule(),
                              new EmphasisRule(), new MaddRule(), new QalqalahRule())
-                .ApplyTajweedRules(segments);
+                .ApplyTajweedRules(segments, reading);
 
             return segments;
         }
@@ -36,7 +37,7 @@ namespace Transliterator.Tests
         public static List<Segment> ParseWithoutRules(string arabicText) =>
             new ArabicParser().Parse(new ArabicNormalizer().Normalize(arabicText));
 
-        public static List<Segment> Consonants(string arabicText) =>
-            Parse(arabicText).Where(s => s.Kind == SegmentKind.Consonant).ToList();
+        public static List<Segment> Consonants(string arabicText, ReadingOptions? reading = null) =>
+            Parse(arabicText, reading).Where(s => s.Kind == SegmentKind.Consonant).ToList();
     }
 }

@@ -3,6 +3,7 @@ using Transliterator.Core.Services.Rules;
 using Transliterator.Domain.Entities;
 using Transliterator.Domain.Exceptions;
 using Transliterator.Domain.Interfaces;
+using Transliterator.Domain.Phonology;
 
 /// <summary>
 /// Конвейер транслитерации: орфография → фонология → правила таджвида → письмо.
@@ -52,16 +53,17 @@ public class TransliterationService : ITransliterationService
     /// конвейера разницы нет. Разница только в том, что здесь его никто до этого
     /// не читал, — пользователь мог стереть в редакторе что угодно.
     /// </remarks>
-    public TransliterationResult Transliterate(string arabicText, TransliterationProfile profile)
+    public TransliterationResult Transliterate(string arabicText, TransliterationProfile profile,
+                                               ReadingOptions? reading = null)
     {
         ArgumentNullException.ThrowIfNull(profile);
 
         ValidateProfile(profile);
 
-        return new TransliterationResult(arabicText ?? string.Empty, Run(arabicText, profile), profile.Name);
+        return new TransliterationResult(arabicText ?? string.Empty, Run(arabicText, profile, reading), profile.Name);
     }
 
-    private string Run(string? arabicText, TransliterationProfile profile)
+    private string Run(string? arabicText, TransliterationProfile profile, ReadingOptions? reading = null)
     {
         if (string.IsNullOrWhiteSpace(arabicText))
             return string.Empty;
@@ -69,7 +71,7 @@ public class TransliterationService : ITransliterationService
         var normalized = _normalizer.Normalize(arabicText);
         var segments = _parser.Parse(normalized);
 
-        _rulesService.ApplyTajweedRules(segments);
+        _rulesService.ApplyTajweedRules(segments, reading);
 
         var missingKeys = new SortedSet<string>(StringComparer.Ordinal);
         var text = _renderer.Render(segments, profile, missingKeys);

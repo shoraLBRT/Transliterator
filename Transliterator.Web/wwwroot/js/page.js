@@ -192,5 +192,26 @@ window.page = (() => {
         }
     }
 
-    return { typewriter, autosize, resize, copy, guard, guardToken, guardReset, guardRemove };
+    /**
+     * Хранилище браузера для выбора, который должен пережить перезагрузку (I2).
+     * Оно бывает недоступно — приватное окно, запрет сайта, — и тогда выбор
+     * просто не запоминается: ни чтение, ни запись страницу не роняют.
+     */
+    function load(key) {
+        try {
+            return window.localStorage.getItem(key);
+        } catch {
+            return null;
+        }
+    }
+
+    function save(key, value) {
+        try {
+            window.localStorage.setItem(key, value);
+        } catch {
+            // Не запомнилось — выбор действует до перезагрузки.
+        }
+    }
+
+    return { typewriter, autosize, resize, copy, guard, guardToken, guardReset, guardRemove, load, save };
 })();

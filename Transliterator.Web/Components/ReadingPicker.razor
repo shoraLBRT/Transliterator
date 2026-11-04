@@ -1,0 +1,167 @@
+@using Transliterator.Core.Services
+
+@* Ступени чтения (I2): полный таджвид, свои варианты счёта, обычное чтение.
+   Как и суры, — одна кнопка под полем ввода: ступени не должны загромождать
+   поле (D5). Правила и их описания берутся из каталога (I1) — правило,
+   добавленное в каталог, появляется здесь само. *@
+
+<div class="picker">
+    <button type="button" class="picker-toggle" aria-expanded="@(_open ? "true" : "false")"
+            aria-controls="reading-menu" @onclick="ToggleAsync" @ref="_toggle">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 7h10M18 7h2M4 17h4M12 17h8" />
+            <circle cx="16" cy="7" r="2" />
+            <circle cx="10" cy="17" r="2" />
+        </svg>
+        <span>@ModeName(Choice.Mode)</span>
+    </button>
+
+    @if (_open)
+    {
+        <div class="picker-backdrop" @onclick="Close"></div>
+
+        <div id="reading-menu" class="picker-panel reading-panel" role="dialog" aria-label="Как читать"
+             tabindex="-1" @ref="_panel" @onkeydown="OnKeyDownAsync">
+            <div class="reading-modes" role="radiogroup" aria-label="Ступень чтения">
+                @foreach (var mode in Modes)
+                {
+                    <button type="button" class="reading-mode" role="radio"
+                            aria-checked="@(Choice.Mode == mode ? "true" : "false")"
+                            @onclick="() => ChooseModeAsync(mode)">
+                        <span class="reading-mode-name">@ModeName(mode)</span>
+                        <span class="reading-mode-note">@ModeNote(mode)</span>
+                    </button>
+                }
+            </div>
+
+            @if (Choice.Mode == ReadingMode.Variants)
+            {
+                <ul class="reading-variants">
+                    @foreach (var rule in Catalog.Rules.Where(r => r.HasVariants))
+                    {
+                        <li class="reading-variant">
+                            <span class="reading-rule-name">@rule.Name</span>
+                            <span class="reading-counts" role="radiogroup" aria-label="@($"{rule.Name}: счёт")">
+                                @foreach (var count in rule.Counts)
+                                {
+                                    <button type="button" class="reading-count" role="radio"
+                                            aria-checked="@(Choice.CountOf(rule) == count ? "true" : "false")"
+                                            @onclick="() => ChooseCountAsync(rule, count)">@count</button>
+                                }
+                            </span>
+                        </li>
+                    }
+                </ul>
+            }
+
+            <details class="reading-rules">
+                <summary>Правила этого чтения</summary>
+
+                @foreach (var group in Groups)
+                {
+                    <p class="reading-group">@GroupName(group.Key)</p>
+                    <ul class="reading-list">
+                        @foreach (var rule in group)
+                        {
+                            <li class="reading-rule @(IsOff(rule) ? "is-off" : null)">
+                                <span class="reading-rule-head">
+                                    <span class="reading-rule-name">@rule.Name</span>
+                                    <span class="reading-rule-arabic" dir="rtl" lang="ar">@rule.ArabicName</span>
+                                </span>
+                                <span class="reading-rule-text">@rule.Description</span>
+                            </li>
+                        }
+                    </ul>
+                }
+            </details>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public TajweedRuleCatalog Catalog { get; set; } = new();
+
+    [Parameter, EditorRequired]
+    public ReadingChoice Choice { get; set; } = ReadingChoice.Default;
+
+    [Parameter]
+    public EventCallback<ReadingChoice> ChoiceChanged { get; set; }
+
+    private static readonly ReadingMode[] Modes = { ReadingMode.Full, ReadingMode.Variants, ReadingMode.Plain };
+
+    private bool _open;
+    private bool _focusPanel;
+    private ElementReference _toggle;
+    private ElementReference _panel;
+
+    /// <summary>Сначала то, что есть в любом чтении, потом — только таджвид.</summary>
+    private IEnumerable<IGrouping<TajweedTier, TajweedRule>> Groups =>
+        Catalog.Rules.GroupBy(r => r.Tier).OrderBy(g => g.Key);
+
+    /// <summary>В обычном чтении правила таджвида не читаются — они видны, но погашены.</summary>
+    private bool IsOff(TajweedRule rule) =>
+        Choice.Mode == ReadingMode.Plain && rule.Tier == TajweedTier.Tajweed;
+
+    private static string ModeName(ReadingMode mode) => mode switch
+    {
+        ReadingMode.Variants => "Свои варианты",
+        ReadingMode.Plain => "Без таджвида",
+        _ => "Полный таджвид",
+    };
+
+    private static string ModeNote(ReadingMode mode) => mode switch
+    {
+        ReadingMode.Variants => "Таджвид, но сколько тянуть мадд — на выбор",
+        ReadingMode.Plain => "Обычное арабское чтение",
+        _ => "Как требует таджвид",
+    };
+
+    private static string GroupName(TajweedTier tier) => tier switch
+    {
+        TajweedTier.Tajweed => "Только в таджвиде",
+        _ => "В любом чтении",
+    };
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_focusPanel)
+        {
+            _focusPanel = false;
+            await _panel.FocusAsync();
+        }
+    }
+
+    private Task ToggleAsync()
+    {
+        _open = !_open;
+        _focusPanel = _open;
+        return Task.CompletedTask;
+    }
+
+    private void Close() => _open = false;
+
+    private async Task OnKeyDownAsync(KeyboardEventArgs e)
+    {
+        if (e.Key != "Escape")
+            return;
+
+        _open = false;
+        await _toggle.FocusAsync();
+    }
+
+    /// <summary>
+    /// Выбранная ступень сразу видна в выводе, и панель закрывается, чтобы его
+    /// открыть. «Свои варианты» оставляет её открытой: счёты выбираются здесь же.
+    /// </summary>
+    private async Task ChooseModeAsync(ReadingMode mode)
+    {
+        if (mode != ReadingMode.Variants)
+            _open = false;
+
+        await ChoiceChanged.InvokeAsync(Choice.WithMode(mode));
+    }
+
+    private Task ChooseCountAsync(TajweedRule rule, int count) =>
+        ChoiceChanged.InvokeAsync(Choice.WithCount(rule.Id, count));
+}

@@ -1,3 +1,4 @@
+@using Transliterator.Core.Repositories
 @using Transliterator.Core.Services
 @inject IProfileRepository Profiles
 @inject ICorpusRepository Corpus
@@ -21,10 +22,17 @@
                       value="@_arabic" @oninput="OnInput" @ref="_input"></textarea>
 
             <div class="composer-bar">
-                @if (_surahs.Count > 0)
-                {
-                    <SurahPicker Surahs="_surahs" Chosen="ChooseAsync" />
-                }
+                <div class="composer-tools">
+                    @if (_surahs.Count > 0)
+                    {
+                        <SurahPicker Surahs="_surahs" Chosen="ChooseAsync" />
+                    }
+
+                    @if (_catalog is not null)
+                    {
+                        <ReadingPicker Catalog="_catalog" Choice="_reading" ChoiceChanged="ChangeReadingAsync" />
+                    }
+                </div>
 
                 @if (HasText)
                 {
@@ -102,8 +110,13 @@
 
     private enum CopyState { Idle, Copied, Failed }
 
+    /// <summary>Ключ хранилища браузера, под которым живёт выбранная ступень чтения (I2).</summary>
+    private const string ReadingKey = "transliterator.reading";
+
     private IReadOnlyList<CorpusSurah> _surahs = Array.Empty<CorpusSurah>();
     private TransliterationProfile? _profile;
+    private TajweedRuleCatalog? _catalog;
+    private ReadingChoice _reading = ReadingChoice.Default;
     private string _placeholder = FallbackPlaceholder;
     private string _arabic = string.Empty;
     private string _result = string.Empty;
@@ -125,6 +138,25 @@
         _profile = await Profiles.GetProfileAsync(ProfileName);
         if (_profile is null)
             _error = $"Профиль {ProfileName} не загрузился. Перезагрузите страницу.";
+
+        _catalog = LoadCatalog();
+    }
+
+    /// <summary>
+    /// Каталог, как и корпус, — ресурс сборки, и битый ресурс не пройдёт тесты.
+    /// Но не прочитался — страница остаётся рабочей: без выбора чтения, полным таджвидом.
+    /// </summary>
+    private TajweedRuleCatalog? LoadCatalog()
+    {
+        try
+        {
+            return EmbeddedTajweedRuleCatalog.Catalog;
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Tajweed rule catalog could not be read");
+            return null;
+        }
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -137,6 +169,7 @@
             {
                 await JS.InvokeVoidAsync("page.typewriter", _hint, Hints, _input);
                 await JS.InvokeVoidAsync("page.autosize", _input);
+                await RestoreReadingAsync();
             }
 
             if (_resizePending)
@@ -166,6 +199,42 @@
         {
             Logger.LogError(ex, "Corpus could not be read");
             return Array.Empty<CorpusSurah>();
+        }
+    }
+
+    /// <summary>
+    /// Выбор чтения помнится в браузере. Читается после первой отрисовки — до неё
+    /// скрипта страницы может ещё не быть. Сверяется с каталогом: из хранилища
+    /// приходит то, что сохранила прежняя версия страницы.
+    /// </summary>
+    private async Task RestoreReadingAsync()
+    {
+        if (_catalog is null)
+            return;
+
+        var stored = await JS.InvokeAsync<string?>("page.load", ReadingKey);
+        var reading = ReadingChoice.Parse(stored, _catalog);
+
+        if (reading.Serialize() == _reading.Serialize())
+            return;
+
+        _reading = reading;
+        Calculate();
+        StateHasChanged();
+    }
+
+    private async Task ChangeReadingAsync(ReadingChoice reading)
+    {
+        _reading = reading;
+        Calculate();
+
+        try
+        {
+            await JS.InvokeVoidAsync("page.save", ReadingKey, reading.Serialize());
+        }
+        catch (JSException ex)
+        {
+            Logger.LogWarning(ex, "Reading choice could not be saved");
         }
     }
 
@@ -234,7 +303,7 @@
 
         try
         {
-            _result = Transliteration.Transliterate(_arabic, _profile).TransliteratedText;
+            _result = Transliteration.Transliterate(_arabic, _profile, _reading.ToOptions()).TransliteratedText;
             _error = null;
         }
         catch (Exception ex)

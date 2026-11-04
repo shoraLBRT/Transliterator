@@ -98,6 +98,11 @@ all the work in the browser. There is no server, and the page is published from
   diacritics is accepted too, although without harakat the reading is incomplete.
 * **Ready-made surahs** from the corpus open with the "Выбрать суру" button. The
   text goes in one ayah per line, and the result keeps the lines.
+* **How to read** — the button next to it picks a reading tier: full tajweed
+  (the default), your own variants (how long to hold madd arid, madd lin,
+  muttasil and munfasil) or plain Arabic reading without tajweed. The output
+  changes at once, every rule is listed with its description from the rule
+  catalog, and the choice is remembered in the browser.
 * **Feedback** — an icon in the corner of the page (a footer line on a phone).
   The message goes to a small Cloudflare Workers function
   ([`feedback-worker/`](feedback-worker/README.md)) that checks Turnstile and

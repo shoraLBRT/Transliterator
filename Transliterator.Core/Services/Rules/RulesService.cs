@@ -51,10 +51,17 @@ namespace Transliterator.Core.Services.Rules
             _qalqalahRule = qalqalahRule;
         }
 
-        public void ApplyTajweedRules(IList<Segment> segments)
+        /// <param name="reading">
+        /// Ступень чтения и выбранные счёты (I2). Без него — полный таджвид со счётами
+        /// по умолчанию. В обычном чтении стадии не выпадают целиком: правила основы
+        /// есть в любом чтении, и каждая стадия сама знает, что из неё — основа.
+        /// </param>
+        public void ApplyTajweedRules(IList<Segment> segments, ReadingOptions? reading = null)
         {
             if (segments.Count == 0)
                 return;
+
+            reading ??= ReadingOptions.FullTajweed;
 
             // Стадия 3: вакф. Должна идти здесь — до всякого межсловного стыка:
             // она решает, какие слова вообще окажутся соседями.
@@ -66,20 +73,21 @@ namespace Transliterator.Core.Services.Rules
             // Стадия 6: идгам однородных и близких согласных. Стоит после артикля:
             // шадда солнечной буквы к этому моменту снята и за отметку слияния
             // больше не сойдёт. Носовых не касается — они решают свою судьбу сами.
-            _assimilationRule.Apply(segments);
+            _assimilationRule.Apply(segments, reading.Tajweed);
 
             // Стадия 7: нун сакина, танвин, мим сакина. Носовым нужен тот же
             // уже слитый текст — у солнечного ляма на этом месте не ل, — но своё
             // слияние они решают сами: по одной шадде изхар и ихфу от идгама
             // не отличить. И до эмфазы, потому что идгам меняет её условия.
-            _nasalRule.Apply(segments);
+            _nasalRule.Apply(segments, reading.Tajweed);
 
             _emphasisRule.Apply(segments);
-            _maddRule.Apply(segments);
+            _maddRule.Apply(segments, reading);
 
             // Стадия 10: кальканя. Идёт последней: безгласность, от которой она
-            // зависит, — итог всех предыдущих стадий.
-            _qalqalahRule.Apply(segments);
+            // зависит, — итог всех предыдущих стадий. В обычном чтении отзвука нет.
+            if (reading.Tajweed)
+                _qalqalahRule.Apply(segments);
         }
     }
 }
