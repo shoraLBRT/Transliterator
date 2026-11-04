@@ -151,7 +151,9 @@ namespace Transliterator.Core.Services.Phonology
             // Гортанный приступ в начале слова смыслоразличительным не является
             // и по традиции не пишется: "аль-хIамду", а не "ъаль-хIамду".
             // Профиль может вернуть его, задав непустой "ء|initial".
-            if (segment.StartsWord && letter == ArabicScript.HamzaStr
+            // Артикль начальную хамзу имени срединной не делает: "аль-ардI", как
+            // "ардI", а не "аль-ъардI" — решено владельцем (G4).
+            if (StartsNoun(segment, previous) && letter == ArabicScript.HamzaStr
                                    && segment.Vowel is not (Harakah.None or Harakah.Sukun))
             {
                 var initial = Lookup(profile, Variant(letter, InitialVariant));
@@ -208,6 +210,15 @@ namespace Transliterator.Core.Services.Phonology
 
             return LookupBase(profile, letter, missingKeys) ?? string.Empty;
         }
+
+        /// <summary>
+        /// Сегмент открывает слово — само по себе или имя за артиклем. Лям артикля
+        /// перед хамзой всегда лунный, и его дефис (<see cref="Segment.HyphenAfter"/>)
+        /// ставит только стадия артикля: по нему имя за артиклем и узнаётся.
+        /// </summary>
+        private static bool StartsNoun(Segment segment, Segment? previous) =>
+            segment.StartsWord
+            || (previous is not null && previous.HyphenAfter && previous.Letter == ArabicScript.LamStr);
 
         private static bool IsBetweenVowels(Segment segment, Segment? previous) =>
             !segment.StartsWord
