@@ -14,7 +14,7 @@ namespace Transliterator.Tests.RulesTests
         [Theory]
         [InlineData("يَسْـَٔلُونَ", "يَسْأَلُونَ", "йасъалююн")]
         [InlineData("شَيْـًٔا", "شَيْئًا", "щайъаа")]            // и танвин на месте
-        [InlineData("ٱلْـَٔاخِرَةِ", "ٱلْءَاخِرَةِ", "аль-ъаахъироh")] // и артикль на месте
+        [InlineData("ٱلْـَٔاخِرَةِ", "ٱلْءَاخِرَةِ", "аль-аахъироh")] // и артикль на месте
         public void HamzaOnTatweel_ReadsLikeHamzaOnCarrier(string tatweel, string carrier, string expected)
         {
             Assert.Equal(expected, TransliterationPipeline.Transliterate(carrier));

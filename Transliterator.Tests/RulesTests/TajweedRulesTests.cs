@@ -1158,7 +1158,6 @@ namespace Transliterator.Tests.RulesTests
         [InlineData("جَآءَ", "джаааъ")]           // в конце слова после долгой: огласовку сняла пауза
         [InlineData("ٱلسَّمَآءِ", "ас-самаааъ")]
         [InlineData("قُرْءَانِ", "qуръаан")]      // после безгласной согласной
-        [InlineData("وَٱلْأَرْضِ", "уаль-ъардI")]  // после ляма артикля
         [InlineData("يُؤْمِنُونَ", "йуъминуун")]  // с сукуном: гласная только перед ней
         public void WithoutAVowelOnBothSides_KeepsItsLetter(string arabic, string expected)
         {
@@ -1170,6 +1169,48 @@ namespace Transliterator.Tests.RulesTests
             Assert.Equal(expected, actual);
             Assert.DoesNotContain("--", actual);
             Assert.False(actual.EndsWith('-'));
+        }
+    }
+
+    /// <summary>
+    /// Хамза после артикля (G4). Артикль не делает начальную хамзу имени срединной:
+    /// она остаётся приступом голоса в начале слова и, как он, не пишется —
+    /// «аль-ардI», как «ардI». Решено владельцем 2026-11-04.
+    /// </summary>
+    public class HamzaAfterArticleTests
+    {
+        [Theory]
+        [InlineData("ٱلْأَرْضِ", "аль-ардI")]
+        [InlineData("وَٱلْأَرْضِ", "уаль-ардI")]          // за приросшей буквой
+        [InlineData("ٱلْءَاخِرَةِ", "аль-аахъироh")]       // хамза перед долгой
+        [InlineData("فِى ٱلْأَرْضِ", "фи-ль-ардI")]        // артикль в соединении
+        [InlineData("ٱلْإِنسَٰنَ", "аль-инсаан")]           // под алифом
+        public void IsNotWritten_LikeAtTheStartOfAWord(string arabic, string expected) =>
+            Assert.Equal(expected, TransliterationPipeline.Transliterate(arabic));
+
+        [Fact]
+        public void ReadsLikeTheNounWithoutTheArticle() =>
+            // Слово за артиклем пишется так же, как без него, — меняется только «аль-».
+            Assert.Equal("аль-" + TransliterationPipeline.Transliterate("أَرْضٌ"),
+                         TransliterationPipeline.Transliterate("ٱلْأَرْضُ"));
+
+        [Fact]
+        public void HamzaInsideTheNoun_IsStillWritten() =>
+            // Решение касается только хамзы сразу за артиклем: внутри имени она пишется.
+            Assert.Equal("аль-qуръаан", TransliterationPipeline.Transliterate("ٱلْقُرْءَانُ"));
+
+        [Fact]
+        public void ProfileCanWriteIt_ThroughTheInitialVariant()
+        {
+            // Хамзу после артикля профиль пишет тем же ключом, что начальную:
+            // кому нужен приступ, задаёт "ء|initial" — и получает его в обоих местах.
+            var profile = new TransliterationProfile
+            {
+                Name = "initial-hamza",
+                Rules = new Dictionary<string, string>(TestProfiles.Standard.Rules) { ["ء|initial"] = "ъ" }
+            };
+
+            Assert.Equal("ъаль-ъардI", TransliterationPipeline.Transliterate("ٱلْأَرْضِ", profile));
         }
     }
 
