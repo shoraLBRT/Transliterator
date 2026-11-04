@@ -50,6 +50,9 @@
   перенумеровываются. Новый пункт получает следующий свободный номер своего
   эпика. Отменённый закрывается как not planned с причиной.
 - **`BA`** — бизнес-анализ: issue ждёт решения владельца, в работу не брать.
+- **Отзывы со страницы** (issues от `transliterator-feedback`) разбирает сессия:
+  даёт код пункта, метки, приоритет и место в итерации, дописывает «Готово, когда».
+  Решение, которое принимает владелец, остаётся вопросом с меткой `BA`.
 
 | Что | Как |
 |---|---|
@@ -62,15 +65,15 @@
 
 | Эпик | Метка | Пункты |
 |---|---|---|
-| A. Корпус примеров и тесты | `epic:corpus` | [A1](https://github.com/shoraLBRT/Transliterator/issues/69) · [A2](https://github.com/shoraLBRT/Transliterator/issues/70) · [A3](https://github.com/shoraLBRT/Transliterator/issues/71) · [A4](https://github.com/shoraLBRT/Transliterator/issues/72) · [A5](https://github.com/shoraLBRT/Transliterator/issues/73) |
-| B. Баги конвейера, найденные прогоном | `epic:pipeline` | [B1](https://github.com/shoraLBRT/Transliterator/issues/74) · [B2](https://github.com/shoraLBRT/Transliterator/issues/75) · [B3](https://github.com/shoraLBRT/Transliterator/issues/76) · [B4](https://github.com/shoraLBRT/Transliterator/issues/77) · [B5](https://github.com/shoraLBRT/Transliterator/issues/78) · [B6](https://github.com/shoraLBRT/Transliterator/issues/79) · [B7](https://github.com/shoraLBRT/Transliterator/issues/80) · [B8](https://github.com/shoraLBRT/Transliterator/issues/81) · [B9](https://github.com/shoraLBRT/Transliterator/issues/82) · [B10](https://github.com/shoraLBRT/Transliterator/issues/51) · [B11](https://github.com/shoraLBRT/Transliterator/issues/83) · [B12](https://github.com/shoraLBRT/Transliterator/issues/64) · [B13](https://github.com/shoraLBRT/Transliterator/issues/84) |
+| A. Корпус примеров и тесты | `epic:corpus` | [A1](https://github.com/shoraLBRT/Transliterator/issues/69) · [A2](https://github.com/shoraLBRT/Transliterator/issues/70) · [A3](https://github.com/shoraLBRT/Transliterator/issues/71) · [A4](https://github.com/shoraLBRT/Transliterator/issues/72) · [A5](https://github.com/shoraLBRT/Transliterator/issues/73) · [A6](https://github.com/shoraLBRT/Transliterator/issues/102) |
+| B. Баги конвейера, найденные прогоном | `epic:pipeline` | [B1](https://github.com/shoraLBRT/Transliterator/issues/74) · [B2](https://github.com/shoraLBRT/Transliterator/issues/75) · [B3](https://github.com/shoraLBRT/Transliterator/issues/76) · [B4](https://github.com/shoraLBRT/Transliterator/issues/77) · [B5](https://github.com/shoraLBRT/Transliterator/issues/78) · [B6](https://github.com/shoraLBRT/Transliterator/issues/79) · [B7](https://github.com/shoraLBRT/Transliterator/issues/80) · [B8](https://github.com/shoraLBRT/Transliterator/issues/81) · [B9](https://github.com/shoraLBRT/Transliterator/issues/82) · [B10](https://github.com/shoraLBRT/Transliterator/issues/51) · [B11](https://github.com/shoraLBRT/Transliterator/issues/83) · [B12](https://github.com/shoraLBRT/Transliterator/issues/64) · [B13](https://github.com/shoraLBRT/Transliterator/issues/84) · [B14](https://github.com/shoraLBRT/Transliterator/issues/106) |
 | C. Готовность ядра к браузеру | `epic:core-browser` | [C1](https://github.com/shoraLBRT/Transliterator/issues/85) · [C2](https://github.com/shoraLBRT/Transliterator/issues/86) · [C3](https://github.com/shoraLBRT/Transliterator/issues/29) |
 | D. Веб-интерфейс | `epic:web` | [D1](https://github.com/shoraLBRT/Transliterator/issues/31) · [D2](https://github.com/shoraLBRT/Transliterator/issues/33) · [D3](https://github.com/shoraLBRT/Transliterator/issues/35) · [D4](https://github.com/shoraLBRT/Transliterator/issues/36) · [D5](https://github.com/shoraLBRT/Transliterator/issues/60) |
-| E. Свои профили в браузере | `epic:custom-profiles` | [E1](https://github.com/shoraLBRT/Transliterator/issues/39) · [E2](https://github.com/shoraLBRT/Transliterator/issues/41) · [E3](https://github.com/shoraLBRT/Transliterator/issues/43) |
-| F. Инфраструктура | `epic:infra` | [F1](https://github.com/shoraLBRT/Transliterator/issues/45) · [F2](https://github.com/shoraLBRT/Transliterator/issues/49) · [F3](https://github.com/shoraLBRT/Transliterator/issues/53) · [F4](https://github.com/shoraLBRT/Transliterator/issues/55) · [F5](https://github.com/shoraLBRT/Transliterator/issues/57) · [F6](https://github.com/shoraLBRT/Transliterator/issues/87) |
+| E. Свои профили в браузере | `epic:custom-profiles` | [E1](https://github.com/shoraLBRT/Transliterator/issues/39) · [E2](https://github.com/shoraLBRT/Transliterator/issues/41) · [E3](https://github.com/shoraLBRT/Transliterator/issues/43) · [E4](https://github.com/shoraLBRT/Transliterator/issues/108) · [E5](https://github.com/shoraLBRT/Transliterator/issues/109) |
+| F. Инфраструктура | `epic:infra` | [F1](https://github.com/shoraLBRT/Transliterator/issues/45) · [F2](https://github.com/shoraLBRT/Transliterator/issues/49) · [F3](https://github.com/shoraLBRT/Transliterator/issues/53) · [F4](https://github.com/shoraLBRT/Transliterator/issues/55) · [F5](https://github.com/shoraLBRT/Transliterator/issues/57) · [F6](https://github.com/shoraLBRT/Transliterator/issues/87) · [F7](https://github.com/shoraLBRT/Transliterator/issues/110) |
 | G. Система записи: графемы `Standard` | `epic:writing-system` | [G1](https://github.com/shoraLBRT/Transliterator/issues/88) · [G2](https://github.com/shoraLBRT/Transliterator/issues/92) · [G3](https://github.com/shoraLBRT/Transliterator/issues/93) · [G4](https://github.com/shoraLBRT/Transliterator/issues/94) · [G5](https://github.com/shoraLBRT/Transliterator/issues/95) · [G6](https://github.com/shoraLBRT/Transliterator/issues/96) |
-| H. Связь с пользователями | `epic:feedback` | [H1](https://github.com/shoraLBRT/Transliterator/issues/89) · [H2](https://github.com/shoraLBRT/Transliterator/issues/90) · [H3](https://github.com/shoraLBRT/Transliterator/issues/99) |
-| I. Правила таджвида для пользователя | `epic:tajweed-rules` | [I1](https://github.com/shoraLBRT/Transliterator/issues/91) |
+| H. Связь с пользователями | `epic:feedback` | [H1](https://github.com/shoraLBRT/Transliterator/issues/89) · [H2](https://github.com/shoraLBRT/Transliterator/issues/90) · [H3](https://github.com/shoraLBRT/Transliterator/issues/99) · [H4](https://github.com/shoraLBRT/Transliterator/issues/103) |
+| I. Правила таджвида для пользователя | `epic:tajweed-rules` | [I1](https://github.com/shoraLBRT/Transliterator/issues/91) · [I2](https://github.com/shoraLBRT/Transliterator/issues/107) |
 
 Корпус (A) шёл первым, и не из вежливости. Веб-версии нужны готовые суры
 для панели примеров, багфиксам нужен эталон, чтобы «починил» не значило «поменял
@@ -84,21 +87,33 @@
 маленькая функция на Cloudflare Workers (H3, `feedback-worker/`), а страница
 остаётся статикой.
 
+GitHub Pages — **dev-стенд** владельца: любое изменение `master` выкатывается туда
+сразу (`pages.yml`), и так и должно быть — всё новое проверяется там, релизов
+и тегов нет. Для людей страница выкатится на свой сервер и домен — это последний
+шаг, когда продукт полностью готов ([F7](https://github.com/shoraLBRT/Transliterator/issues/110)). «Полностью готов» на сегодня —
+закрытая итерация 2. Решено владельцем 2026-11-04.
+
 ### Итерация 2
 
 | Порядок | Issue | Зависит от |
 |---|---|---|
 | 1 | [B13](https://github.com/shoraLBRT/Transliterator/issues/84) — хамза на татвиле пропадает | — |
-| 2 | [I1](https://github.com/shoraLBRT/Transliterator/issues/91) — каталог правил таджвида | — (каталог в ядре; ждёт, пока владелец утвердит отключаемость и вычитает тексты) |
+| 2 | [I1](https://github.com/shoraLBRT/Transliterator/issues/91) — каталог правил таджвида | — (каталог в ядре; ждёт, пока владелец утвердит раскладку правил по ступеням и вычитает тексты) |
 | 3 | [H1](https://github.com/shoraLBRT/Transliterator/issues/89) — кнопка обратной связи | — (отправка — ссылкой на форму issue, выбрано владельцем) |
 | 4 | [H3](https://github.com/shoraLBRT/Transliterator/issues/99) — обратная связь без аккаунта GitHub | H1; функция развёрнута владельцем |
-| — | [H2](https://github.com/shoraLBRT/Transliterator/issues/90) — контакты владельца, `BA` | выбор канала владельцем |
+| 5 | [B14](https://github.com/shoraLBRT/Transliterator/issues/106) — мадд силя доживает до паузы | — |
+| 6 | [G4](https://github.com/shoraLBRT/Transliterator/issues/94) — хамза после артикля не пишется, как и в начале слова | — |
+| 7 | [H4](https://github.com/shoraLBRT/Transliterator/issues/103) — форма обратной связи без предупреждения о публичности | — |
+| 8 | [I2](https://github.com/shoraLBRT/Transliterator/issues/107) — ступени таджвида на странице | I1 |
 
-Вне итераций, ждут решения владельца: G1–G6 (система записи) и F6 (обязательный
-набор ключей профиля).
+Вне итераций, ждут решения владельца: [G2](https://github.com/shoraLBRT/Transliterator/issues/92) (графема хамзы, варианты
+в issue), [H2](https://github.com/shoraLBRT/Transliterator/issues/90) (нужны ли другие каналы связи, пока нет) и [F7](https://github.com/shoraLBRT/Transliterator/issues/110)
+(боевой хостинг — последним). Вне итераций без решения владельца не стоят, но
+и не запланированы: A6 (короткие суры 30-го джуза), E4, E5 и F6 (свои профили).
 
 Интерфейс своих профилей (D2, D4, E1–E3) снят со страницы в D5, ядро и тесты
-на месте. Возвращать его будет отдельный issue — он пока не заведён.
+на месте. Возвращает его [E4](https://github.com/shoraLBRT/Transliterator/issues/108) — в новом виде, вписанном в нынешний
+интерфейс; как именно, решается при реализации.
 
 ### Предложения, не взятые в работу
 
@@ -129,7 +144,10 @@
   она исполняет; каждый пример сверяется с конвейером тестом. Отключаемость
   в нём — предложение, а не решение: утверждает её владелец в I1. Пары
   «с правилом / без правила» пока нет — вывод без правила появится вместе
-  с самим отключением
+  с самим отключением. **Взято в работу** (2026-11-04): владелец решил, что
+  отключать нужно не правила по одному, а ступенями — полный таджвид, варианты
+  внутри таджвида (счёт мадда арид и т. п.), обычное арабское чтение без таджвида.
+  Раскладка правил по ступеням — в I1, ступени на странице — I2
 
 ## Архитектурные инварианты
 
@@ -392,13 +410,19 @@
 и позиция владельца.
 
 - [G2](https://github.com/shoraLBRT/Transliterator/issues/92) — **графема хамзы `ъ` конфликтует с диграфами** (`зъ`/`хъ`/`гъ`):
-  «з + хамза» неотличимо от `ذ`. Между гласными снято B7
-- [G3](https://github.com/shoraLBRT/Transliterator/issues/93) — **`ع` = `'`**: апостроф слабо различим и спорит с типографикой
-- [G4](https://github.com/shoraLBRT/Transliterator/issues/94) — **`"ء|initial": ""`**: хамза в начале слова не пишется
-- [G5](https://github.com/shoraLBRT/Transliterator/issues/95) — **`ق` = `q`**: латиница в кириллическом профиле
-- [G6](https://github.com/shoraLBRT/Transliterator/issues/96) — **отзвук кальканя в `Standard` не пишется**
-- [G1](https://github.com/shoraLBRT/Transliterator/issues/88) — **гунна не различима на письме**: ихфа и чистый нун пишутся
-  одинаково
+  «з + хамза» неотличимо от `ذ`. Между гласными снято B7. Твёрдый знак владельцу
+  не подходит; варианты с выводом — в issue, рекомендован дефис внутри слова
+  и ничего на конце
+
+Решено владельцем 2026-11-04:
+
+- [G3](https://github.com/shoraLBRT/Transliterator/issues/93) — **`ع` остаётся `'`**: владельца устраивает, иначе — в своём профиле
+- [G4](https://github.com/shoraLBRT/Transliterator/issues/94) — **хамза в начале слова не пишется — и после артикля тоже**:
+  `ٱلْأَرْضِ` → «аль-ардI». Вторая половина ещё не сделана — issue в итерации 2
+- [G5](https://github.com/shoraLBRT/Transliterator/issues/95) — **`ق` остаётся `q`**; «къ» — в своём профиле. О графеме, которая
+  спорит с другой, профиль предупредит с примером (E5)
+- [G1](https://github.com/shoraLBRT/Transliterator/issues/88), [G6](https://github.com/shoraLBRT/Transliterator/issues/96) — **гунне и отзвуку кальканя своя графема не нужна**:
+  всего, что звучит, на письме не обозначить. Профиль вправе задать своё
 
 ## Не в конвейере
 
