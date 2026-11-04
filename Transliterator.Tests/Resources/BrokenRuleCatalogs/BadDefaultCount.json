@@ -6,10 +6,11 @@
       "Stage": 3,
       "Name": "Вакф",
       "ArabicName": "الوقف",
-      "Description": "Неотключаемое правило без причины.",
+      "Description": "Счёт по умолчанию вне допустимых.",
       "Examples": [ { "Arabic": "أَحَدٌ", "Transliteration": "ахIад" } ],
-      "CanDisable": false,
-      "WhyNotDisable": ""
+      "Tier": "Base",
+      "Counts": [ 2, 4, 6 ],
+      "DefaultCount": 5
     }
   ]
 }

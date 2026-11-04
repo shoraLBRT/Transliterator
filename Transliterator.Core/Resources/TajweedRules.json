@@ -20,8 +20,7 @@
         { "Arabic": "قُلْ هُوَ ٱللَّهُ أَحَدٌ", "Transliteration": "qуль hууа-ллааhу ахIад" },
         { "Arabic": "تَرْمِيهِم بِحِجَارَةٍ", "Transliteration": "тармииhим бихIиджаароh" }
       ],
-      "CanDisable": false,
-      "WhyNotDisable": "Вакф решает, какие слова соединяются в чтении, а от соседа зависят васля, артикль и мадд. Без него конвейер читал бы всё одним выдохом, и остальные правила видели бы не тот текст."
+      "Tier": "Base"
     },
     {
       "Id": "madd-iwad",
@@ -32,8 +31,7 @@
       "Examples": [
         { "Arabic": "أَفْوَاجًا", "Transliteration": "афуааджаа" }
       ],
-      "CanDisable": false,
-      "WhyNotDisable": "Это не удлинение сверх нормы, а то, как танвин фатха звучит на остановке. Выключить его значило бы читать паузу так, как её не читают."
+      "Tier": "Base"
     },
     {
       "Id": "hamzat-al-wasl",
@@ -45,8 +43,7 @@
         { "Arabic": "ٱهْدِنَا ٱلصِّرَٰطَ", "Transliteration": "иhдина-сIсIироотI" },
         { "Arabic": "بِسْمِ ٱللَّهِ", "Transliteration": "бисми-лляяh" }
       ],
-      "CanDisable": false,
-      "WhyNotDisable": "Васля меняет, какие звуки встречаются на стыке слов: от неё зависят артикль, идгам и мадд. Без неё следующие правила работали бы с неверным текстом."
+      "Tier": "Base"
     },
     {
       "Id": "lam-qamariyya",
@@ -58,8 +55,7 @@
         { "Arabic": "ٱلْحَمْدُ لِلَّهِ", "Transliteration": "аль-хIамду лилляяh" },
         { "Arabic": "ٱلْفَلَقِ", "Transliteration": "аль-фаляq" }
       ],
-      "CanDisable": false,
-      "WhyNotDisable": "Это обычное произношение ляма, выключать здесь нечего."
+      "Tier": "Base"
     },
     {
       "Id": "lam-shamsiyya",
@@ -71,8 +67,7 @@
         { "Arabic": "ٱلصَّمَدُ", "Transliteration": "асI-сIомад" },
         { "Arabic": "مَلِكِ ٱلنَّاسِ", "Transliteration": "малики-ннаас" }
       ],
-      "CanDisable": false,
-      "WhyNotDisable": "Правило меняет саму букву: лям становится следующим согласным. На этом строятся эмфаза и мадд, и без слияния они видели бы лям, которого в чтении нет."
+      "Tier": "Base"
     },
     {
       "Id": "idgham-mutajanisayn",
@@ -84,8 +79,7 @@
         { "Arabic": "عَبَدتُّمْ", "Transliteration": "'абаттум" },
         { "Arabic": "قَالَت طَّآئِفَةٌ", "Transliteration": "qоолятI-тIооо-ифаh" }
       ],
-      "CanDisable": false,
-      "WhyNotDisable": "Слияние меняет саму букву, а эмфаза, мадд и кальканя смотрят на то, что после него осталось."
+      "Tier": "Tajweed"
     },
     {
       "Id": "idgham-mutaqaribayn",
@@ -97,8 +91,7 @@
         { "Arabic": "قُل رَّبِّ", "Transliteration": "qур-робб" },
         { "Arabic": "أَلَمْ نَخْلُقكُّم", "Transliteration": "алям нахълюккум" }
       ],
-      "CanDisable": false,
-      "WhyNotDisable": "Слияние меняет саму букву, а эмфаза, мадд и кальканя смотрят на то, что после него осталось."
+      "Tier": "Tajweed"
     },
     {
       "Id": "izhar-halqi",
@@ -109,8 +102,7 @@
       "Examples": [
         { "Arabic": "مِنْ هَادٍ", "Transliteration": "мин hаад" }
       ],
-      "CanDisable": false,
-      "WhyNotDisable": "Это обычное произношение нуна, выключать здесь нечего."
+      "Tier": "Base"
     },
     {
       "Id": "idgham-bi-ghunna",
@@ -121,8 +113,7 @@
       "Examples": [
         { "Arabic": "مَن يَقُولُ", "Transliteration": "май-йаqууль" }
       ],
-      "CanDisable": false,
-      "WhyNotDisable": "Слияние меняет саму букву: нун становится следующим согласным, и эмфаза с маддом решают уже по нему."
+      "Tier": "Tajweed"
     },
     {
       "Id": "idgham-bila-ghunna",
@@ -133,8 +124,7 @@
       "Examples": [
         { "Arabic": "مِن رَّبِّهِمْ", "Transliteration": "мир-роббиhим" }
       ],
-      "CanDisable": false,
-      "WhyNotDisable": "Слияние меняет саму букву: нун становится следующим согласным, и эмфаза с маддом решают уже по нему."
+      "Tier": "Tajweed"
     },
     {
       "Id": "iqlab",
@@ -145,8 +135,7 @@
       "Examples": [
         { "Arabic": "مِنۢ بَعْدِ", "Transliteration": "мим ба'д" }
       ],
-      "CanDisable": false,
-      "WhyNotDisable": "Правило меняет саму букву: вместо нуна звучит мим."
+      "Tier": "Tajweed"
     },
     {
       "Id": "ikhfa",
@@ -157,8 +146,7 @@
       "Examples": [
         { "Arabic": "مِن شَرِّ", "Transliteration": "мин щарр" }
       ],
-      "CanDisable": true,
-      "WhyNotDisable": ""
+      "Tier": "Tajweed"
     },
     {
       "Id": "idgham-mithlayn",
@@ -169,8 +157,7 @@
       "Examples": [
         { "Arabic": "لَهُم مَّا", "Transliteration": "ляhум-маа" }
       ],
-      "CanDisable": false,
-      "WhyNotDisable": "Слияние соединяет слова и меняет то, что видят следующие правила."
+      "Tier": "Base"
     },
     {
       "Id": "ikhfa-shafawi",
@@ -181,8 +168,7 @@
       "Examples": [
         { "Arabic": "تَرْمِيهِم بِحِجَارَةٍ", "Transliteration": "тармииhим бихIиджаароh" }
       ],
-      "CanDisable": true,
-      "WhyNotDisable": ""
+      "Tier": "Tajweed"
     },
     {
       "Id": "izhar-shafawi",
@@ -193,8 +179,7 @@
       "Examples": [
         { "Arabic": "لَكُمْ دِينُكُمْ", "Transliteration": "лякум диинукум" }
       ],
-      "CanDisable": false,
-      "WhyNotDisable": "Это обычное произношение мима, выключать здесь нечего."
+      "Tier": "Base"
     },
     {
       "Id": "tafkhim-isti'la",
@@ -205,8 +190,7 @@
       "Examples": [
         { "Arabic": "صِرَٰطَ", "Transliteration": "сIироотI" }
       ],
-      "CanDisable": true,
-      "WhyNotDisable": ""
+      "Tier": "Base"
     },
     {
       "Id": "ra",
@@ -219,8 +203,7 @@
         { "Arabic": "رِجَالٌ", "Transliteration": "риджааль" },
         { "Arabic": "فِرْعَوْنَ", "Transliteration": "фир'ауун" }
       ],
-      "CanDisable": true,
-      "WhyNotDisable": ""
+      "Tier": "Base"
     },
     {
       "Id": "lam-allah",
@@ -232,8 +215,7 @@
         { "Arabic": "قَالَ ٱللَّهُ", "Transliteration": "qооля-ллааh" },
         { "Arabic": "بِسْمِ ٱللَّهِ", "Transliteration": "бисми-лляяh" }
       ],
-      "CanDisable": true,
-      "WhyNotDisable": ""
+      "Tier": "Base"
     },
     {
       "Id": "madd-lazim",
@@ -244,8 +226,7 @@
       "Examples": [
         { "Arabic": "وَلَا ٱلضَّآلِّينَ", "Transliteration": "уаля-дIдIооооллиин" }
       ],
-      "CanDisable": true,
-      "WhyNotDisable": ""
+      "Tier": "Tajweed"
     },
     {
       "Id": "madd-muttasil",
@@ -256,8 +237,9 @@
       "Examples": [
         { "Arabic": "جَآءَ", "Transliteration": "джаааъ" }
       ],
-      "CanDisable": true,
-      "WhyNotDisable": ""
+      "Tier": "Tajweed",
+      "Counts": [ 4, 5 ],
+      "DefaultCount": 4
     },
     {
       "Id": "madd-munfasil",
@@ -268,8 +250,9 @@
       "Examples": [
         { "Arabic": "بِمَآ أُنزِلَ", "Transliteration": "бимааа унзиль" }
       ],
-      "CanDisable": true,
-      "WhyNotDisable": ""
+      "Tier": "Tajweed",
+      "Counts": [ 4, 5 ],
+      "DefaultCount": 4
     },
     {
       "Id": "madd-arid",
@@ -280,8 +263,9 @@
       "Examples": [
         { "Arabic": "ٱلرَّحِيمِ", "Transliteration": "ар-рохIиим" }
       ],
-      "CanDisable": true,
-      "WhyNotDisable": ""
+      "Tier": "Base",
+      "Counts": [ 2, 4, 6 ],
+      "DefaultCount": 2
     },
     {
       "Id": "madd-lin",
@@ -292,8 +276,9 @@
       "Examples": [
         { "Arabic": "خَوْفٍ", "Transliteration": "хъоууф" }
       ],
-      "CanDisable": true,
-      "WhyNotDisable": ""
+      "Tier": "Base",
+      "Counts": [ 2, 4, 6 ],
+      "DefaultCount": 2
     },
     {
       "Id": "madd-sila",
@@ -305,8 +290,7 @@
         { "Arabic": "إِنَّهُۥ كَانَ", "Transliteration": "иннаhуу каан" },
         { "Arabic": "مَالَهُۥٓ أَخْلَدَ", "Transliteration": "мааляhууу ахъляд" }
       ],
-      "CanDisable": true,
-      "WhyNotDisable": ""
+      "Tier": "Tajweed"
     },
     {
       "Id": "madd-badal",
@@ -317,8 +301,7 @@
       "Examples": [
         { "Arabic": "ءَامَنُوا۟", "Transliteration": "аамануу" }
       ],
-      "CanDisable": false,
-      "WhyNotDisable": "Два счёта — обычная долгота, и удлинять сверх неё правило не удлиняет: выключать нечего."
+      "Tier": "Base"
     },
     {
       "Id": "iltiqa-sakinayn",
@@ -329,8 +312,7 @@
       "Examples": [
         { "Arabic": "فِى ٱلْعُقَدِ", "Transliteration": "фи-ль-'уqод" }
       ],
-      "CanDisable": false,
-      "WhyNotDisable": "Без правила вывод требовал бы произнести то, чего в чтении не бывает: долгую гласную вплотную к безгласной букве."
+      "Tier": "Base"
     },
     {
       "Id": "qalqalah-sughra",
@@ -341,8 +323,7 @@
       "Examples": [
         { "Arabic": "يَلِدْ وَلَمْ", "Transliteration": "йалид уалям" }
       ],
-      "CanDisable": true,
-      "WhyNotDisable": ""
+      "Tier": "Tajweed"
     },
     {
       "Id": "qalqalah-kubra",
@@ -353,8 +334,7 @@
       "Examples": [
         { "Arabic": "ٱلْفَلَقِ", "Transliteration": "аль-фаляq" }
       ],
-      "CanDisable": true,
-      "WhyNotDisable": ""
+      "Tier": "Tajweed"
     }
   ]
 }

@@ -64,6 +64,60 @@ namespace Transliterator.Tests.RulesTests
             Assert.All(Catalog.Rules, rule => Assert.Matches(arabic, rule.ArabicName));
         }
 
+        /// <summary>
+        /// Правила, которые в обычном чтении убираются. Раскладка утверждена
+        /// владельцем 2026-11-04 (#91); тест держит её, чтобы правка каталога
+        /// не передвинула правило на другую ступень молча.
+        /// </summary>
+        private static readonly string[] TajweedOnly =
+        {
+            "idgham-mutajanisayn", "idgham-mutaqaribayn",
+            "idgham-bi-ghunna", "idgham-bila-ghunna", "iqlab", "ikhfa", "ikhfa-shafawi",
+            "madd-lazim", "madd-muttasil", "madd-munfasil", "madd-sila",
+            "qalqalah-sughra", "qalqalah-kubra",
+        };
+
+        [Fact]
+        public void Tiers_AreTheOwnersLayout()
+        {
+            var tajweed = Catalog.Rules.Where(r => r.Tier == TajweedTier.Tajweed).Select(r => r.Id);
+
+            Assert.Equal(TajweedOnly.Order(), tajweed.Order());
+        }
+
+        [Theory]
+        [InlineData("madd-arid", new[] { 2, 4, 6 }, 2)]
+        [InlineData("madd-lin", new[] { 2, 4, 6 }, 2)]
+        [InlineData("madd-muttasil", new[] { 4, 5 }, 4)]
+        [InlineData("madd-munfasil", new[] { 4, 5 }, 4)]
+        public void Variants_AreTheOwnersLayout(string id, int[] counts, int defaultCount)
+        {
+            var rule = Catalog.Rules.Single(r => r.Id == id);
+
+            Assert.Equal(counts, rule.Counts);
+            Assert.Equal(defaultCount, rule.DefaultCount);
+        }
+
+        [Fact]
+        public void OnlyTheOwnersVariants_HaveCounts() =>
+            Assert.Equal(new[] { "madd-arid", "madd-lin", "madd-muttasil", "madd-munfasil" }.Order(),
+                         Catalog.Rules.Where(r => r.HasVariants).Select(r => r.Id).Order());
+
+        [Theory]
+        [InlineData("madd-arid", "ٱلرَّحِيمِ", "ح")]       // долгая ī перед конечной буквой на паузе
+        [InlineData("madd-lin", "خَوْفٌ", "و")]            // сам глайд
+        [InlineData("madd-muttasil", "جَآءَ", "ج")]        // долгая ā перед хамзой того же слова
+        [InlineData("madd-munfasil", "لَآ أَعْبُدُ", "ل")]  // долгая ā перед хамзой следующего слова
+        public void DefaultCount_IsWhatThePipelineCounts(string id, string arabic, string letter)
+        {
+            // Счёт по умолчанию — не подпись, а то, что конвейер и правда тянет:
+            // каталог показывает его выбранным, пока человек не выбрал свой.
+            var rule = Catalog.Rules.Single(r => r.Id == id);
+            var segment = TransliterationPipeline.Consonants(arabic).First(s => s.Letter == letter);
+
+            Assert.Equal(rule.DefaultCount, segment.VowelLength);
+        }
+
         [Fact]
         public void Catalog_IsReadFromTheAssembly_NotFromDisk()
         {
@@ -75,7 +129,7 @@ namespace Transliterator.Tests.RulesTests
 
         [Theory]
         [InlineData("UnknownStage", "unknown stage")]
-        [InlineData("NoReason", "does not say why")]
+        [InlineData("BadDefaultCount", "default count outside its counts")]
         public void BrokenCatalog_FailsToLoad(string name, string message)
         {
             var exception = Assert.Throws<TransliterationException>(() =>

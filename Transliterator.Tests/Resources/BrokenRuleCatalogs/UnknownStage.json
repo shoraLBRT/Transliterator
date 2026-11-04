@@ -8,8 +8,7 @@
       "ArabicName": "المد اللازم",
       "Description": "Правило ссылается на стадию, которой в каталоге нет.",
       "Examples": [ { "Arabic": "وَلَا ٱلضَّآلِّينَ", "Transliteration": "уаля-дIдIооооллиин" } ],
-      "CanDisable": true,
-      "WhyNotDisable": ""
+      "Tier": "Base"
     }
   ]
 }

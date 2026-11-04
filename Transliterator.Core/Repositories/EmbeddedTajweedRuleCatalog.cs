@@ -97,13 +97,14 @@ namespace Transliterator.Core.Repositories
                         $"rule '{rule.Id}' has no name, Arabic name or description");
                 Require(rule.Examples.Count > 0, $"rule '{rule.Id}' has no examples");
 
-                // Причина — та самая строка, которую увидит человек у недоступного
-                // переключателя. Отключаемому правилу причина не нужна, и строка
-                // там означала бы, что флаг и текст разошлись.
-                Require(rule.CanDisable == string.IsNullOrWhiteSpace(rule.WhyNotDisable),
-                        rule.CanDisable
-                            ? $"rule '{rule.Id}' can be disabled but says why it cannot"
-                            : $"rule '{rule.Id}' cannot be disabled and does not say why");
+                // Счёт по умолчанию — один из допустимых: его конвейер берёт, пока
+                // человек не выбрал свой, и показан он будет выбранным.
+                Require(rule.Counts.SequenceEqual(rule.Counts.Distinct().Order()),
+                        $"rule '{rule.Id}' lists its counts out of order or twice");
+                Require(rule.HasVariants ? rule.Counts.Contains(rule.DefaultCount) : rule.DefaultCount == 0,
+                        rule.HasVariants
+                            ? $"rule '{rule.Id}' has a default count outside its counts"
+                            : $"rule '{rule.Id}' has a default count but no counts");
             }
         }
     }
