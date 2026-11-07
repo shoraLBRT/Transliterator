@@ -21,6 +21,26 @@ namespace Transliterator.Tests.ProfileTests
         private ProfileEditor Editor(UserProfileRepository repository) => new(repository);
 
         [Fact]
+        public async Task OwnGrapheme_ChangesTheOutput_AndSurvivesReload()
+        {
+            // Путь страницы (E4): копия встроенного профиля, правка графемы, вывод
+            // этим профилем — и он же после перезагрузки. ع владелец оставил
+            // апострофом (G3), а кому удобнее иначе, переписывает его в своём профиле.
+            var repository = Repository();
+            var editor = Editor(repository);
+
+            var name = await editor.SuggestCopyNameAsync("Standard");
+            var mine = await editor.CreateCopyAsync("Standard", name);
+            await editor.SetRuleAsync(mine, "ع", "ʿ");
+
+            Assert.Equal("наʿбуд", TransliterationPipeline.Transliterate("نَعْبُدُ", mine));
+
+            var reloaded = await Repository().GetProfileAsync(name);
+            Assert.Equal("наʿбуд", TransliterationPipeline.Transliterate("نَعْبُدُ", reloaded!));
+            Assert.Equal("на'буд", TransliterationPipeline.Transliterate("نَعْبُدُ"));
+        }
+
+        [Fact]
         public async Task NewProfile_IsACopyOfAnExistingOne()
         {
             var repository = Repository();

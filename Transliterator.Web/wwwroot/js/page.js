@@ -213,5 +213,40 @@ window.page = (() => {
         }
     }
 
-    return { typewriter, autosize, resize, copy, guard, guardToken, guardReset, guardRemove, load, save };
+    /**
+     * Запись своего профиля (E4). В отличие от save, говорит, почему не удалось:
+     * null — записано, "quota" — не хватило места (имя ошибки у браузеров разное),
+     * иначе — имя ошибки, например SecurityError, когда хранение запрещено.
+     * Профиль, который молча не записался, пропал бы при перезагрузке.
+     */
+    function storageSet(key, value) {
+        try {
+            window.localStorage.setItem(key, value);
+            return null;
+        } catch (e) {
+            const quota = e && (e.name === "QuotaExceededError"
+                || e.name === "NS_ERROR_DOM_QUOTA_REACHED"
+                || e.code === 22
+                || e.code === 1014);
+            return quota ? "quota" : String((e && e.name) || e);
+        }
+    }
+
+    function storageRemove(key) {
+        window.localStorage.removeItem(key);
+    }
+
+    /** Все ключи хранилища: свои профили ищутся по префиксу. */
+    function storageKeys() {
+        try {
+            return Object.keys(window.localStorage);
+        } catch {
+            return [];
+        }
+    }
+
+    return {
+        typewriter, autosize, resize, copy, guard, guardToken, guardReset, guardRemove,
+        load, save, storageSet, storageRemove, storageKeys,
+    };
 })();

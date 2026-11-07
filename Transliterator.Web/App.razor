@@ -32,6 +32,12 @@
                     {
                         <ReadingPicker Catalog="_catalog" Choice="_reading" ChoiceChanged="ChangeReadingAsync" />
                     }
+
+                    @if (_profile is not null)
+                    {
+                        <ProfilePicker Profile="_profile" DefaultProfile="@ProfileName" Preview="@_result"
+                                       ProfileChanged="ChangeProfileAsync" />
+                    }
                 </div>
 
                 @if (HasText)
@@ -83,10 +89,12 @@
 
 @code {
     /// <summary>
-    /// Первая итерация пишет одним профилем. Выбор профиля, редактор и импорт
-    /// сняты со страницы (D5), но в ядре остаются и вернутся следующей итерацией.
+    /// Профиль, которым страница пишет, пока человек не выбрал другой (E4).
     /// </summary>
     private const string ProfileName = "Standard";
+
+    /// <summary>Ключ хранилища браузера с именем выбранного профиля (E4).</summary>
+    private const string ProfileKey = "transliterator.profile";
 
     /// <summary>Первый аят Аль-Фатихи — на случай, если корпус не прочитался.</summary>
     private const string FallbackPlaceholder = "بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ";
@@ -170,6 +178,7 @@
                 await JS.InvokeVoidAsync("page.typewriter", _hint, Hints, _input);
                 await JS.InvokeVoidAsync("page.autosize", _input);
                 await RestoreReadingAsync();
+                await RestoreProfileAsync();
             }
 
             if (_resizePending)
@@ -221,6 +230,46 @@
         _reading = reading;
         Calculate();
         StateHasChanged();
+    }
+
+    /// <summary>
+    /// Выбранный профиль помнится по имени. Нет такого больше — удалён в другой
+    /// вкладке, хранилище очищено — страница остаётся на профиле по умолчанию.
+    /// </summary>
+    private async Task RestoreProfileAsync()
+    {
+        var stored = await JS.InvokeAsync<string?>("page.load", ProfileKey);
+        if (string.IsNullOrEmpty(stored) || stored == _profile?.Name)
+            return;
+
+        try
+        {
+            if (await Profiles.GetProfileAsync(stored) is not { } profile)
+                return;
+
+            _profile = profile;
+            Calculate();
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogWarning(ex, "Stored profile could not be read");
+        }
+    }
+
+    private async Task ChangeProfileAsync(TransliterationProfile profile)
+    {
+        _profile = profile;
+        Calculate();
+
+        try
+        {
+            await JS.InvokeVoidAsync("page.save", ProfileKey, profile.Name);
+        }
+        catch (JSException ex)
+        {
+            Logger.LogWarning(ex, "Profile choice could not be saved");
+        }
     }
 
     private async Task ChangeReadingAsync(ReadingChoice reading)
