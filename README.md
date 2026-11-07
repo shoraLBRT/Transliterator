@@ -28,8 +28,8 @@ tajweed needs.
 * Rules operate on a segment stream, never on finished Cyrillic: there is not a
   single Cyrillic grapheme in the rule code — every one of them comes from
   a profile.
-* **Transliteration profiles** are JSON files. Two ship with the core; the first
-  iteration of the web version writes with one — `Standard`.
+* **Transliteration profiles** are JSON files. Two ship with the core —
+  `Standard` and `Latin`; on the page you can copy one and rewrite its graphemes.
 * **Web version**: one input field, the result under it and ready-made surahs —
   a static page with no server.
 * **CLI**: text as an argument, from a file, from stdin or a ready-made surah
@@ -111,11 +111,13 @@ all the work in the browser. There is no server, and the page is published from
   pre-filled new-issue form on GitHub that the person submits with their own
   account. The text from the field and its transliteration are attached only
   when the person ticks the box.
-* **One profile — `Standard`.** Profile selection, the rules table and the
-  custom profile editor are taken off the page in the first iteration. They stay
-  in the core: localStorage storage, the editor, JSON export and import
-  (`UserProfileRepository`, `ProfileEditor`, `ProfileJson`) are covered by tests
-  and will return to the page in the next iteration.
+* **Profile** — the third button under the field, named after the current
+  profile (`Standard` by default). It picks a built-in profile (`Standard`,
+  `Latin`) or your own; "Создать копию" makes your own copy at once, and its
+  graphemes can be rewritten in a searchable table, for example `ع` as `ʿ`
+  instead of `'`. The panel repeats the output, so a change is seen while typing.
+  Your profiles and the choice live in the browser's localStorage. JSON export
+  and import (`ProfileJson`) stay in the core and are not on the page yet.
 
 To run the page locally:
 
