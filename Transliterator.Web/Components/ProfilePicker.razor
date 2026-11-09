@@ -4,12 +4,17 @@
 @using Transliterator.Domain.Exceptions
 @inject UserProfileRepository Profiles
 @inject ProfileEditor Editor
+@inject ICorpusRepository Corpus
+@inject ITransliterationService Transliteration
 @inject ILogger<ProfilePicker> Logger
 
 @* Свои профили (E4). Как суры и ступени чтения — одна кнопка под полем ввода:
    профили не на виду, пока их не открыли (D5). Внутри — выбор профиля, копия,
    переименование и удаление своего, и графемы с поиском. Панель закрывает
-   результат, поэтому вывод повторён в ней самой: правка графемы видна сразу. *@
+   результат, поэтому вывод повторён в ней самой: правка графемы видна сразу.
+   Спорная графема своего профиля помечена прямо у буквы, с примером (E5):
+   запрещать её не нужно — решает пользователь, — но видеть, к чему она
+   приведёт, он должен. *@
 
 <div class="picker">
     <button type="button" class="picker-toggle" aria-expanded="@(_open ? "true" : "false")"
@@ -83,6 +88,14 @@
                 {
                     <p class="profile-note is-error" role="alert">@_error</p>
                 }
+
+                @if (ShownConflicts.Count > 0)
+                {
+                    <p class="profile-note is-warning" role="status">
+                        Спорных графем: @ShownConflicts.Count. Профиль сохранён, но некоторые
+                        буквы по выводу не отличить — подробности у букв ниже.
+                    </p>
+                }
             </div>
 
             <div class="profile-preview" aria-live="polite">
@@ -115,6 +128,11 @@
                                 <span class="profile-key" dir="rtl" lang="ar" title="@CodePoints(group.BaseKey)">@Display(group.BaseKey)</span>
                                 @Cell(group.BaseKey)
                             </div>
+
+                            @foreach (var conflict in ShownConflicts.Where(c => c.Involves(group.BaseKey)))
+                            {
+                                @Warning(conflict)
+                            }
 
                             @foreach (var variant in group.Variants)
                             {
@@ -175,6 +193,18 @@
     private TransliterationProfile? _grouped;
     private IReadOnlyList<RuleGroup> _groups = Array.Empty<RuleGroup>();
 
+    private IReadOnlyList<GraphemeConflict> _conflicts = Array.Empty<GraphemeConflict>();
+
+    /// <summary>Текст корпуса — источник примеров к спорам. Читается при первом открытии.</summary>
+    private IReadOnlyList<string>? _texts;
+
+    /// <summary>
+    /// Споры показываются у своего профиля: встроенный не правится, и его споры —
+    /// решения владельца (G2), а не то, что пользователь только что ввёл.
+    /// </summary>
+    private IReadOnlyList<GraphemeConflict> ShownConflicts =>
+        IsBuiltIn ? Array.Empty<GraphemeConflict>() : _conflicts;
+
     private bool IsBuiltIn => _profiles.FirstOrDefault(p => p.Name == Profile.Name)?.BuiltIn ?? true;
 
     // Группы пересобираются при смене профиля, а не на каждую отрисовку: страница
@@ -182,6 +212,10 @@
     // профиля в момент отрисовки — правка графемы групп не меняет.
     protected override void OnParametersSet()
     {
+        // Споры же считаются заново всегда: правка графемы меняет словарь на месте,
+        // и профиль остаётся тем же объектом. Букв три десятка — это дёшево.
+        _conflicts = GraphemeConflicts.Find(Profile.Rules);
+
         if (ReferenceEquals(_grouped, Profile))
             return;
 
@@ -244,6 +278,8 @@
                 items.Add(new Item(profile.Name, await Profiles.IsBuiltInAsync(profile.Name)));
 
             // Профиль по умолчанию — первым, за ним прочие встроенные, потом свои.
+            _texts ??= await LoadTextsAsync();
+
             _profiles = items.OrderByDescending(p => p.Name == DefaultProfile)
                              .ThenByDescending(p => p.BuiltIn)
                              .ToList();
@@ -366,6 +402,85 @@
             // Необработанное исключение в WebAssembly гасит страницу целиком.
             Logger.LogError(ex, "Profile action failed");
             _error = "Не получилось: хранилище браузера недоступно.";
+        }
+    }
+
+    /// <summary>Не прочитался корпус — споры всё равно видны, только без примеров.</summary>
+    private async Task<IReadOnlyList<string>> LoadTextsAsync()
+    {
+        try
+        {
+            return (await Corpus.GetAllSurahsAsync())
+                .SelectMany(surah => surah.Ayahs.Select(ayah => ayah.Arabic))
+                .ToList();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogWarning(ex, "Corpus could not be read for conflict examples");
+            return Array.Empty<string>();
+        }
+    }
+
+    /// <summary>
+    /// Предупреждение у буквы: что с чем спорит и пример — слово из корпуса
+    /// и его вывод этим профилем, где спорная графема видна.
+    /// </summary>
+    private RenderFragment Warning(GraphemeConflict conflict)
+    {
+        var letter = conflict.Letter;
+        var first = conflict.Parts[0];
+
+        // Пример — к спорящей букве, а при совпадении — к обеим: видно, что пишутся одинаково.
+        var examples = (conflict.IsComposed ? new[] { letter } : conflict.Letters.ToArray())
+            .Select(Example)
+            .OfType<(string Arabic, string Output)>()
+            .ToList();
+
+        // Арабская буква внутри русской фразы — в bdi: иначе алгоритм двунаправленного
+        // текста утаскивает за ней соседнюю пунктуацию.
+        return @<p class="profile-warning" role="status">
+                    @if (conflict.IsComposed)
+                    {
+                        var second = conflict.Parts[1];
+                        <span>
+                            «@Grapheme(letter)» у <bdi lang="ar">@letter</bdi> = «@Grapheme(first)» у
+                            <bdi lang="ar">@first</bdi> + «@Grapheme(second)» у <bdi lang="ar">@second</bdi>:
+                            <bdi lang="ar">@letter</bdi> по выводу не отличить от <bdi lang="ar">@first</bdi>,
+                            за которой идёт <bdi lang="ar">@second</bdi>.
+                        </span>
+                    }
+                    else
+                    {
+                        <span>
+                            «@Grapheme(letter)» — так же пишется <bdi lang="ar">@first</bdi>:
+                            <bdi lang="ar">@letter</bdi> и <bdi lang="ar">@first</bdi> по выводу не отличить.
+                        </span>
+                    }
+                    @foreach (var (arabic, output) in examples)
+                    {
+                        <span class="profile-example">
+                            <span dir="rtl" lang="ar">@arabic</span> → <span>@output</span>
+                        </span>
+                    }
+                </p>;
+    }
+
+    private string Grapheme(string letter) => Profile.Rules.GetValueOrDefault(letter) ?? string.Empty;
+
+    /// <summary>Слово из корпуса с этой буквой и его вывод текущим профилем.</summary>
+    private (string Arabic, string Output)? Example(string letter)
+    {
+        if (_texts is null || GraphemeConflicts.ExampleWord(_texts, letter) is not { } word)
+            return null;
+
+        try
+        {
+            return (word, Transliteration.Transliterate(word, Profile).TransliteratedText);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogWarning(ex, "Conflict example could not be transliterated");
+            return null;
         }
     }
 
