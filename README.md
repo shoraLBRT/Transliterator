@@ -116,6 +116,10 @@ all the work in the browser. There is no server, and the page is published from
   `Latin`) or your own; "Создать копию" makes your own copy at once, and its
   graphemes can be rewritten in a searchable table, for example `ع` as `ʿ`
   instead of `'`. The panel repeats the output, so a change is seen while typing.
+  A grapheme that can no longer be told apart — the same as another letter's,
+  or made of two others, like "къ" for `ق` = "к" + the hamza "ъ" — gets a
+  warning next to the letter with a corpus word as an example; the profile is
+  saved anyway.
   Your profiles and the choice live in the browser's localStorage. JSON export
   and import (`ProfileJson`) stay in the core and are not on the page yet.
 

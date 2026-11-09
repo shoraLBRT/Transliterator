@@ -13,6 +13,8 @@
     --ink: #1f2d2a;
     --ink-muted: #5d6a66;
     --error: #b3261e;
+    --warn-bg: #fbf1dc;
+    --warn-ink: #7a4f06;
 
     --shadow: 0 1px 2px rgba(31, 45, 42, 0.04), 0 10px 30px rgba(31, 45, 42, 0.07);
     --radius-card: 1.75rem;
@@ -530,6 +532,33 @@ svg {
 
 .profile-note.is-error {
     color: var(--error);
+}
+
+/* Спорная графема (E5): не ошибка — профиль сохранён, — а предупреждение. */
+.profile-note.is-warning {
+    color: var(--warn-ink);
+}
+
+.profile-warning {
+    display: grid;
+    gap: 0.2rem;
+    margin: 0.25rem 0 0.35rem;
+    padding: 0.45rem 0.65rem;
+    border-radius: 0.6rem;
+    background: var(--warn-bg);
+    color: var(--warn-ink);
+    font-size: 0.8rem;
+    line-height: 1.45;
+}
+
+.profile-example {
+    color: var(--ink);
+}
+
+.profile-warning bdi,
+.profile-example [lang="ar"] {
+    font-family: var(--font-arabic);
+    font-size: 1.05rem;
 }
 
 .profile-input {
