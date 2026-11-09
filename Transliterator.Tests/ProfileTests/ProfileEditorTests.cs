@@ -21,6 +21,26 @@ namespace Transliterator.Tests.ProfileTests
         private ProfileEditor Editor(UserProfileRepository repository) => new(repository);
 
         [Fact]
+        public async Task CopyOfAnIncompleteProfile_IsRefused_WithTheMissingKeys()
+        {
+            // Свой профиль мог быть сохранён до обязательного набора (F6). Копию
+            // с его неполнотой не создать, и сказано, чего не хватает.
+            var repository = Repository();
+            var rules = new Dictionary<string, string>(TestProfiles.Standard.Rules);
+            rules.Remove("ع");
+            await repository.SaveAsync(new Transliterator.Domain.Entities.TransliterationProfile("Старый", "")
+            {
+                Rules = rules
+            });
+
+            var error = await Assert.ThrowsAsync<TransliterationException>(
+                () => Editor(repository).CreateCopyAsync("Старый", "Новый"));
+
+            Assert.Contains("ع", error.Message);
+            Assert.False(await repository.ProfileExistsAsync("Новый"));
+        }
+
+        [Fact]
         public async Task OwnGrapheme_ChangesTheOutput_AndSurvivesReload()
         {
             // Путь страницы (E4): копия встроенного профиля, правка графемы, вывод

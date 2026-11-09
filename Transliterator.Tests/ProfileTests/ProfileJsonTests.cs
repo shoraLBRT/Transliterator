@@ -158,10 +158,48 @@ namespace Transliterator.Tests.ProfileTests
         [Fact]
         public void Import_TrimsTheName_AndDescriptionIsOptional()
         {
-            var result = ProfileJson.Import("{\"Name\": \"  Мой  \", \"Rules\": {\"ب\": \"б\"}}");
+            // Правила полные: профиль без обязательного ключа импорт отвергает (F6).
+            var json = System.Text.Json.JsonSerializer.Serialize(
+                new { Name = "  Мой  ", Rules = TestProfiles.Standard.Rules });
+
+            var result = ProfileJson.Import(json);
 
             Assert.Equal("Мой", result.Profile!.Name);
             Assert.Equal(string.Empty, result.Profile.Description);
+        }
+
+        [Fact]
+        public void Import_RejectsAProfileWithoutRequiredKeys_ListingAllOfThem()
+        {
+            // Отвергается сразу, а не когда ключ понадобится тексту, и перечень —
+            // весь: чинить файл по одному ключу за попытку никто не станет.
+            var rules = new Dictionary<string, string>(TestProfiles.Standard.Rules);
+            // Ключи без своих вариантов: вариант без базового ключа — другая ошибка.
+            rules.Remove("ع");
+            rules.Remove("ِ");
+            rules.Remove("ة|waqf");
+            var json = System.Text.Json.JsonSerializer.Serialize(new { Name = "Мой", Rules = rules });
+
+            var result = ProfileJson.Import(json);
+
+            Assert.Null(result.Profile);
+            var problem = Assert.Single(result.Problems);
+            Assert.Contains("(3)", problem);
+            Assert.Contains("ع", problem);
+            Assert.Contains("◌ِ", problem);
+            Assert.Contains("ة|waqf", problem);
+        }
+
+        [Fact]
+        public void Import_AcceptsAProfileWithoutOptionalKeys()
+        {
+            // Цифры и необязательные варианты профиль вправе не задавать.
+            var rules = TestProfiles.Standard.Rules
+                .Where(r => RequiredProfileKeys.All.Contains(r.Key))
+                .ToDictionary(r => r.Key, r => r.Value);
+            var json = System.Text.Json.JsonSerializer.Serialize(new { Name = "Мой", Rules = rules });
+
+            Assert.NotNull(ProfileJson.Import(json).Profile);
         }
 
         [Fact]

@@ -116,6 +116,11 @@ namespace Transliterator.Core.Services
                 if (name is not null && string.IsNullOrWhiteSpace(name))
                     problems.Add($"Имя профиля ({NameField}) пустое.");
 
+                // Обязательный набор (F6): без этих ключей вывод непригоден, и профиль
+                // отвергается сразу, а не когда ключ понадобится тексту.
+                if (rules is not null && RequiredProfileKeys.Missing(rules) is { Count: > 0 } missing)
+                    problems.Add(MissingKeysProblem(missing));
+
                 if (problems.Count > 0)
                     return new ProfileImport(null, problems);
 
@@ -129,6 +134,11 @@ namespace Transliterator.Core.Services
         }
 
         private static ProfileImport Fail(string problem) => new(null, new[] { problem });
+
+        /// <summary>Перечень недостающих обязательных ключей — весь, а не первый.</summary>
+        public static string MissingKeysProblem(IReadOnlyList<string> missing) =>
+            $"Не хватает обязательных ключей ({missing.Count}): " +
+            string.Join(", ", missing.Select(RequiredProfileKeys.Describe)) + ".";
 
         private static void CheckFields(JsonElement root, List<string> problems)
         {

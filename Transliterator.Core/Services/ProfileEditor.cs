@@ -44,13 +44,23 @@ namespace Transliterator.Core.Services
             return taken is null ? null : $"Профиль «{taken.Name}» уже есть.";
         }
 
-        /// <summary>Новый профиль — копия существующего, встроенного или своего.</summary>
-        /// <exception cref="TransliterationException">Имя не годится или источника нет.</exception>
+        /// <summary>
+        /// Новый профиль — копия существующего, встроенного или своего. Копия
+        /// без обязательного ключа (F6) не создаётся: свой профиль мог быть сохранён
+        /// до того, как набор появился, и размножать его неполноту незачем.
+        /// </summary>
+        /// <exception cref="TransliterationException">
+        /// Имя не годится, источника нет или в нём не хватает обязательных ключей.
+        /// </exception>
         public async Task<TransliterationProfile> CreateCopyAsync(string sourceName, string newName)
         {
             var name = await RequireNameAsync(newName);
             var source = await _profiles.GetProfileAsync(sourceName)
                 ?? throw new TransliterationException($"Профиль «{sourceName}» не найден.");
+
+            if (RequiredProfileKeys.Missing(source.Rules) is { Count: > 0 } missing)
+                throw new TransliterationException(
+                    $"Профиль «{sourceName}» не скопирован. {ProfileJson.MissingKeysProblem(missing)}");
 
             var copy = new TransliterationProfile(name, source.Description)
             {
