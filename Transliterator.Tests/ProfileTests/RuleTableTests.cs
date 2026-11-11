@@ -1,4 +1,5 @@
 using Transliterator.Core.Services;
+using Transliterator.Core.Services.Phonology;
 using Xunit;
 
 namespace Transliterator.Tests.ProfileTests
@@ -109,6 +110,75 @@ namespace Transliterator.Tests.ProfileTests
             var groups = RuleTable.Group(TestProfiles.Standard.Rules);
 
             Assert.Same(groups, RuleTable.Filter(groups, query));
+        }
+
+        [Theory]
+        [InlineData("х")]
+        [InlineData("Х")]
+        public void Search_ByGrapheme_FindsLettersWrittenThatWay(string query)
+        {
+            // Тот, кто не знает арабского, ищет букву по тому, как она пишется (E7).
+            var found = RuleTable.Filter(RuleTable.Group(TestProfiles.Standard.Rules), query);
+
+            Assert.Equal(new[] { "ح", "خ" }, found.Select(g => g.BaseKey).Order());
+        }
+
+        [Fact]
+        public void ShortQuery_DoesNotSearchTheNotes()
+        {
+            // «х» — это графема, а не начало слова «хамза» в пояснении к hiatus.
+            var found = RuleTable.Filter(RuleTable.Group(TestProfiles.Standard.Rules), "х");
+
+            Assert.DoesNotContain(found, g => g.BaseKey == "ء");
+        }
+
+        [Fact]
+        public void Search_ByGrapheme_LooksIntoVariantsToo()
+        {
+            // Графема, которой нет ни у одной базы, а есть только у варианта:
+            // поиск находит букву и по ней.
+            var groups = RuleTable.Group(TestProfiles.Standard.Rules);
+            var variant = groups.SelectMany(g => g.Variants)
+                                .First(v => v.Value.Length > 0
+                                         && !groups.Any(g => g.BaseValue?.Contains(v.Value, StringComparison.OrdinalIgnoreCase) == true));
+
+            var found = RuleTable.Filter(groups, variant.Value);
+
+            Assert.Contains(found, g => g.Variants.Contains(variant));
+        }
+
+        [Theory]
+        [InlineData("пауз", "waqf")]
+        [InlineData("эмфаз", "heavy")]
+        [InlineData("в начале слова", "initial")]
+        public void Search_ByRussianNote_FindsTheVariant(string query, string variant)
+        {
+            var found = RuleTable.Filter(RuleTable.Group(TestProfiles.Standard.Rules), query);
+
+            Assert.NotEmpty(found);
+            Assert.All(found, group => Assert.Contains(group.Variants, v => v.Name == variant));
+        }
+
+        [Theory]
+        [MemberData(nameof(Profiles))]
+        public void EveryVariantOfABuiltInProfile_IsExplainedInRussian(string name)
+        {
+            // Панель профиля показывает рядом с «initial» и «hiatus» пояснение:
+            // вариант без него человеку без английского ничего не скажет (E7).
+            var profile = TestProfiles.All.Single(p => p.Name == name);
+            var variants = RuleTable.Group(profile.Rules).SelectMany(g => g.Variants);
+
+            Assert.All(variants, variant => Assert.False(string.IsNullOrWhiteSpace(variant.Note), variant.Key));
+        }
+
+        [Fact]
+        public void EveryVariantTheRendererKnows_IsExplainedInRussian()
+        {
+            var known = typeof(CyrillicRenderer).GetFields()
+                                                .Where(f => f.IsLiteral && f.Name.EndsWith("Variant"))
+                                                .Select(f => (string)f.GetRawConstantValue()!);
+
+            Assert.Equal(known.Order(), RuleTable.VariantNotes.Keys.Order());
         }
 
         [Fact]
