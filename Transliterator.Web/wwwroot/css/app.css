@@ -449,12 +449,39 @@ svg {
     cursor: pointer;
 }
 
+/* Заголовок группы — заголовок, а не ещё одна строка (I6): отбит линией,
+   набран темнее строк и прилипает к верху панели при прокрутке. Панель
+   с отступом 0.5rem, поэтому top отрицательный — иначе над заголовком
+   просвечивали бы уезжающие строки. */
 .reading-group {
-    margin: 0.75rem 0 0.35rem;
-    font-size: 0.75rem;
-    font-weight: 600;
-    letter-spacing: 0.02em;
+    position: sticky;
+    top: -0.5rem;
+    z-index: 1;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.25rem 0.5rem;
+    margin: 0.9rem -0.75rem 0.5rem;
+    padding: 0.5rem 0.75rem 0.4rem;
+    background: var(--paper);
+    border-bottom: 2px solid var(--foam-300);
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
     text-transform: uppercase;
+    color: var(--foam-700);
+}
+
+.reading-group-count {
+    font-weight: 500;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--ink-muted);
+}
+
+.reading-group.is-off {
+    border-bottom-color: var(--line);
     color: var(--ink-muted);
 }
 
