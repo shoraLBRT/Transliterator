@@ -30,7 +30,8 @@
 
                     @if (_catalog is not null)
                     {
-                        <ReadingPicker Catalog="_catalog" Choice="_reading" ChoiceChanged="ChangeReadingAsync" />
+                        <ReadingPicker Catalog="_catalog" Choice="_reading" ChoiceChanged="ChangeReadingAsync"
+                                       Transliterate="TransliterateExample" />
                     }
 
                     @if (_profile is not null)
@@ -336,6 +337,26 @@
 
         if (stamp == _copyStamp)
             _copyState = CopyState.Idle;
+    }
+
+    /// <summary>
+    /// Пример правила в «Своих вариантах» (I3) — тем же профилем и выбором, что
+    /// и вывод страницы. Сбой примера страницу не роняет: показывается пример каталога.
+    /// </summary>
+    private string? TransliterateExample(string arabic)
+    {
+        if (_profile is null)
+            return null;
+
+        try
+        {
+            return Transliteration.Transliterate(arabic, _profile, _reading.ToOptions()).TransliteratedText;
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Example transliteration failed");
+            return null;
+        }
     }
 
     /// <summary>
