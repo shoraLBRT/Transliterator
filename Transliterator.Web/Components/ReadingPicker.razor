@@ -79,7 +79,12 @@
 
                 @foreach (var group in Groups)
                 {
-                    <p class="reading-group">@GroupName(group.Key)</p>
+                    var off = IsOff(group.Key);
+
+                    <h3 class="reading-group @(off ? "is-off" : null)">
+                        <span>@GroupName(group.Key)</span>
+                        <span class="reading-group-count">@RuleCount(group.Count())@(off ? " · сейчас не читаются" : null)</span>
+                    </h3>
                     <ul class="reading-list">
                         @foreach (var rule in group)
                         {
@@ -124,13 +129,36 @@
     private ElementReference _toggle;
     private ElementReference _panel;
 
-    /// <summary>Сначала то, что есть в любом чтении, потом — только таджвид.</summary>
+    /// <summary>
+    /// Сначала то, что есть в любом чтении, потом — только таджвид. Заголовок группы
+    /// прилипает к верху панели при прокрутке: видно, к какой группе относится
+    /// правило перед глазами (I6).
+    /// </summary>
     private IEnumerable<IGrouping<TajweedTier, TajweedRule>> Groups =>
         Catalog.Rules.GroupBy(r => r.Tier).OrderBy(g => g.Key);
 
     /// <summary>В обычном чтении правила таджвида не читаются — они видны, но погашены.</summary>
-    private bool IsOff(TajweedRule rule) =>
-        Choice.Mode == ReadingMode.Plain && rule.Tier == TajweedTier.Tajweed;
+    private bool IsOff(TajweedRule rule) => IsOff(rule.Tier);
+
+    private bool IsOff(TajweedTier tier) =>
+        Choice.Mode == ReadingMode.Plain && tier == TajweedTier.Tajweed;
+
+    /// <summary>«13 правил», «1 правило», «2 правила».</summary>
+    private static string RuleCount(int count)
+    {
+        var word = (count % 100) switch
+        {
+            >= 11 and <= 14 => "правил",
+            _ => (count % 10) switch
+            {
+                1 => "правило",
+                >= 2 and <= 4 => "правила",
+                _ => "правил",
+            },
+        };
+
+        return $"{count} {word}";
+    }
 
     private string ExampleOf(TajweedRuleExample example) =>
         Transliterate?.Invoke(example.Arabic) ?? example.Transliteration;
