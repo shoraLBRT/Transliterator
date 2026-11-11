@@ -3,7 +3,9 @@
 @* Ступени чтения (I2): полный таджвид, свои варианты счёта, обычное чтение.
    Как и суры, — одна кнопка под полем ввода: ступени не должны загромождать
    поле (D5). Правила и их описания берутся из каталога (I1) — правило,
-   добавленное в каталог, появляется здесь само. *@
+   добавленное в каталог, появляется здесь само. Рядом с названием правила
+   в скобках — его перевод (I7): «Мадд лязим» без него — арабское слово
+   русскими буквами. *@
 
 <div class="picker">
     <button type="button" class="picker-toggle" aria-expanded="@(_open ? "true" : "false")"
@@ -49,7 +51,10 @@
 
                             <li class="reading-variant">
                                 <span class="reading-variant-head">
-                                    <span class="reading-rule-name">@rule.Name</span>
+                                    <span class="reading-rule-title">
+                                        <span class="reading-rule-name">@rule.Name</span>
+                                        <span class="reading-rule-translation">(@rule.Translation)</span>
+                                    </span>
                                     <span class="reading-counts" role="radiogroup" aria-label="@($"{rule.Name}: счёт")">
                                         @foreach (var count in rule.Counts)
                                         {
@@ -90,7 +95,10 @@
                         {
                             <li class="reading-rule @(IsOff(rule) ? "is-off" : null)">
                                 <span class="reading-rule-head">
-                                    <span class="reading-rule-name">@rule.Name</span>
+                                    <span class="reading-rule-title">
+                                        <span class="reading-rule-name">@rule.Name</span>
+                                        <span class="reading-rule-translation">(@rule.Translation)</span>
+                                    </span>
                                     <span class="reading-rule-arabic" dir="rtl" lang="ar">@rule.ArabicName</span>
                                 </span>
                                 <span class="reading-rule-text">@rule.Description</span>

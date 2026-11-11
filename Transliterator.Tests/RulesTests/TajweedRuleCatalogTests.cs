@@ -65,6 +65,37 @@ namespace Transliterator.Tests.RulesTests
             Assert.All(Catalog.Rules, rule => Assert.Matches(arabic, rule.ArabicName));
         }
 
+        [Fact]
+        public void EveryRule_HasATranslation_InRussian_ThatIsNotItsName()
+        {
+            // Перевод названия (I7) — то, что поймёт человек без арабского: короткий,
+            // по-русски, со строчной буквы (на странице он стоит в скобках после
+            // названия) и не повтор самого названия.
+            var russian = new Regex(@"^[а-яё][а-яё «»-]*$");
+
+            Assert.All(Catalog.Rules, rule =>
+            {
+                Assert.Matches(russian, rule.Translation);
+                Assert.NotEqual(rule.Name, rule.Translation, StringComparer.OrdinalIgnoreCase);
+                Assert.True(rule.Translation.Length <= 40, $"translation of '{rule.Id}' is not short: {rule.Translation}");
+            });
+        }
+
+        [Fact]
+        public void Translation_IsShownNextToTheName_WhereverThePageShowsARule()
+        {
+            // Правило на странице видно в двух местах — в «Своих вариантах» и в
+            // «Правилах этого чтения»; перевод должен стоять рядом с названием в обоих.
+            var picker = File.ReadAllText(Path.Combine(DocsTests.ReadmeTests.RepositoryRoot(),
+                                                       "Transliterator.Web", "Components", "ReadingPicker.razor"));
+
+            var names = Regex.Matches(picker, @"class=""reading-rule-name"">@rule\.Name</span>").Count;
+            var translations = Regex.Matches(picker, @"@rule\.Name</span>\s*<span class=""reading-rule-translation"">\(@rule\.Translation\)</span>").Count;
+
+            Assert.Equal(2, names);
+            Assert.Equal(names, translations);
+        }
+
         /// <summary>
         /// Правила, которые в обычном чтении убираются. Раскладка утверждена
         /// владельцем 2026-11-04 (#91); тест держит её, чтобы правка каталога
@@ -167,6 +198,7 @@ namespace Transliterator.Tests.RulesTests
         [Theory]
         [InlineData("UnknownStage", "unknown stage")]
         [InlineData("BadDefaultCount", "default count outside its counts")]
+        [InlineData("NoTranslation", "no translation of its name")]
         public void BrokenCatalog_FailsToLoad(string name, string message)
         {
             var exception = Assert.Throws<TransliterationException>(() =>

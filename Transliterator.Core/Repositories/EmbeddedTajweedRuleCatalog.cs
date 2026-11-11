@@ -95,6 +95,10 @@ namespace Transliterator.Core.Repositories
                         && !string.IsNullOrWhiteSpace(rule.ArabicName)
                         && !string.IsNullOrWhiteSpace(rule.Description),
                         $"rule '{rule.Id}' has no name, Arabic name or description");
+
+                // Перевод названия (I7) обязателен, как и само название: без него
+                // «Мадд лязим» на странице — арабское слово русскими буквами.
+                Require(!string.IsNullOrWhiteSpace(rule.Translation), $"rule '{rule.Id}' has no translation of its name");
                 Require(rule.Examples.Count > 0, $"rule '{rule.Id}' has no examples");
 
                 // Счёт по умолчанию — один из допустимых: его конвейер берёт, пока
