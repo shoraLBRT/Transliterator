@@ -5,6 +5,7 @@
       "Id": "madd-lazim",
       "Stage": 9,
       "Name": "Мадд лязим",
+      "Translation": "удлинение",
       "ArabicName": "المد اللازم",
       "Description": "Правило ссылается на стадию, которой в каталоге нет.",
       "Examples": [ { "Arabic": "وَلَا ٱلضَّآلِّينَ", "Transliteration": "уаля-дIдIооооллиин" } ],

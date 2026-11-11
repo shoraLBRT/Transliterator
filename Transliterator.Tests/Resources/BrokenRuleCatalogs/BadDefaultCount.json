@@ -5,6 +5,7 @@
       "Id": "waqf",
       "Stage": 3,
       "Name": "Вакф",
+      "Translation": "остановка",
       "ArabicName": "الوقف",
       "Description": "Счёт по умолчанию вне допустимых.",
       "Examples": [ { "Arabic": "أَحَدٌ", "Transliteration": "ахIад" } ],

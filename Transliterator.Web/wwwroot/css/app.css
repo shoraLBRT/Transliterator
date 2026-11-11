@@ -510,8 +510,23 @@ svg {
     gap: 0.5rem;
 }
 
+/* Название правила и его перевод в скобках (I7). Флекс, а не пробел в разметке:
+   Blazor пробелы между тегами выбрасывает, а на узкой панели перевод уходит
+   на вторую строку, а не прижимает название к краю. */
+.reading-rule-title {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0 0.35em;
+}
+
 .reading-rule-name {
     font-size: 0.9rem;
+}
+
+.reading-rule-translation {
+    font-size: 0.8rem;
+    color: var(--ink-muted);
 }
 
 .reading-rule-arabic {
