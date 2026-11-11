@@ -36,22 +36,42 @@
 
             @if (Choice.Mode == ReadingMode.Variants)
             {
-                <ul class="reading-variants">
-                    @foreach (var rule in Catalog.Rules.Where(r => r.HasVariants))
-                    {
-                        <li class="reading-variant">
-                            <span class="reading-rule-name">@rule.Name</span>
-                            <span class="reading-counts" role="radiogroup" aria-label="@($"{rule.Name}: счёт")">
-                                @foreach (var count in rule.Counts)
+                <div class="reading-variants">
+                    <p class="reading-variants-note">
+                        Счёт — сколько тянется долгая гласная: два — обычная долгая, четыре и шесть —
+                        вдвое и втрое дольше. Пять на письме пока выглядит как четыре.
+                    </p>
+
+                    <ul class="reading-variant-list">
+                        @foreach (var rule in Catalog.Rules.Where(r => r.HasVariants))
+                        {
+                            var example = rule.Examples.FirstOrDefault();
+
+                            <li class="reading-variant">
+                                <span class="reading-variant-head">
+                                    <span class="reading-rule-name">@rule.Name</span>
+                                    <span class="reading-counts" role="radiogroup" aria-label="@($"{rule.Name}: счёт")">
+                                        @foreach (var count in rule.Counts)
+                                        {
+                                            <button type="button" class="reading-count" role="radio"
+                                                    aria-checked="@(Choice.CountOf(rule) == count ? "true" : "false")"
+                                                    @onclick="() => ChooseCountAsync(rule, count)">@count</button>
+                                        }
+                                    </span>
+                                </span>
+                                <span class="reading-rule-text">@rule.Description</span>
+                                @if (example is not null)
                                 {
-                                    <button type="button" class="reading-count" role="radio"
-                                            aria-checked="@(Choice.CountOf(rule) == count ? "true" : "false")"
-                                            @onclick="() => ChooseCountAsync(rule, count)">@count</button>
+                                    <span class="reading-example">
+                                        <span class="reading-rule-arabic" dir="rtl" lang="ar">@example.Arabic</span>
+                                        <span class="reading-example-arrow" aria-hidden="true">→</span>
+                                        <span class="reading-example-text" aria-live="polite">@ExampleOf(example)</span>
+                                    </span>
                                 }
-                            </span>
-                        </li>
-                    }
-                </ul>
+                            </li>
+                        }
+                    </ul>
+                </div>
             }
 
             <details class="reading-rules">
@@ -88,6 +108,15 @@
     [Parameter]
     public EventCallback<ReadingChoice> ChoiceChanged { get; set; }
 
+    /// <summary>
+    /// Транслитерация текущим выбором и профилем страницы. Пример правила в «Своих
+    /// вариантах» пересчитывается под выбранный счёт — так видно, что счёт меняет (I3).
+    /// Без неё — или когда она вернула <c>null</c> — показывается пример из каталога,
+    /// посчитанный полным таджвидом.
+    /// </summary>
+    [Parameter]
+    public Func<string, string?>? Transliterate { get; set; }
+
     private static readonly ReadingMode[] Modes = { ReadingMode.Full, ReadingMode.Variants, ReadingMode.Plain };
 
     private bool _open;
@@ -102,6 +131,9 @@
     /// <summary>В обычном чтении правила таджвида не читаются — они видны, но погашены.</summary>
     private bool IsOff(TajweedRule rule) =>
         Choice.Mode == ReadingMode.Plain && rule.Tier == TajweedTier.Tajweed;
+
+    private string ExampleOf(TajweedRuleExample example) =>
+        Transliterate?.Invoke(example.Arabic) ?? example.Transliteration;
 
     private static string ModeName(ReadingMode mode) => mode switch
     {

@@ -1,5 +1,6 @@
 using System.Text.RegularExpressions;
 using Transliterator.Core.Repositories;
+using Transliterator.Core.Services;
 using Transliterator.Core.Services.Rules;
 using Transliterator.Domain.Entities;
 using Transliterator.Domain.Exceptions;
@@ -117,6 +118,42 @@ namespace Transliterator.Tests.RulesTests
 
             Assert.Equal(rule.DefaultCount, segment.VowelLength);
         }
+
+        public static IEnumerable<object[]> VariantRules =>
+            EmbeddedTajweedRuleCatalog.Catalog.Rules.Where(r => r.HasVariants).Select(r => new object[] { r.Id });
+
+        [Theory]
+        [MemberData(nameof(VariantRules))]
+        public void VariantRule_IsExplained_WhereItsCountIsChosen(string id)
+        {
+            // «Свои варианты» (I3) показывают рядом со счётом описание и пример,
+            // и пример пересчитывается под выбранный счёт: так видно, что счёт меняет.
+            // Пример, в котором разные счёты пишутся одинаково, ничего не объяснит.
+            var rule = Catalog.Rules.Single(r => r.Id == id);
+            var example = rule.Examples.First();
+
+            Assert.False(string.IsNullOrWhiteSpace(rule.Description));
+
+            var variants = ReadingChoice.Default.WithMode(ReadingMode.Variants);
+            var outputs = rule.Counts.Select(count => Transliterate(example.Arabic, variants.WithCount(id, count))).ToList();
+
+            // Повтор графемы различает только 2, 4 и 6: 5 пишется как 4 (G7).
+            var written = rule.Counts.Select(count => count == 5 ? 4 : count).Distinct();
+
+            Assert.Equal(written.Count(), outputs.Distinct().Count());
+
+            // Пример показывает своё правило, а не соседнее: счёты остальных правил
+            // его не меняют. Слово с маддом перед хамзой на паузе так не годится —
+            // там гласную тянет и мадд арид, и при ариде на шести выбор муттасиля
+            // в примере не виден.
+            var othersLongest = Catalog.Rules.Where(r => r.HasVariants && r.Id != id)
+                                       .Aggregate(variants, (choice, other) => choice.WithCount(other.Id, other.Counts.Max()));
+
+            Assert.Equal(outputs, rule.Counts.Select(count => Transliterate(example.Arabic, othersLongest.WithCount(id, count))));
+        }
+
+        private static string Transliterate(string arabic, ReadingChoice choice) =>
+            TransliterationPipeline.Transliterate(arabic, reading: choice.ToOptions());
 
         [Fact]
         public void Catalog_IsReadFromTheAssembly_NotFromDisk()
