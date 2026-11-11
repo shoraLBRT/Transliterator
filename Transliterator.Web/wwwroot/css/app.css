@@ -700,8 +700,21 @@ svg {
     min-height: 2.1rem;
 }
 
+/* У варианта под именем — пояснение по-русски (E7), ему нужна колонка шире буквы. */
 .profile-row.is-variant {
+    grid-template-columns: 8.5rem minmax(0, 1fr);
     padding-inline-start: 0.75rem;
+}
+
+.profile-variant-label {
+    display: grid;
+    min-width: 0;
+}
+
+.profile-variant-note {
+    font-size: 0.75rem;
+    line-height: 1.3;
+    color: var(--ink);
 }
 
 /* Буква пишется справа налево, но в колонке стоит слева, как имена вариантов

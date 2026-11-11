@@ -1,7 +1,16 @@
+using Transliterator.Core.Services.Phonology;
+
 namespace Transliterator.Core.Services
 {
     /// <summary>Вариант буквы: <c>"ر|heavy"</c> — имя <c>heavy</c>, ключ целиком и графема.</summary>
-    public sealed record RuleVariant(string Name, string Key, string Value);
+    public sealed record RuleVariant(string Name, string Key, string Value)
+    {
+        /// <summary>
+        /// Что вариант значит, по-русски: <c>heavy</c> — «твёрдо, под эмфазой».
+        /// <c>null</c> — имя рендереру неизвестно (опечатка в своём профиле).
+        /// </summary>
+        public string? Note => RuleTable.VariantNotes.GetValueOrDefault(Name);
+    }
 
     /// <summary>
     /// Буква профиля со всеми своими вариантами.
@@ -22,6 +31,25 @@ namespace Transliterator.Core.Services
     {
         /// <summary>Разделитель буквы и варианта в ключе профиля.</summary>
         public const char VariantSeparator = '|';
+
+        /// <summary>
+        /// Пояснения к вариантам для того, кто не знает английского (E7). Имена
+        /// вариантов — это то, что знает рендерер, и ключи профилей на них держатся;
+        /// на странице рядом с именем показывается пояснение, и по нему же ищется.
+        /// </summary>
+        public static IReadOnlyDictionary<string, string> VariantNotes { get; } =
+            new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                [CyrillicRenderer.HeavyVariant] = "твёрдо, под эмфазой",
+                [CyrillicRenderer.SoftVariant] = "мягко, после мягкого ляма",
+                [CyrillicRenderer.SukunVariant] = "без гласной, в закрытом слоге",
+                [CyrillicRenderer.WaqfVariant] = "на паузе",
+                [CyrillicRenderer.InitialVariant] = "в начале слова",
+                [CyrillicRenderer.HiatusVariant] = "хамза между гласными",
+                [CyrillicRenderer.GhunnaVariant] = "в нос, с гунной",
+                [CyrillicRenderer.QalqalahVariant] = "с отзвуком, кальканя",
+                [CyrillicRenderer.QalqalahStrongVariant] = "с сильным отзвуком на паузе",
+            };
 
         /// <summary>
         /// Группы в порядке профиля: буква стоит там, где в профиле впервые встретился
@@ -56,9 +84,10 @@ namespace Transliterator.Core.Services
         }
 
         /// <summary>
-        /// Поиск по ключу. Группа находится целиком — и по своей букве, и по ключу
-        /// или имени любого своего варианта: <c>heavy</c> показывает все буквы,
-        /// у которых такой вариант есть, вместе с их базовыми графемами.
+        /// Поиск. Группа находится целиком — по своей букве, по ключу или имени любого
+        /// своего варианта (<c>heavy</c> показывает все буквы, у которых такой вариант
+        /// есть, вместе с их базовыми графемами), по графеме — тому, как буква пишется
+        /// («х»), — и по русскому пояснению варианта («пауз» находит <c>waqf</c>, E7).
         /// </summary>
         public static IReadOnlyList<RuleGroup> Filter(IReadOnlyList<RuleGroup> groups, string? query)
         {
@@ -68,12 +97,20 @@ namespace Transliterator.Core.Services
                 return groups;
 
             return groups.Where(group => Matches(group.BaseKey, needle)
-                                      || group.Variants.Any(variant => Matches(variant.Key, needle)))
+                                      || Matches(group.BaseValue, needle)
+                                      || group.Variants.Any(variant => Matches(variant.Key, needle)
+                                                                    || Matches(variant.Value, needle)
+                                                                    || (needle.Length >= MinNoteQuery && Matches(variant.Note, needle))))
                          .ToList();
         }
 
-        // Регистр значим только для имён вариантов: у арабских букв его нет.
-        private static bool Matches(string key, string needle) =>
-            key.Contains(needle, StringComparison.OrdinalIgnoreCase);
+        // Пояснение — слова, и одна-две буквы находят в них что угодно: «х» искал бы
+        // графему «х», а нашёл бы и хамзу — по «хамза между гласными».
+        private const int MinNoteQuery = 3;
+
+        // Регистр не значим ни для имён вариантов, ни для графем: «Х» ищет и «х».
+        // У арабских букв его нет.
+        private static bool Matches(string? text, string needle) =>
+            text is not null && text.Contains(needle, StringComparison.OrdinalIgnoreCase);
     }
 }

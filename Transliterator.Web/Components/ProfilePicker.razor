@@ -109,8 +109,8 @@
                     <p class="profile-note">Встроенный профиль не меняется — создайте копию, чтобы переписать графемы.</p>
                 }
 
-                <input type="search" class="profile-input profile-search" aria-label="Поиск по букве или варианту"
-                       placeholder="Поиск: буква или вариант (heavy, waqf…)" spellcheck="false" autocomplete="off"
+                <input type="search" class="profile-input profile-search" aria-label="Поиск по букве, записи или варианту"
+                       placeholder="Поиск: буква, запись или вариант (х, пауза…)" spellcheck="false" autocomplete="off"
                        @bind="_query" @bind:event="oninput" />
 
                 @{ var groups = RuleTable.Filter(_groups, _query); }
@@ -137,7 +137,13 @@
                             @foreach (var variant in group.Variants)
                             {
                                 <div class="profile-row is-variant">
-                                    <code class="profile-variant" title="@variant.Key">@variant.Name</code>
+                                    <span class="profile-variant-label">
+                                        <code class="profile-variant" title="@variant.Key">@variant.Name</code>
+                                        @if (variant.Note is not null)
+                                        {
+                                            <span class="profile-variant-note">@variant.Note</span>
+                                        }
+                                    </span>
                                     @Cell(variant.Key)
                                 </div>
                             }
