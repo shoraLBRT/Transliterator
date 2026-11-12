@@ -437,6 +437,70 @@ svg {
     font-weight: 600;
 }
 
+/* Переключатель правила, которое можно не читать (I4). */
+.reading-variants-title {
+    margin: 1rem 0 0.35rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.reading-variant.is-off .reading-rule-title,
+.reading-variant.is-off .reading-rule-text {
+    color: var(--ink-muted);
+}
+
+.reading-switch {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.25rem 0.6rem 0.25rem 0.3rem;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: var(--paper);
+    color: var(--ink);
+    font: inherit;
+    font-size: 0.8rem;
+    cursor: pointer;
+}
+
+.reading-switch:hover {
+    background: var(--foam-50);
+}
+
+.reading-switch-track {
+    position: relative;
+    width: 1.9rem;
+    height: 1.1rem;
+    border-radius: 999px;
+    background: var(--line);
+    transition: background 0.15s;
+}
+
+.reading-switch-track::after {
+    content: "";
+    position: absolute;
+    top: 0.15rem;
+    left: 0.15rem;
+    width: 0.8rem;
+    height: 0.8rem;
+    border-radius: 50%;
+    background: var(--paper);
+    transition: transform 0.15s;
+}
+
+.reading-switch[aria-checked="true"] {
+    border-color: var(--foam-300);
+    color: var(--foam-700);
+}
+
+.reading-switch[aria-checked="true"] .reading-switch-track {
+    background: var(--foam-700);
+}
+
+.reading-switch[aria-checked="true"] .reading-switch-track::after {
+    transform: translateX(0.8rem);
+}
+
 .reading-rules {
     margin-top: 0.5rem;
     padding: 0.6rem 0.75rem 0.25rem;

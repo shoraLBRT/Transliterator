@@ -70,7 +70,8 @@ namespace Transliterator.Core.Services.Rules
         /// Ступень чтения и выбранные счёты (I2). Мадд арид и мадд лин — основа:
         /// они есть в любом чтении, и счёт их выбирается. Мадд лязим, муттасиль,
         /// мунфасиль и силя — только таджвид: в обычном чтении долгая гласная
-        /// тянется свои два счёта, сколько бы её ни удлинял мусхаф.
+        /// тянется свои два счёта, сколько бы её ни удлинял мусхаф. Силю можно
+        /// выключить и по одному (I4) — тогда она читается, как в обычном чтении.
         /// </param>
         public void Apply(IList<Segment> segments, ReadingOptions? reading = null)
         {
@@ -80,6 +81,10 @@ namespace Transliterator.Core.Services.Rules
             int lin = reading.Count(TajweedRuleIds.MaddLin, Arid);
             int muttasil = reading.Count(TajweedRuleIds.MaddMuttasil, Obligatory);
             int munfasil = reading.Count(TajweedRuleIds.MaddMunfasil, Obligatory);
+
+            // Силя читается только в таджвиде, и в «Своих вариантах» её выключают
+            // по одному (I4). Выключенная — как в обычном чтении: ه с краткой гласной.
+            bool sila = reading.Tajweed && reading.Reads(TajweedRuleIds.MaddSila);
 
             for (int i = 0; i < segments.Count; i++)
             {
@@ -99,8 +104,17 @@ namespace Transliterator.Core.Services.Rules
                 // Мадд силя сугра. Силя кубра (4 хараката перед хамзой) отдельной
                 // ветки не требует: силя делает ه долгой, а дальше её удлиняет
                 // общее правило мунфасиля — оно и так стоит ниже.
-                if (reading.Tajweed && IsSila(segments, i))
+                if (sila && IsSila(segments, i))
                     segment.VowelLength = Math.Max(segment.VowelLength, Natural);
+
+                // Без сили долготу, которую мусхаф дописал местоимению малой ۥ или ۦ,
+                // снимает и обычное чтение, и выключенное правило: дальше её не тянет
+                // ни мунфасиль, ни встреча двух безгласных — ه просто краткая.
+                if (!sila && IsWrittenSila(segments, i))
+                {
+                    segment.VowelLength = Short;
+                    continue;
+                }
 
                 if (segment.VowelLength < Natural)
                     continue;
@@ -118,7 +132,7 @@ namespace Transliterator.Core.Services.Rules
                 // мера таджвида, а не языка. Остаются два счёта и мадд арид.
                 if (!reading.Tajweed)
                 {
-                    segment.VowelLength = IsWrittenSila(segments, i) ? Short : Natural;
+                    segment.VowelLength = Natural;
                     LengthenBeforePause(segments, i, arid);
                     continue;
                 }

@@ -84,15 +84,16 @@ namespace Transliterator.Tests.RulesTests
         [Fact]
         public void Translation_IsShownNextToTheName_WhereverThePageShowsARule()
         {
-            // Правило на странице видно в двух местах — в «Своих вариантах» и в
-            // «Правилах этого чтения»; перевод должен стоять рядом с названием в обоих.
+            // Правило на странице видно в трёх местах — у счёта и у переключателя
+            // в «Своих вариантах» (I3, I4) и в «Правилах этого чтения»; перевод должен
+            // стоять рядом с названием во всех.
             var picker = File.ReadAllText(Path.Combine(DocsTests.ReadmeTests.RepositoryRoot(),
                                                        "Transliterator.Web", "Components", "ReadingPicker.razor"));
 
             var names = Regex.Matches(picker, @"class=""reading-rule-name"">@rule\.Name</span>").Count;
             var translations = Regex.Matches(picker, @"@rule\.Name</span>\s*<span class=""reading-rule-translation"">\(@rule\.Translation\)</span>").Count;
 
-            Assert.Equal(2, names);
+            Assert.Equal(3, names);
             Assert.Equal(names, translations);
         }
 
@@ -197,6 +198,7 @@ namespace Transliterator.Tests.RulesTests
         [InlineData("UnknownStage", "unknown stage")]
         [InlineData("BadDefaultCount", "default count outside its counts")]
         [InlineData("NoTranslation", "no translation of its name")]
+        [InlineData("SwitchableBaseRule", "switchable but not in the tajweed tier")]
         public void BrokenCatalog_FailsToLoad(string name, string message)
         {
             var exception = Assert.Throws<TransliterationException>(() =>

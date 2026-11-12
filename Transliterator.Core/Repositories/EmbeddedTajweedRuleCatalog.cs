@@ -109,6 +109,11 @@ namespace Transliterator.Core.Repositories
                         rule.HasVariants
                             ? $"rule '{rule.Id}' has a default count outside its counts"
                             : $"rule '{rule.Id}' has a default count but no counts");
+
+                // Выключить по одному можно только правило таджвида (I4): правило основы
+                // есть в любом чтении, и выключенное читалось бы так же, как включённое.
+                Require(!rule.Switchable || rule.Tier == TajweedTier.Tajweed,
+                        $"rule '{rule.Id}' is switchable but not in the tajweed tier");
             }
         }
     }

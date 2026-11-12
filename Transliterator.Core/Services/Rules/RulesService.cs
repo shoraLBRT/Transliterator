@@ -55,6 +55,8 @@ namespace Transliterator.Core.Services.Rules
         /// Ступень чтения и выбранные счёты (I2). Без него — полный таджвид со счётами
         /// по умолчанию. В обычном чтении стадии не выпадают целиком: правила основы
         /// есть в любом чтении, и каждая стадия сама знает, что из неё — основа.
+        /// Так же и с правилами, выключенными по одному (I4): стадия не пропускается,
+        /// а читает выключенное правило так, как в обычном чтении.
         /// </param>
         public void ApplyTajweedRules(IList<Segment> segments, ReadingOptions? reading = null)
         {
@@ -79,15 +81,18 @@ namespace Transliterator.Core.Services.Rules
             // уже слитый текст — у солнечного ляма на этом месте не ل, — но своё
             // слияние они решают сами: по одной шадде изхар и ихфу от идгама
             // не отличить. И до эмфазы, потому что идгам меняет её условия.
-            _nasalRule.Apply(segments, reading.Tajweed);
+            _nasalRule.Apply(segments, reading);
 
             _emphasisRule.Apply(segments);
             _maddRule.Apply(segments, reading);
 
             // Стадия 10: кальканя. Идёт последней: безгласность, от которой она
-            // зависит, — итог всех предыдущих стадий. В обычном чтении отзвука нет.
+            // зависит, — итог всех предыдущих стадий. В обычном чтении отзвука нет,
+            // а в «Своих вариантах» малый и большой отзвук выключаются по одному (I4).
             if (reading.Tajweed)
-                _qalqalahRule.Apply(segments);
+                _qalqalahRule.Apply(segments,
+                                    minor: reading.Reads(TajweedRuleIds.QalqalahSughra),
+                                    major: reading.Reads(TajweedRuleIds.QalqalahKubra));
         }
     }
 }

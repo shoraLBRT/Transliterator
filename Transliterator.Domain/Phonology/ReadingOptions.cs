@@ -7,7 +7,7 @@ namespace Transliterator.Domain.Phonology
     /// <para>
     /// Какое правило к какой ступени относится и какие счёты у него допустимы,
     /// записано в каталоге правил (<c>TajweedRules.json</c>). Здесь — только выбор
-    /// человека: ступень и счёты по идентификатору правила из каталога.
+    /// человека: ступень, счёты и выключенные правила по идентификатору из каталога.
     /// </para>
     /// </summary>
     public sealed class ReadingOptions
@@ -35,5 +35,19 @@ namespace Transliterator.Domain.Phonology
         /// <summary>Выбранный счёт правила или <paramref name="fallback"/>, если выбора не было.</summary>
         public int Count(string ruleId, int fallback) =>
             Counts.TryGetValue(ruleId, out var count) ? count : fallback;
+
+        /// <summary>
+        /// Правила, выключенные по одному, по идентификатору каталога (I4). Выключить
+        /// можно только те, что помечены в каталоге <c>Switchable</c>: их отключение
+        /// не меняет того, что видят следующие стадии. Выключенное правило читается
+        /// так, как в обычном чтении, а всё остальное — как при полном таджвиде.
+        /// </summary>
+        public IReadOnlySet<string> Off { get; init; } = new HashSet<string>();
+
+        /// <summary>
+        /// Не выключено ли правило по одному. Ступень проверяется отдельно
+        /// (<see cref="Tajweed"/>): в обычном чтении правил таджвида нет и без этого.
+        /// </summary>
+        public bool Reads(string ruleId) => !Off.Contains(ruleId);
     }
 }

@@ -5,7 +5,8 @@
    поле (D5). Правила и их описания берутся из каталога (I1) — правило,
    добавленное в каталог, появляется здесь само. Рядом с названием правила
    в скобках — его перевод (I7): «Мадд лязим» без него — арабское слово
-   русскими буквами. *@
+   русскими буквами. В «Своих вариантах» рядом со счётами — переключатели у правил,
+   которые можно не читать (I4): какие именно, решает каталог (Switchable). *@
 
 <div class="picker">
     <button type="button" class="picker-toggle" aria-expanded="@(_open ? "true" : "false")"
@@ -66,6 +67,47 @@
                                                     @onclick="() => ChooseCountAsync(rule, count)">@count</button>
                                         }
                                     </span>
+                                </span>
+                                <span class="reading-rule-text">@rule.Description</span>
+                                @if (example is not null)
+                                {
+                                    <span class="reading-example">
+                                        <span class="reading-rule-arabic" dir="rtl" lang="ar">@example.Arabic</span>
+                                        <span class="reading-example-arrow" aria-hidden="true">→</span>
+                                        <span class="reading-example-text" aria-live="polite">@ExampleOf(example)</span>
+                                    </span>
+                                }
+                            </li>
+                        }
+                    </ul>
+
+                    <h3 class="reading-variants-title">Можно не читать</h3>
+                    <p class="reading-variants-note">
+                        Эти правила не меняют того, от чего зависят другие. Выключенное читается,
+                        как в обычном чтении, остальное — как в полном таджвиде.
+                        Гунну ихфы и отзвук кальканя профиль Standard не пишет: их выключение видно
+                        в «Правилах этого чтения» и в своём профиле, где у них есть буква.
+                    </p>
+
+                    <ul class="reading-variant-list">
+                        @foreach (var rule in Catalog.Rules.Where(r => r.Switchable))
+                        {
+                            var example = rule.Examples.FirstOrDefault();
+                            var on = Choice.Reads(rule);
+
+                            <li class="reading-variant @(on ? null : "is-off")">
+                                <span class="reading-variant-head">
+                                    <span class="reading-rule-title">
+                                        <span class="reading-rule-name">@rule.Name</span>
+                                        <span class="reading-rule-translation">(@rule.Translation)</span>
+                                    </span>
+                                    <button type="button" class="reading-switch" role="switch"
+                                            aria-checked="@(on ? "true" : "false")"
+                                            aria-label="@($"{rule.Name}: читать")"
+                                            @onclick="() => SwitchRuleAsync(rule, !on)">
+                                        <span class="reading-switch-track" aria-hidden="true"></span>
+                                        <span class="reading-switch-text">@(on ? "читается" : "не читается")</span>
+                                    </button>
                                 </span>
                                 <span class="reading-rule-text">@rule.Description</span>
                                 @if (example is not null)
@@ -148,8 +190,12 @@
     private IEnumerable<IGrouping<TajweedTier, TajweedRule>> Groups =>
         Catalog.Rules.GroupBy(r => r.Tier).OrderBy(g => g.Key);
 
-    /// <summary>В обычном чтении правила таджвида не читаются — они видны, но погашены.</summary>
-    private bool IsOff(TajweedRule rule) => IsOff(rule.Tier);
+    /// <summary>
+    /// В обычном чтении правила таджвида не читаются — они видны, но погашены.
+    /// В «Своих вариантах» погашены и правила, выключенные по одному (I4).
+    /// </summary>
+    private bool IsOff(TajweedRule rule) =>
+        IsOff(rule.Tier) || (Choice.Mode == ReadingMode.Variants && rule.Switchable && !Choice.Reads(rule));
 
     private bool IsOff(TajweedTier tier) =>
         Choice.Mode == ReadingMode.Plain && tier == TajweedTier.Tajweed;
@@ -183,7 +229,7 @@
 
     private static string ModeNote(ReadingMode mode) => mode switch
     {
-        ReadingMode.Variants => "Таджвид, но сколько тянуть мадд — на выбор",
+        ReadingMode.Variants => "Таджвид, но сколько тянуть мадд и что не читать — на выбор",
         ReadingMode.Plain => "Обычное арабское чтение",
         _ => "Как требует таджвид",
     };
@@ -235,4 +281,7 @@
 
     private Task ChooseCountAsync(TajweedRule rule, int count) =>
         ChoiceChanged.InvokeAsync(Choice.WithCount(rule.Id, count));
+
+    private Task SwitchRuleAsync(TajweedRule rule, bool on) =>
+        ChoiceChanged.InvokeAsync(Choice.WithRule(rule.Id, on));
 }
