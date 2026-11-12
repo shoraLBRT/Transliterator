@@ -5,8 +5,10 @@
 @inject ITransliterationService Transliteration
 @inject IJSRuntime JS
 @inject ILogger<App> Logger
+@inject PagePanels Panels
+@implements IDisposable
 
-<div class="shell @(HasText ? "is-active" : null)">
+<div class="shell @(HasText ? "is-active" : null) @(Panels.Current is not null ? "has-panel" : null)">
     <main class="stage">
         <h1 class="visually-hidden">Транслитерация Корана кириллицей</h1>
 
@@ -21,23 +23,13 @@
                       spellcheck="false" autocomplete="off" placeholder="@_placeholder"
                       value="@_arabic" @oninput="OnInput" @ref="_input"></textarea>
 
+            @* Под полем — только выбор суры (D6): он меняет сам текст. Как этот текст
+               читать и писать — круглые кнопки сбоку, ниже. *@
             <div class="composer-bar">
                 <div class="composer-tools">
                     @if (_surahs.Count > 0)
                     {
                         <SurahPicker Surahs="_surahs" Chosen="ChooseAsync" />
-                    }
-
-                    @if (_catalog is not null)
-                    {
-                        <ReadingPicker Catalog="_catalog" Choice="_reading" ChoiceChanged="ChangeReadingAsync"
-                                       Transliterate="TransliterateExample" />
-                    }
-
-                    @if (_profile is not null)
-                    {
-                        <ProfilePicker Profile="_profile" DefaultProfile="@ProfileName" Preview="@_result"
-                                       ProfileChanged="ChangeProfileAsync" />
                     }
                 </div>
 
@@ -49,6 +41,28 @@
                 }
             </div>
         </div>
+
+        @* Ступень чтения и профиль (D6). На широком экране — круглые кнопки у края
+           страницы, и панель открывается колонкой рядом с полем и выводом, отодвигая
+           их, а не закрывая. На телефоне двум колонкам нет места: кнопки стоят строкой
+           под полем, панель — поверх вывода, как прежде. У каждой кнопки подписано, что
+           выбрано сейчас («Полный таджвид», «Профиль: Standard»). *@
+        @if (_catalog is not null || _profile is not null)
+        {
+            <aside class="side-rail" aria-label="Как читать и писать">
+                @if (_catalog is not null)
+                {
+                    <ReadingPicker Catalog="_catalog" Choice="_reading" ChoiceChanged="ChangeReadingAsync"
+                                   Transliterate="TransliterateExample" />
+                }
+
+                @if (_profile is not null)
+                {
+                    <ProfilePicker Profile="_profile" DefaultProfile="@ProfileName" Preview="@_result"
+                                   ProfileChanged="ChangeProfileAsync" />
+                }
+            </aside>
+        }
 
         @if (_error is not null)
         {
@@ -139,8 +153,18 @@
 
     private bool HasText => !string.IsNullOrWhiteSpace(_arabic);
 
+    /// <summary>
+    /// Открытая панель на широком экране отодвигает поле и вывод (D6) — для этого
+    /// странице нужно знать, открыта ли какая-нибудь.
+    /// </summary>
+    private void OnPanelsChanged() => _ = InvokeAsync(StateHasChanged);
+
+    public void Dispose() => Panels.Changed -= OnPanelsChanged;
+
     protected override async Task OnInitializedAsync()
     {
+        Panels.Changed += OnPanelsChanged;
+
         _surahs = await LoadSurahsAsync();
         _placeholder = _surahs.FirstOrDefault(s => s.Number == 1)?.Ayahs.FirstOrDefault()?.Arabic ?? FallbackPlaceholder;
 

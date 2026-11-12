@@ -267,6 +267,74 @@ svg {
     outline: none;
 }
 
+/* Шапка панели (D6): имя и крестик. На широком экране подложки нет, и закрывают
+   панель крестиком, Escape или той же кнопкой. */
+.panel-head {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0 0 0 0.75rem;
+}
+
+.panel-title {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 600;
+}
+
+/* ---- Кнопки сбоку: ступень чтения и профиль (D6) ---- */
+
+/* Круглый значок и подпись рядом — что выбрано сейчас («Полный таджвид»,
+   «Профиль: Standard», E6). Подпись — текст самой кнопки: по ней же кнопку
+   называет экранный диктор. На телефоне кнопки стоят строкой под полем,
+   и панель открывается под ними, поверх вывода, как прежде. */
+.side-rail {
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 1.25rem;
+    margin-top: 0.75rem;
+    padding-inline: 0.5rem;
+}
+
+.side-rail .picker-toggle {
+    gap: 0.55rem;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--ink-muted);
+    font-size: 0.85rem;
+    font-weight: 400;
+}
+
+.side-rail .picker-toggle svg {
+    box-sizing: content-box;
+    padding: 0.6rem;
+    border: 1px solid var(--line);
+    border-radius: 50%;
+    background: var(--paper);
+    box-shadow: var(--shadow);
+    color: var(--foam-700);
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.side-rail .picker-toggle:hover,
+.side-rail .picker-toggle[aria-expanded="true"] {
+    background: transparent;
+    color: var(--ink);
+}
+
+.side-rail .picker-toggle:hover svg,
+.side-rail .picker-toggle[aria-expanded="true"] svg {
+    background: var(--foam-50);
+    border-color: var(--foam-300);
+}
+
+.side-rail .picker-toggle:focus-visible {
+    outline-offset: 4px;
+}
+
 @keyframes rise {
     from { opacity: 0; transform: translateY(-4px); }
 }
@@ -736,8 +804,9 @@ svg {
     box-shadow: 0 0 0 3px var(--foam-50);
 }
 
-/* Вывод повторён в панели: она закрывает результат, а правка графемы
-   должна быть видна сразу. Липнет к верху прокрутки — виден и под таблицей. */
+/* Вывод повторён в панели: на телефоне она закрывает результат, а правка графемы
+   должна быть видна сразу. Липнет к верху прокрутки — виден и под таблицей.
+   На широком экране панель стоит рядом с выводом, и повтор скрыт (D6). */
 .profile-preview {
     position: sticky;
     top: -0.5rem;
@@ -1114,6 +1183,86 @@ svg {
     }
 }
 
+/* ---- Широкий экран: панель сбоку (D6) ---- */
+
+/* Кнопки ступени и профиля — столбиком у левого края, панель любой кнопки (и сур
+   тоже) — колонкой справа от них. Поле, вывод и подвал отодвигаются вправо ровно
+   на ширину колонки и остаются рабочими: подложки нет, щелчок по полю панель
+   не закрывает. С 64rem рядом с колонкой ещё помещается поле шириной ~32rem;
+   уже — как на телефоне, панель поверх. Отступы считаются от края колонки
+   страницы (у .shell свой отступ 1.25rem). */
+@media (min-width: 64rem) {
+    .shell {
+        --panel-left: 4.75rem;
+        --panel-width: 25rem;
+        --rail-space: 14rem; /* значки и подписи у кнопок сбоку */
+    }
+
+    .shell.has-panel {
+        --rail-space: calc(var(--panel-left) + var(--panel-width));
+    }
+
+    .stage,
+    .footer {
+        width: min(46rem, 100% - var(--rail-space));
+        max-width: none;
+        margin-right: 0;
+        margin-left: max(var(--rail-space), (100% - 46rem) / 2);
+        transition: margin-left 0.3s ease, width 0.3s ease;
+    }
+
+    .side-rail {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 1.25rem;
+        z-index: 11;
+        flex-direction: column;
+        flex-wrap: nowrap;
+        align-items: flex-start;
+        justify-content: center;
+        gap: 0.75rem;
+        margin: 0;
+        padding: 0;
+        pointer-events: none; /* полоса во всю высоту не ловит щелчки мимо кнопок */
+    }
+
+    .side-rail .picker {
+        pointer-events: auto;
+    }
+
+    .side-rail .picker-toggle-text {
+        max-width: 10rem;
+        font-size: 0.8rem;
+    }
+
+    /* Пока открыта колонка, подписи ушли бы под неё: они прячутся с экрана,
+       но остаются именем кнопки для диктора. Выбор виден в самой панели. */
+    .shell.has-panel .side-rail .picker-toggle-text {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+    }
+
+    .picker-panel,
+    .reading-panel,
+    .profile-panel {
+        position: fixed;
+        top: 1.25rem;
+        left: var(--panel-left);
+        width: var(--panel-width);
+        max-height: calc(100vh - 2.5rem);
+        max-height: calc(100dvh - 2.5rem);
+    }
+
+    .picker-backdrop,
+    .profile-preview {
+        display: none;
+    }
+}
+
 /* ---- Загрузка и сбой среды ---- */
 
 .boot {
@@ -1182,6 +1331,16 @@ svg {
 
     .picker-panel {
         width: 100%;
+    }
+
+    /* Обе кнопки сбоку — в одну строку под полем на экране в 375px. */
+    .side-rail {
+        gap: 0.5rem 1rem;
+        padding-inline: 0;
+    }
+
+    .side-rail .picker-toggle svg {
+        padding: 0.5rem;
     }
 
     .result {

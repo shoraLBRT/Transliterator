@@ -1,0 +1,22 @@
+@* Шапка панели (D6): имя панели — оно же имя диалога для экранного диктора — и
+   крестик. На широком экране у панели нет подложки, и закрывают её крестиком,
+   Escape или той же кнопкой; на телефоне крестик — к тому же щелчку мимо. *@
+
+<div class="panel-head">
+    <h2 id="@Id" class="panel-title">@Title</h2>
+    <button type="button" class="icon-button panel-close" title="Закрыть" aria-label="Закрыть панель" @onclick="Close">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" /></svg>
+    </button>
+</div>
+
+@code {
+    /// <summary>Id заголовка: на него ссылается aria-labelledby панели.</summary>
+    [Parameter, EditorRequired]
+    public string Id { get; set; } = string.Empty;
+
+    [Parameter, EditorRequired]
+    public string Title { get; set; } = string.Empty;
+
+    [Parameter]
+    public EventCallback Close { get; set; }
+}

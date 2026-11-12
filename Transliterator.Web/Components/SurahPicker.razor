@@ -1,9 +1,14 @@
-@* Готовые суры одной кнопкой под полем ввода. Список не перечисляет суры в разметке:
-   сура, добавленная в корпус, появляется здесь сама. *@
+@inherits PanelPicker
+
+@* Готовые суры одной кнопкой под полем ввода — единственная настройка, что
+   осталась под полем (D6): сура меняет сам текст, а не то, как он пишется.
+   Список открывается так же, как панели ступени и профиля: на широком экране
+   колонкой сбоку. Список не перечисляет суры в разметке: сура, добавленная
+   в корпус, появляется здесь сама. *@
 
 <div class="picker">
-    <button type="button" class="picker-toggle" aria-expanded="@(_open ? "true" : "false")"
-            aria-controls="surah-menu" @onclick="ToggleAsync" @ref="_toggle">
+    <button type="button" class="picker-toggle" aria-expanded="@(IsOpen ? "true" : "false")"
+            aria-controls="surah-menu" @onclick="ToggleAsync" @ref="ToggleButton">
         <svg viewBox="0 0 24 24" aria-hidden="true">
             <path d="M3 5.5C5.5 4.2 8.5 4.2 12 6c3.5-1.8 6.5-1.8 9-.5V19c-2.5-1.3-5.5-1.3-9 .5-3.5-1.8-6.5-1.8-9-.5z" />
             <path d="M12 6v13.5" />
@@ -11,12 +16,13 @@
         <span>Выбрать суру</span>
     </button>
 
-    @if (_open)
+    @if (IsOpen)
     {
-        <div class="picker-backdrop" @onclick="CloseAsync"></div>
+        <div class="picker-backdrop" @onclick="Close"></div>
 
-        <div id="surah-menu" class="picker-panel" role="dialog" aria-label="Готовые суры"
-             tabindex="-1" @ref="_panel" @onkeydown="OnKeyDownAsync">
+        <div id="surah-menu" class="picker-panel" role="dialog" aria-labelledby="surah-menu-title"
+             tabindex="-1" @ref="PanelElement" @onkeydown="OnPanelKeyDownAsync">
+            <PanelHead Id="surah-menu-title" Title="Готовые суры" Close="CloseToToggleAsync" />
             <p class="picker-caption">Транслитерация этих сур сверена вручную</p>
 
             <ul class="picker-list">
@@ -42,52 +48,12 @@
     [Parameter]
     public EventCallback<CorpusSurah> Chosen { get; set; }
 
-    private bool _open;
-    private bool _focusPanel;
-    private ElementReference _toggle;
-    private ElementReference _panel;
+    protected override string Panel => "surah";
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        // Фокус переходит в открытый список: с клавиатуры до сур иначе пришлось бы
-        // добираться заново, а Escape возвращает его на кнопку.
-        if (_focusPanel)
-        {
-            _focusPanel = false;
-            await _panel.FocusAsync();
-        }
-    }
-
-    private async Task ToggleAsync()
-    {
-        if (_open)
-        {
-            await CloseAsync();
-            return;
-        }
-
-        _open = true;
-        _focusPanel = true;
-    }
-
-    private Task CloseAsync()
-    {
-        _open = false;
-        return Task.CompletedTask;
-    }
-
-    private async Task OnKeyDownAsync(KeyboardEventArgs e)
-    {
-        if (e.Key != "Escape")
-            return;
-
-        _open = false;
-        await _toggle.FocusAsync();
-    }
-
+    /// <summary>Сура выбрана — список закрывается: текст в поле уже другой, и вывод рядом.</summary>
     private async Task ChooseAsync(CorpusSurah surah)
     {
-        _open = false;
+        Close();
         await Chosen.InvokeAsync(surah);
     }
 }

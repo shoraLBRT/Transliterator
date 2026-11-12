@@ -31,6 +31,9 @@ builder.Services.AddSingleton<ProfileEditor>();
 builder.Services.AddSingleton<ICorpusRepository, EmbeddedCorpusRepository>();
 builder.Services.AddTransient<ITransliterationService, TransliterationService>();
 
+// Какая панель открыта (D6): одна на страницу, её знают и кнопки, и раскладка.
+builder.Services.AddSingleton<PagePanels>();
+
 // Обратная связь (H3): адрес функции и ключ Turnstile — из wwwroot/appsettings.json.
 // Пока они пусты, кнопка отправляет ссылкой на форму GitHub (H1).
 builder.Services.AddSingleton(new FeedbackSettings(
