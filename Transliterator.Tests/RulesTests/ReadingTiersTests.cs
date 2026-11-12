@@ -90,7 +90,7 @@ namespace Transliterator.Tests.RulesTests
         [Theory]
         [InlineData(2, "ар-рохIиим")]
         [InlineData(4, "ар-рохIииим")]
-        [InlineData(6, "ар-рохIиииим")]
+        [InlineData(6, "ар-рохIииииим")]
         public void MaddArid_TakesTheChosenCount(int count, string expected) =>
             Assert.Equal(expected, TransliterationPipeline.Transliterate(
                 "ٱلرَّحِيمِ", reading: WithCount(TajweedRuleIds.MaddArid, count)));
@@ -142,6 +142,33 @@ namespace Transliterator.Tests.RulesTests
 
             Assert.Equal(4, segments.First(s => s.Letter == "ج").VowelLength);   // муттасиль
             Assert.Equal(5, segments.First(s => s.Letter == "م").VowelLength);   // мунфасиль
+        }
+
+        // Шкала долготы на письме (G7, решено владельцем 2026-11-12): 2 → две графемы,
+        // 4 → три, 5 → четыре, 6 → пять. Пять счётов муттасиля и мунфасиля больше
+        // не пишутся как четыре, и выбор «5» на странице виден в тексте.
+        [Theory]
+        [InlineData(TajweedRuleIds.MaddMuttasil, 4, "جَآءَ", "джааа")]
+        [InlineData(TajweedRuleIds.MaddMuttasil, 5, "جَآءَ", "джаааа")]
+        [InlineData(TajweedRuleIds.MaddMunfasil, 4, "لَآ أَعْبُدُ", "ляяя а'буд")]
+        [InlineData(TajweedRuleIds.MaddMunfasil, 5, "لَآ أَعْبُدُ", "ляяяя а'буд")]
+        public void FiveCounts_AreWrittenLongerThanFour(string ruleId, int count, string arabic, string expected) =>
+            Assert.Equal(expected, TransliterationPipeline.Transliterate(arabic, reading: WithCount(ruleId, count)));
+
+        [Theory]
+        [InlineData(2, 2)]
+        [InlineData(4, 3)]
+        [InlineData(5, 4)]
+        [InlineData(6, 5)]
+        public void LengthScale_GivesEveryCountItsOwnNumberOfGraphemes(int count, int graphemes)
+        {
+            // Шкала — забота рендерера, а не правила: одно слово на паузе проводится
+            // через все четыре долготы, и счёт 5, которого у мадда арид нет в каталоге,
+            // здесь лишь проверяет, как рендерер пишет пять харакатов. Число графем —
+            // не число харакатов: шкала только упорядочивает долготы, и это объяснено
+            // на странице, где выбирают счёт, и в README.
+            Assert.Equal("ар-рохI" + new string('и', graphemes) + "м",
+                         TransliterationPipeline.Transliterate("ٱلرَّحِيمِ", reading: WithCount(TajweedRuleIds.MaddArid, count)));
         }
 
         [Fact]

@@ -699,7 +699,7 @@ namespace Transliterator.Tests.RulesTests
 
             Assert.Equal(1, MaddOfFirstWord(segments).VowelLength);
             Assert.Equal(6, segments.Last(s => s.Letter == "ض").VowelLength);
-            Assert.Equal("уаля-дIдIооооллиин", TransliterationPipeline.Transliterate(arabic));
+            Assert.Equal("уаля-дIдIоооооллиин", TransliterationPipeline.Transliterate(arabic));
         }
 
         /// <summary>Последний звучащий согласный первого слова — носитель долготы на стыке.</summary>
