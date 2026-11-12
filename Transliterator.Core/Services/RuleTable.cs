@@ -46,6 +46,7 @@ namespace Transliterator.Core.Services
                 [CyrillicRenderer.WaqfVariant] = "на паузе",
                 [CyrillicRenderer.InitialVariant] = "в начале слова",
                 [CyrillicRenderer.HiatusVariant] = "хамза между гласными",
+                [CyrillicRenderer.FinalVariant] = "на конце слова",
                 [CyrillicRenderer.GhunnaVariant] = "в нос, с гунной",
                 [CyrillicRenderer.QalqalahVariant] = "с отзвуком, кальканя",
                 [CyrillicRenderer.QalqalahStrongVariant] = "с сильным отзвуком на паузе",

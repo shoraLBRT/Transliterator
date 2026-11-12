@@ -53,6 +53,8 @@ namespace Transliterator.Core.Services
                 "Хамза в начале слова пишется базовой графемой хамзы — приступ голоса виден на письме.",
             [CyrillicRenderer.HiatusVariant] =
                 "Хамза между гласными пишется базовой графемой, а не разделителем.",
+            [CyrillicRenderer.FinalVariant] =
+                "Безгласная хамза на конце слова пишется базовой графемой хамзы, как внутри слова.",
             [CyrillicRenderer.QalqalahVariant] =
                 "Отзвук кальканя не пишется: всего, что звучит, на письме не обозначить (G6).",
             [CyrillicRenderer.QalqalahStrongVariant] =

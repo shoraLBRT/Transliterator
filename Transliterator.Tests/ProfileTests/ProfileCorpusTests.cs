@@ -67,24 +67,30 @@ namespace Transliterator.Tests.ProfileTests
             // Профиль вправе поменять каждую графему и не вправе сдвинуть ни одну
             // границу. Всё, что не пробел и не дефис, здесь схлопнуто в «·».
             //
-            // Разделитель хамзы между гласными — не граница, а графема: Standard
-            // пишет его дефисом, Latin — той же ʾ (B7). Чтобы он не сошёл здесь
-            // за структуру, вариант снят с обоих профилей и берётся базовый ключ.
+            // Дефис хамзы — не граница, а графема: Standard пишет им хамзу между
+            // гласными (B7) и внутри слова (G2), Latin — той же ʾ, а на конце слова
+            // Standard хамзу не пишет вовсе. Чтобы графема хамзы не сошла здесь
+            // за структуру, оба профиля пишут хамзу одной буквой везде, кроме
+            // начала слова: её варианты сняты, базовый ключ общий.
             var arabic = Arabic(id);
-            var standard = Skeleton(TransliterationPipeline.Transliterate(arabic, WithoutHiatus(TestProfiles.Standard)));
-            var actual = Skeleton(TransliterationPipeline.Transliterate(arabic, WithoutHiatus(Get(name))));
+            var standard = Skeleton(TransliterationPipeline.Transliterate(arabic, WithNeutralHamza(TestProfiles.Standard)));
+            var actual = Skeleton(TransliterationPipeline.Transliterate(arabic, WithNeutralHamza(Get(name))));
 
             Assert.True(standard == actual,
                         $"{name}, {id}: границы разошлись со Standard\n  Standard: {standard}\n  {name}: {actual}");
         }
 
-        private static TransliterationProfile WithoutHiatus(TransliterationProfile profile) =>
-            new(profile.Name, profile.Description)
-            {
-                Rules = profile.Rules
-                    .Where(rule => !rule.Key.EndsWith("|" + CyrillicRenderer.HiatusVariant))
-                    .ToDictionary(rule => rule.Key, rule => rule.Value)
-            };
+        private static TransliterationProfile WithNeutralHamza(TransliterationProfile profile)
+        {
+            var rules = profile.Rules
+                .Where(rule => !rule.Key.EndsWith("|" + CyrillicRenderer.HiatusVariant)
+                            && !rule.Key.EndsWith("|" + CyrillicRenderer.FinalVariant))
+                .ToDictionary(rule => rule.Key, rule => rule.Value);
+
+            rules[ArabicScript.HamzaStr] = "ʔ";
+
+            return new TransliterationProfile(profile.Name, profile.Description) { Rules = rules };
+        }
 
         private static string Skeleton(string rendered)
         {

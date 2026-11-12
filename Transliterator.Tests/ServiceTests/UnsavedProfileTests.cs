@@ -152,15 +152,16 @@ namespace Transliterator.Tests.ServiceTests
         public void IncompleteProfile_WithoutVariants_FallsBackToBaseKeys()
         {
             // Вариант — уточнение базовой графемы, и профиль вправе его не задавать.
-            // В وَإِيَّاكَ из вариантов участвует только разделитель хамзы: без него
-            // она пишется базовой графемой, и ничего больше в выводе не меняется.
+            // В جُزْءٌ из вариантов участвует только хамза на конце слова: без
+            // "ء|final" она пишется базовой графемой — дефисом, — и ничего больше
+            // в выводе не меняется.
             var withoutVariants = Copy("Draft", rule => !rule.Key.Contains('|'));
 
-            var full = _service.Transliterate("وَإِيَّاكَ", TestProfiles.Standard).TransliteratedText;
-            var reduced = _service.Transliterate("وَإِيَّاكَ", withoutVariants).TransliteratedText;
+            var full = _service.Transliterate("جُزْءٌ", TestProfiles.Standard).TransliteratedText;
+            var reduced = _service.Transliterate("جُزْءٌ", withoutVariants).TransliteratedText;
 
-            Assert.Contains("-", full);
-            Assert.Equal(full.Replace("-", "ъ"), reduced);
+            Assert.Equal("джуз", full);
+            Assert.Equal(full + "-", reduced);
         }
 
         [Fact]
