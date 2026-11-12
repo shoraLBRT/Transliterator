@@ -47,9 +47,22 @@ namespace Transliterator.Tests.ProfileTests
         [InlineData("جَآءَ مَا", "джааа-а маа", "ǧaaaʾa maa")]
         public void HamzaBetweenVowels_KeepsItsLetterInLatin(string arabic, string cyrillic, string latin)
         {
-            // Разделитель между гласными нужен кириллице: там "ъ" спорит с диграфами
+            // Разделитель между гласными нужен кириллице: там "ъ" спорил с диграфами
             // "зъ", "хъ", "гъ". В латинице ʾ ни с чем не спорит и сама разводит
             // гласные, поэтому "ء|hiatus" задан ей явно — той же ʾ, а не пропущен.
+            Assert.Equal(cyrillic, TransliterationPipeline.Transliterate(arabic));
+            Assert.Equal(latin, TransliterationPipeline.Transliterate(arabic, TestProfiles.Latin));
+        }
+
+        [Theory]
+        [InlineData("جُزْءٌ", "джуз", "ǧuzʾ")]
+        [InlineData("يُؤْمِنُونَ", "йу-минуун", "yuʾminuun")]
+        public void HamzaOutsideHiatus_KeepsItsLetterInLatin(string arabic, string cyrillic, string latin)
+        {
+            // Дефис внутри слова и пустота на конце (G2) — решение для кириллицы:
+            // «ъ» там спорил с диграфами. Латинице спорить не с чем, и "ء|final"
+            // в ней не задан — рендерер откатывается к базовой ʾ.
+            Assert.False(TestProfiles.Latin.Rules.ContainsKey("ء|final"));
             Assert.Equal(cyrillic, TransliterationPipeline.Transliterate(arabic));
             Assert.Equal(latin, TransliterationPipeline.Transliterate(arabic, TestProfiles.Latin));
         }

@@ -41,9 +41,9 @@ namespace Transliterator.Tests.ProfileTests
         {
             var hamza = RuleTable.Group(TestProfiles.Standard.Rules).Single(g => g.BaseKey == "ء");
 
-            Assert.Equal("ъ", hamza.BaseValue);
-            Assert.Equal(new[] { "initial", "hiatus" }, hamza.Variants.Select(v => v.Name));
-            Assert.Equal(new[] { "ء|initial", "ء|hiatus" }, hamza.Variants.Select(v => v.Key));
+            Assert.Equal("-", hamza.BaseValue);
+            Assert.Equal(new[] { "initial", "hiatus", "final" }, hamza.Variants.Select(v => v.Name));
+            Assert.Equal(new[] { "ء|initial", "ء|hiatus", "ء|final" }, hamza.Variants.Select(v => v.Key));
         }
 
         [Fact]
@@ -101,6 +101,17 @@ namespace Transliterator.Tests.ProfileTests
             Assert.Equal(new[] { "heavy", "soft" }, fatha.Variants.Select(v => v.Name));
         }
 
+        [Fact]
+        public void Search_ByFinal_FindsHamzaWithEveryPosition()
+        {
+            // Хамза на конце слова (G2) — вариант той же буквы: поиск показывает
+            // её целиком, со всеми позициями, и правка одной видна рядом с прочими.
+            var hamza = Assert.Single(RuleTable.Filter(RuleTable.Group(TestProfiles.Standard.Rules), "final"));
+
+            Assert.Equal("ء", hamza.BaseKey);
+            Assert.Equal(new[] { "initial", "hiatus", "final" }, hamza.Variants.Select(v => v.Name));
+        }
+
         [Theory]
         [InlineData(null)]
         [InlineData("")]
@@ -151,6 +162,7 @@ namespace Transliterator.Tests.ProfileTests
         [InlineData("пауз", "waqf")]
         [InlineData("эмфаз", "heavy")]
         [InlineData("в начале слова", "initial")]
+        [InlineData("на конце слова", "final")]        // G2
         public void Search_ByRussianNote_FindsTheVariant(string query, string variant)
         {
             var found = RuleTable.Filter(RuleTable.Group(TestProfiles.Standard.Rules), query);

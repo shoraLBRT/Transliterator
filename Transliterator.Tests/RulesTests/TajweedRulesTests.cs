@@ -34,7 +34,7 @@ namespace Transliterator.Tests.RulesTests
 
         [Theory]
         [InlineData("رَحْمَةٌ", "рохIмаh")] // дамматан
-        [InlineData("شَيْءٍ", "щаййъ")]    // касратан; ي при этом получает мадд лин
+        [InlineData("شَيْءٍ", "щайй")]     // касратан; ي при этом получает мадд лин
         public void DammatanAndKasratan_AreDropped(string arabic, string expected) =>
             Assert.Equal(expected, TransliterationPipeline.Transliterate(arabic));
 
@@ -163,7 +163,7 @@ namespace Transliterator.Tests.RulesTests
 
         [Theory]
         [InlineData("ٱلرَّحْمَـٰنِ", "ар-рохIмаан")]
-        [InlineData("ٱلسَّمَآءِ", "ас-самаааъ")]
+        [InlineData("ٱلسَّمَآءِ", "ас-самааа")]
         [InlineData("ٱلَّذِينَ", "аллязъиин")]
         public void SunLetter_AssimilatesLam(string arabic, string expected) =>
             Assert.Equal(expected, TransliterationPipeline.Transliterate(arabic));
@@ -1154,21 +1154,88 @@ namespace Transliterator.Tests.RulesTests
             Assert.Equal("уаль-хIамд", TransliterationPipeline.Transliterate("وَٱلْحَمْدُ"));
 
         [Theory]
-        [InlineData("شَيْءٍ", "щаййъ")]          // в конце слова, после безгласного глайда
-        [InlineData("جَآءَ", "джаааъ")]           // в конце слова после долгой: огласовку сняла пауза
-        [InlineData("ٱلسَّمَآءِ", "ас-самаааъ")]
-        [InlineData("قُرْءَانِ", "qуръаан")]      // после безгласной согласной
-        [InlineData("يُؤْمِنُونَ", "йуъминуун")]  // с сукуном: гласная только перед ней
-        public void WithoutAVowelOnBothSides_KeepsItsLetter(string arabic, string expected)
+        [InlineData("قُرْءَانِ", "qур-аан")]                       // после безгласной согласной
+        [InlineData("ٱلْقُرْءَانُ", "аль-qур-аан")]
+        [InlineData("يُؤْمِنُونَ", "йу-минуун")]                   // с сукуном: гласная только перед ней
+        [InlineData("بِئْسَ", "би-с")]
+        [InlineData("ٱلذِّئْبُ", "азъ-зъи-б")]                     // «з + хамза» больше не «зъ»
+        [InlineData("كُلِّ شَىْءٍ قَدِيرٌ", "кулли щай-ин qодиир")] // в соединении танвин держит хамзу внутри слова
+        public void InsideAWord_IsWrittenAsAHyphen(string arabic, string expected)
         {
-            // Разделять нечего, пока гласная есть лишь с одной стороны. Поэтому
-            // разделитель — вариант ключа, а не замена базовой графемы: с "ء": "-"
-            // здесь повис бы дефис, а после дефиса артикля встал бы второй.
+            // Внутри слова хамза — разрыв, и Standard пишет его тем же дефисом,
+            // что между гласными, базовым ключом "ء" — решено владельцем (G2).
+            // «ъ» спорил с диграфами: «джузъ» читалось так, будто в слове ذ.
             var actual = TransliterationPipeline.Transliterate(arabic);
 
             Assert.Equal(expected, actual);
             Assert.DoesNotContain("--", actual);
+        }
+
+        [Theory]
+        [InlineData("جُزْءٌ", "джуз")]                // после безгласной согласной
+        [InlineData("شَيْءٍ", "щайй")]                // после безгласного глайда
+        [InlineData("جَآءَ", "джааа")]                // после долгой: огласовку сняла пауза
+        [InlineData("ٱلسَّمَآءِ", "ас-самааа")]
+        [InlineData("ٱلْمَلَأُ", "аль-маля")]          // после краткой
+        [InlineData("يَسْتَهْزِئُ", "йастаhзи")]
+        [InlineData("جَزَٰٓؤُا۟", "джазааа")]          // немой алиф слова не продолжает
+        [InlineData("ٱقْرَأْ بِٱسْمِ", "иqро бисм")]   // на конце слова и в соединении
+        public void AtTheEndOfAWord_WritesNothing(string arabic, string expected)
+        {
+            // На конце слова после хамзы ничего не звучит, и дефис бы повис: «джуз-».
+            // Вариант "ء|final" пуст, долгота перед хамзой видна и так (G2).
+            var actual = TransliterationPipeline.Transliterate(arabic);
+
+            Assert.Equal(expected, actual);
             Assert.False(actual.EndsWith('-'));
+        }
+    }
+
+    /// <summary>
+    /// Каждая позиция хамзы — свой ключ профиля: <c>"ء|initial"</c> в начале слова,
+    /// <c>"ء|hiatus"</c> между гласными, базовый <c>"ء"</c> внутри слова и
+    /// <c>"ء|final"</c> на конце. Условие владельца (G2): правка одного ключа
+    /// не меняет остальные, а свой профиль без нового варианта пишет хамзу так,
+    /// как писал.
+    /// </summary>
+    public class HamzaProfileKeysTests
+    {
+        // По слову на каждую позицию: начало, между гласными, внутри слова, конец.
+        private const string EveryPosition = "أَعْبُدُ جَآءَ مَا يُؤْمِنُونَ جُزْءٌ";
+
+        private static TransliterationProfile StandardWith(string key, string value) => new()
+        {
+            Name = "edited",
+            Rules = new Dictionary<string, string>(TestProfiles.Standard.Rules) { [key] = value }
+        };
+
+        [Fact]
+        public void Standard_WritesEveryPosition()
+        {
+            Assert.Equal("а'буду джааа-а маа йу-минууна джуз",
+                         TransliterationPipeline.Transliterate(EveryPosition));
+        }
+
+        [Theory]
+        [InlineData("ء|initial", "ʔа'буду джааа-а маа йу-минууна джуз")]
+        [InlineData("ء|hiatus", "а'буду джаааʔа маа йу-минууна джуз")]
+        [InlineData("ء", "а'буду джааа-а маа йуʔминууна джуз")]
+        [InlineData("ء|final", "а'буду джааа-а маа йу-минууна джузʔ")]
+        public void EditingOneKey_ChangesOnlyItsPosition(string key, string expected) =>
+            Assert.Equal(expected, TransliterationPipeline.Transliterate(EveryPosition, StandardWith(key, "ʔ")));
+
+        [Fact]
+        public void ProfileWithoutFinal_FallsBackToTheBaseKey()
+        {
+            // Свой профиль, скопированный до G2: хамза в нём — «ъ», варианта "ء|final"
+            // ещё нет. Кто писал хамзу по-своему, так и пишет — и на конце слова тоже.
+            var rules = new Dictionary<string, string>(TestProfiles.Standard.Rules) { ["ء"] = "ъ" };
+            rules.Remove("ء|final");
+            var copiedBeforeG2 = new TransliterationProfile { Name = "copied-before-G2", Rules = rules };
+
+            Assert.Equal("а'буду джааа-а маа йуъминууна джузъ",
+                         TransliterationPipeline.Transliterate(EveryPosition, copiedBeforeG2));
+            Assert.Equal("ас-самаааъ", TransliterationPipeline.Transliterate("ٱلسَّمَآءِ", copiedBeforeG2));
         }
     }
 
@@ -1197,7 +1264,7 @@ namespace Transliterator.Tests.RulesTests
         [Fact]
         public void HamzaInsideTheNoun_IsStillWritten() =>
             // Решение касается только хамзы сразу за артиклем: внутри имени она пишется.
-            Assert.Equal("аль-qуръаан", TransliterationPipeline.Transliterate("ٱلْقُرْءَانُ"));
+            Assert.Equal("аль-qур-аан", TransliterationPipeline.Transliterate("ٱلْقُرْءَانُ"));
 
         [Fact]
         public void ProfileCanWriteIt_ThroughTheInitialVariant()
@@ -1218,7 +1285,7 @@ namespace Transliterator.Tests.RulesTests
     {
         [Fact]
         public void Hamza_IsNotDropped() =>
-            Assert.Equal("qуръаан", TransliterationPipeline.Transliterate("قُرْءَانِ"));
+            Assert.Equal("qур-аан", TransliterationPipeline.Transliterate("قُرْءَانِ"));
 
         [Fact]
         public void TaMarbutaAndTanwin_AreNotDropped() =>

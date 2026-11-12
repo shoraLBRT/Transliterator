@@ -23,7 +23,9 @@ namespace Transliterator.Tests.ProfileTests
         public void QafAsKaHamza_IsComposedOfKafAndHamza()
         {
             // Пример владельца (G5): «къ» для ق при хамзе «ъ» — это «к + хамза».
-            var conflict = Assert.Single(GraphemeConflicts.Find(Standard(("ق", "къ"))), c => c.Letter == "ق");
+            // Standard пишет хамзу дефисом (G2), и «ъ» ей задаёт свой профиль.
+            var conflict = Assert.Single(GraphemeConflicts.Find(Standard(("ق", "къ"), ("ء", "ъ"))),
+                                         c => c.Letter == "ق");
 
             Assert.True(conflict.IsComposed);
             Assert.Equal(new[] { "ك", "ء" }, conflict.Parts);
@@ -40,20 +42,21 @@ namespace Transliterator.Tests.ProfileTests
         }
 
         [Fact]
-        public void Standard_HasOnlyTheKnownDhalConflict()
+        public void Standard_HasNoConflicts() =>
+            // Хамза дефисом (G2) сняла единственный спор Standard — ذ «зъ».
+            // ت и ة пишутся одинаково по праву, это один звук.
+            Assert.Empty(GraphemeConflicts.Find(TestProfiles.Standard.Rules));
+
+        [Fact]
+        public void HamzaAsHardSign_ConflictsWithDhal()
         {
-            // ذ «зъ» при хамзе «ъ» — тот самый спор, с которого начался G2. Других
-            // в Standard нет: ت и ة пишутся одинаково по праву, это один звук.
-            var conflict = Assert.Single(GraphemeConflicts.Find(TestProfiles.Standard.Rules));
+            // ذ «зъ» при хамзе «ъ» — тот самый спор, с которого начался G2: так
+            // писал Standard до него и так пишет свой профиль, скопированный раньше.
+            var conflict = Assert.Single(GraphemeConflicts.Find(Standard(("ء", "ъ"))));
 
             Assert.Equal("ذ", conflict.Letter);
             Assert.Equal(new[] { "ز", "ء" }, conflict.Parts);
         }
-
-        [Fact]
-        public void ChangingHamza_ClearsTheDhalConflict() =>
-            // Предложение G2 — хамза дефисом — снимает спор.
-            Assert.Empty(GraphemeConflicts.Find(Standard(("ء", "-"))));
 
         [Fact]
         public void SilentGraphemes_DoNotConflict() =>

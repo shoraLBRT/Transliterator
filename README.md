@@ -79,9 +79,15 @@ A few more runs:
 | `قُلْ هُوَ ٱللَّهُ أَحَدٌ` | `qуль hууа-ллааhу ахIад` |
 | `لَمْ يَلِدْ وَلَمْ يُولَدْ` | `лям йалид уалям йууляд` |
 | `مِنْ بَعْدِ` | `мим ба'д` |
+| `ٱلْقُرْءَانُ` | `аль-qур-аан` |
+| `جُزْءٌ` | `джуз` |
 
-The last line is iqlab: a nun sakina before `ب` turns into a mim, and the words
-do not merge while it happens.
+`مِنْ بَعْدِ` is iqlab: a nun sakina before `ب` turns into a mim, and the words
+do not merge while it happens. The last two lines are hamza: inside a word it is
+written as a hyphen, a break (`аль-qур-аан`), and at the end of a word it is not
+written at all (`джуз`), since nothing sounds after it. The hard sign it used to
+be written with clashed with the digraphs: "джузъ" read as if the word had `ذ`
+"зъ".
 
 ---
 
@@ -117,7 +123,7 @@ all the work in the browser. There is no server, and the page is published from
   graphemes can be rewritten in a searchable table, for example `ع` as `ʿ`
   instead of `'`. The panel repeats the output, so a change is seen while typing.
   A grapheme that can no longer be told apart — the same as another letter's,
-  or made of two others, like "къ" for `ق` = "к" + the hamza "ъ" — gets a
+  or made of two others, like "къ" for `ق` = "к" + "ъ" when hamza is set to "ъ" — gets a
   warning next to the letter with a corpus word as an example; the profile is
   saved anyway.
   Your profiles and the choice live in the browser's localStorage. JSON export
@@ -243,13 +249,14 @@ error that names the key.
 | `waqf` | at a pause | `"ة\|waqf": "h"` |
 | `initial` | word-initially | `"ء\|initial": ""` — hamza is not written |
 | `hiatus` | hamza between vowels | `"ء\|hiatus": "-"` — `уа-иййаака` |
+| `final` | unvowelled hamza at the end of a word | `"ء\|final": ""` — `джуз`; inside a word the base `"ء": "-"` applies, `йу-минуун` |
 | `ghunna` | under nasalisation | `"ن\|ghunna": "н"` |
 | `qalqalah` | the echo when an unvowelled stop is released | `"ب\|qalqalah": ""` |
 | `qalqalah-strong` | the same at a pause; falls back to `qalqalah` | not set in `Standard` |
 
 An empty value is a legitimate entry rather than an omission: this is how the
-qalqalah echo and the initial hamza are deliberately set in `Standard`. The
-reasoning is under "Открытые решения" in the roadmap.
+qalqalah echo, the initial hamza and the word-final hamza are deliberately set
+in `Standard`. The reasoning is under "Открытые решения" in the roadmap.
 
 ### What a profile does not contain
 
@@ -276,9 +283,10 @@ An excerpt from `Transliterator.Core/Resources/Profiles/Standard.json`:
   "Name": "Standard",
   "Description": "Расширенная кириллица. Ключ вида \"буква|вариант\" переопределяет базовую графему...",
   "Rules": {
-    "ء": "ъ",
+    "ء": "-",
     "ء|initial": "",
     "ء|hiatus": "-",
+    "ء|final": "",
     "ب": "б",
     "ب|qalqalah": "",
     "ة": "т",

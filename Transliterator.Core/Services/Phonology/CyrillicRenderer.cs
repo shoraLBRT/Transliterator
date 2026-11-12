@@ -25,6 +25,7 @@ namespace Transliterator.Core.Services.Phonology
         public const string WaqfVariant = "waqf";
         public const string InitialVariant = "initial";
         public const string HiatusVariant = "hiatus";
+        public const string FinalVariant = "final";
         public const string GhunnaVariant = "ghunna";
         public const string QalqalahVariant = "qalqalah";
         public const string QalqalahStrongVariant = "qalqalah-strong";
@@ -37,7 +38,7 @@ namespace Transliterator.Core.Services.Phonology
         public static readonly IReadOnlySet<string> KnownVariants = new HashSet<string>(StringComparer.Ordinal)
         {
             HeavyVariant, SoftVariant, SukunVariant, WaqfVariant, InitialVariant,
-            HiatusVariant, GhunnaVariant, QalqalahVariant, QalqalahStrongVariant
+            HiatusVariant, FinalVariant, GhunnaVariant, QalqalahVariant, QalqalahStrongVariant
         };
 
         /// <summary>
@@ -67,8 +68,10 @@ namespace Transliterator.Core.Services.Phonology
             // стоит ли хамза между гласными. Немые буквы звука не дают и не считаются.
             Segment? previous = null;
 
-            foreach (var segment in segments)
+            for (var index = 0; index < segments.Count; index++)
             {
+                var segment = segments[index];
+
                 switch (segment.Kind)
                 {
                     case SegmentKind.Break:
@@ -88,7 +91,7 @@ namespace Transliterator.Core.Services.Phonology
 
                 if (!segment.Silent)
                 {
-                    var consonant = RenderConsonant(segment, previous, profile, missingKeys);
+                    var consonant = RenderConsonant(segment, previous, EndsWord(segments, index), profile, missingKeys);
                     previous = segment;
                     result.Append(Repeat(consonant, GlideCount(segment)));
                     if (segment.Shadda)
@@ -143,8 +146,8 @@ namespace Transliterator.Core.Services.Phonology
             result.Append('-');
         }
 
-        private string RenderConsonant(Segment segment, Segment? previous, TransliterationProfile profile,
-                                       ISet<string>? missingKeys)
+        private string RenderConsonant(Segment segment, Segment? previous, bool endsWord,
+                                       TransliterationProfile profile, ISet<string>? missingKeys)
         {
             var letter = segment.Letter;
 
@@ -171,6 +174,19 @@ namespace Transliterator.Core.Services.Phonology
                 var hiatus = Lookup(profile, Variant(letter, HiatusVariant));
                 if (hiatus is not null)
                     return hiatus;
+            }
+
+            // Безгласная хамза на конце слова: после неё ничего не звучит, и Standard
+            // её не пишет — "джуз", "ас-самааа", а не висящий дефис "джуз-" (G2).
+            // Долгота перед ней видна и так. Внутри слова безгласная хамза — разрыв,
+            // и её пишет базовый ключ: "йу-минуун". Профиль без этого варианта
+            // (скопированный до G2) откатывается к базовому "ء" и пишет хамзу,
+            // как писал.
+            if (letter == ArabicScript.HamzaStr && endsWord && !IsVowelled(segment))
+            {
+                var final = Lookup(profile, Variant(letter, FinalVariant));
+                if (final is not null)
+                    return final;
             }
 
             // Та-марбута звучит как /t/ в соединении и как /h/ на паузе.
@@ -219,6 +235,29 @@ namespace Transliterator.Core.Services.Phonology
         private static bool StartsNoun(Segment segment, Segment? previous) =>
             segment.StartsWord
             || (previous is not null && previous.HyphenAfter && previous.Letter == ArabicScript.LamStr);
+
+        /// <summary>
+        /// За сегментом в этом слове больше ничего не звучит: дальше конец текста,
+        /// граница слова, знак или цифра. Немые буквы (алиф после و множественного
+        /// числа) слова не продолжают.
+        /// </summary>
+        private static bool EndsWord(IReadOnlyList<Segment> segments, int index)
+        {
+            for (var next = index + 1; next < segments.Count; next++)
+            {
+                var segment = segments[next];
+
+                if (segment.Kind != SegmentKind.Consonant)
+                    return true;
+
+                if (segment.Silent)
+                    continue;
+
+                return segment.StartsWord;
+            }
+
+            return true;
+        }
 
         private static bool IsBetweenVowels(Segment segment, Segment? previous) =>
             !segment.StartsWord

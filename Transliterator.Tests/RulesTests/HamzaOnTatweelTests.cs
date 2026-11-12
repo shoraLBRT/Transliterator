@@ -12,8 +12,8 @@ namespace Transliterator.Tests.RulesTests
     public class HamzaOnTatweelTests
     {
         [Theory]
-        [InlineData("يَسْـَٔلُونَ", "يَسْأَلُونَ", "йасъалююн")]
-        [InlineData("شَيْـًٔا", "شَيْئًا", "щайъаа")]            // и танвин на месте
+        [InlineData("يَسْـَٔلُونَ", "يَسْأَلُونَ", "йас-алююн")]
+        [InlineData("شَيْـًٔا", "شَيْئًا", "щай-аа")]            // и танвин на месте
         [InlineData("ٱلْـَٔاخِرَةِ", "ٱلْءَاخِرَةِ", "аль-аахъироh")] // и артикль на месте
         public void HamzaOnTatweel_ReadsLikeHamzaOnCarrier(string tatweel, string carrier, string expected)
         {
@@ -50,7 +50,7 @@ namespace Transliterator.Tests.RulesTests
             // Хамза набрана раньше огласовки — NFC переставит знаки в канонический порядок.
             const string hamzaFirst = "يَسْـَٔلُونَ";
 
-            Assert.Equal("йасъалююн", TransliterationPipeline.Transliterate(hamzaFirst));
+            Assert.Equal("йас-алююн", TransliterationPipeline.Transliterate(hamzaFirst));
         }
 
         [Fact]
