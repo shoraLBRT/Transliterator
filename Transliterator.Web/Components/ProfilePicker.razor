@@ -7,23 +7,26 @@
 @inject ICorpusRepository Corpus
 @inject ITransliterationService Transliteration
 @inject ILogger<ProfilePicker> Logger
+@inherits PanelPicker
 
-@* Свои профили (E4). Как суры и ступени чтения — одна кнопка под полем ввода:
+@* Свои профили (E4). Как ступени чтения — одна круглая кнопка сбоку страницы (D6):
    профили не на виду, пока их не открыли (D5). Внутри — выбор профиля, копия,
-   переименование и удаление своего, и графемы с поиском. Панель закрывает
-   результат, поэтому вывод повторён в ней самой: правка графемы видна сразу.
+   переименование и удаление своего, и графемы с поиском. На телефоне панель
+   закрывает результат, поэтому вывод повторён в ней самой: правка графемы видна
+   сразу. На широком экране панель стоит колонкой рядом с выводом, и повтор
+   там скрыт стилями.
    Спорная графема своего профиля помечена прямо у буквы, с примером (E5):
    запрещать её не нужно — решает пользователь, — но видеть, к чему она
    приведёт, он должен.
-   На кнопке — подпись и имя («Профиль: Standard», свой — «Профиль: Мой», E6):
+   У кнопки — подпись и имя («Профиль: Standard», свой — «Профиль: Мой», E6):
    одно имя не говорит пришедшему впервые, что кнопка выбирает. Подпись — часть
    текста кнопки, а не оформление вокруг неё: она же имя кнопки для экранного
-   диктора и переезжает вместе с кнопкой в любую раскладку (D6). Длинное имя
-   обрезается многоточием с конца, и подпись остаётся видна. *@
+   диктора и стоит рядом с круглым значком (D6). Длинное имя обрезается
+   многоточием с конца, и подпись остаётся видна. *@
 
 <div class="picker">
-    <button type="button" class="picker-toggle" aria-expanded="@(_open ? "true" : "false")"
-            aria-controls="profile-menu" title="@ToggleText" @onclick="ToggleAsync" @ref="_toggle">
+    <button type="button" class="picker-toggle" aria-expanded="@(IsOpen ? "true" : "false")"
+            aria-controls="profile-menu" title="@ToggleText" @onclick="ToggleAsync" @ref="ToggleButton">
         <svg viewBox="0 0 24 24" aria-hidden="true">
             <path d="M4 20h4L19 9a2.1 2.1 0 0 0-3-3L5 17z" />
             <path d="M14 8l2.5 2.5" />
@@ -31,12 +34,13 @@
         <span class="picker-toggle-text">@ToggleText</span>
     </button>
 
-    @if (_open)
+    @if (IsOpen)
     {
         <div class="picker-backdrop" @onclick="Close"></div>
 
-        <div id="profile-menu" class="picker-panel profile-panel" role="dialog" aria-label="Профиль записи"
-             tabindex="-1" @ref="_panel" @onkeydown="OnKeyDownAsync">
+        <div id="profile-menu" class="picker-panel profile-panel" role="dialog" aria-labelledby="profile-menu-title"
+             tabindex="-1" @ref="PanelElement" @onkeydown="OnPanelKeyDownAsync">
+            <PanelHead Id="profile-menu-title" Title="Профиль записи" Close="CloseToToggleAsync" />
             <p class="picker-caption">Профиль решает, какими буквами записать каждый звук</p>
 
             <div class="reading-modes" role="radiogroup" aria-label="Профиль">
@@ -165,7 +169,7 @@
     [Parameter, EditorRequired]
     public TransliterationProfile Profile { get; set; } = default!;
 
-    /// <summary>Текст кнопки под полем: что она выбирает и что выбрано (E6).</summary>
+    /// <summary>Текст кнопки сбоку: что она выбирает и что выбрано (E6).</summary>
     private string ToggleText => $"Профиль: {Profile.Name}";
 
     /// <summary>
@@ -175,7 +179,7 @@
     [Parameter, EditorRequired]
     public string DefaultProfile { get; set; } = string.Empty;
 
-    /// <summary>Вывод страницы: панель закрывает результат и повторяет его в себе.</summary>
+    /// <summary>Вывод страницы: на телефоне панель закрывает результат и повторяет его в себе.</summary>
     [Parameter]
     public string Preview { get; set; } = string.Empty;
 
@@ -190,11 +194,9 @@
 
     private sealed record Item(string Name, bool BuiltIn);
 
-    private bool _open;
-    private bool _focusPanel;
+    protected override string Panel => "profile";
+
     private bool _focusName;
-    private ElementReference _toggle;
-    private ElementReference _panel;
     private ElementReference _nameInput;
 
     private IReadOnlyList<Item> _profiles = Array.Empty<Item>();
@@ -239,11 +241,7 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (_focusPanel)
-        {
-            _focusPanel = false;
-            await _panel.FocusAsync();
-        }
+        await base.OnAfterRenderAsync(firstRender);
 
         if (_focusName)
         {
@@ -252,34 +250,13 @@
         }
     }
 
-    private async Task ToggleAsync()
-    {
-        if (_open)
-        {
-            Close();
-            return;
-        }
+    protected override Task BeforeOpenAsync() => LoadProfilesAsync();
 
-        await LoadProfilesAsync();
-        _open = true;
-        _focusPanel = true;
-    }
-
-    /// <summary>Закрытие не теряет правки: каждая графема сохраняется сразу.</summary>
-    private void Close()
-    {
-        _open = false;
-        Cancel();
-    }
-
-    private async Task OnKeyDownAsync(KeyboardEventArgs e)
-    {
-        if (e.Key != "Escape")
-            return;
-
-        Close();
-        await _toggle.FocusAsync();
-    }
+    /// <summary>
+    /// Закрытие — любым путём, в том числе другой панелью, — сбрасывает начатое
+    /// переименование или удаление, но не теряет правки: каждая графема сохраняется сразу.
+    /// </summary>
+    protected override void OnClosed() => Cancel();
 
     private async Task LoadProfilesAsync()
     {

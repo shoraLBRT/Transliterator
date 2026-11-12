@@ -106,9 +106,16 @@ all the work in the browser. There is no server, and the page is published from
 * **One field.** Arabic text goes into the field in the centre, and the result
   appears under it, recalculated on every edit. A button copies it. Text without
   diacritics is accepted too, although without harakat the reading is incomplete.
-* **Ready-made surahs** from the corpus open with the "Выбрать суру" button. The
-  text goes in one ayah per line, and the result keeps the lines.
-* **How to read** — the button next to it picks a reading tier: full tajweed
+* **Ready-made surahs** from the corpus open with the "Выбрать суру" button,
+  the only setting left under the field. The text goes in one ayah per line,
+  and the result keeps the lines.
+* **Settings at the side.** How to read and the profile are small round icon
+  buttons, each captioned with what is picked now ("Полный таджвид",
+  "Профиль: Standard"). On a wide screen they stand at the left edge, and any
+  panel — the surah list too — opens as a column beside the field and the
+  output, moving them aside instead of covering them. On a phone the buttons
+  sit in a row under the field and the panel opens over the output.
+* **How to read** — the round button with a sound wave picks a reading tier: full tajweed
   (the default), partial tajweed — "Неполный таджвид" on the page (how long to
   hold madd arid, madd lin, muttasil and munfasil, and which rules to leave out:
   qalqalah, the ghunnah rules — idgham with ghunnah, iqlab, ikhfa — and madd
@@ -124,13 +131,14 @@ all the work in the browser. There is no server, and the page is published from
   pre-filled new-issue form on GitHub that the person submits with their own
   account. The text from the field and its transliteration are attached only
   when the person ticks the box.
-* **Profile** — the third button under the field. It says what it picks and
+* **Profile** — the round button with a pen. Its caption says what it picks and
   what is picked now: "Профиль: Standard" by default, your own profile under its
   own name ("Профиль: Мой"); a long name is cut with an ellipsis, the caption
   stays. It picks a built-in profile (`Standard`,
   `Latin`) or your own; "Создать копию" makes your own copy at once, and its
   graphemes can be rewritten in a searchable table, for example `ع` as `ʿ`
-  instead of `'`. The panel repeats the output, so a change is seen while typing.
+  instead of `'`. The output stays in view while typing: beside the panel on a
+  wide screen, repeated inside it on a phone.
   A grapheme that can no longer be told apart — the same as another letter's,
   or made of two others, like "къ" for `ق` = "к" + "ъ" when hamza is set to "ъ" — gets a
   warning next to the letter with a corpus word as an example; the profile is

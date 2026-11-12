@@ -1,30 +1,34 @@
 @using Transliterator.Core.Services
+@inherits PanelPicker
 
 @* Ступени чтения (I2): полный таджвид, неполный таджвид (I5), обычное чтение.
-   Как и суры, — одна кнопка под полем ввода: ступени не должны загромождать
-   поле (D5). Правила и их описания берутся из каталога (I1) — правило,
+   Одна круглая кнопка сбоку страницы (D6): ступени не загромождают поле (D5),
+   а панель на широком экране открывается колонкой рядом с полем и выводом.
+   Рядом с кнопкой — имя выбранной ступени: оно же текст кнопки и её имя для
+   экранного диктора. Правила и их описания берутся из каталога (I1) — правило,
    добавленное в каталог, появляется здесь само. Рядом с названием правила
    в скобках — его перевод (I7): «Мадд лязим» без него — арабское слово
    русскими буквами. В «Неполном таджвиде» рядом со счётами — переключатели у правил,
    которые можно не читать (I4): какие именно, решает каталог (Switchable). *@
 
 <div class="picker">
-    <button type="button" class="picker-toggle" aria-expanded="@(_open ? "true" : "false")"
-            aria-controls="reading-menu" @onclick="ToggleAsync" @ref="_toggle">
+    @* Значок — звуковая волна: кнопка выбирает, как текст звучит. *@
+    <button type="button" class="picker-toggle" aria-expanded="@(IsOpen ? "true" : "false")"
+            aria-controls="reading-menu" title="@ModeName(Choice.Mode)" @onclick="ToggleAsync" @ref="ToggleButton">
         <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M4 7h10M18 7h2M4 17h4M12 17h8" />
-            <circle cx="16" cy="7" r="2" />
-            <circle cx="10" cy="17" r="2" />
+            <path d="M4 10v4M8 7v10M12 4v16M16 8v8M20 11v2" />
         </svg>
-        <span>@ModeName(Choice.Mode)</span>
+        <span class="picker-toggle-text">@ModeName(Choice.Mode)</span>
     </button>
 
-    @if (_open)
+    @if (IsOpen)
     {
         <div class="picker-backdrop" @onclick="Close"></div>
 
-        <div id="reading-menu" class="picker-panel reading-panel" role="dialog" aria-label="Как читать"
-             tabindex="-1" @ref="_panel" @onkeydown="OnKeyDownAsync">
+        <div id="reading-menu" class="picker-panel reading-panel" role="dialog" aria-labelledby="reading-menu-title"
+             tabindex="-1" @ref="PanelElement" @onkeydown="OnPanelKeyDownAsync">
+            <PanelHead Id="reading-menu-title" Title="Как читать" Close="CloseToToggleAsync" />
+
             <div class="reading-modes" role="radiogroup" aria-label="Ступень чтения">
                 @foreach (var mode in Modes)
                 {
@@ -177,10 +181,7 @@
 
     private static readonly ReadingMode[] Modes = { ReadingMode.Full, ReadingMode.Variants, ReadingMode.Plain };
 
-    private bool _open;
-    private bool _focusPanel;
-    private ElementReference _toggle;
-    private ElementReference _panel;
+    protected override string Panel => "reading";
 
     /// <summary>
     /// Сначала то, что есть в любом чтении, потом — только таджвид. Заголовок группы
@@ -240,41 +241,15 @@
         _ => "В любом чтении",
     };
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (_focusPanel)
-        {
-            _focusPanel = false;
-            await _panel.FocusAsync();
-        }
-    }
-
-    private Task ToggleAsync()
-    {
-        _open = !_open;
-        _focusPanel = _open;
-        return Task.CompletedTask;
-    }
-
-    private void Close() => _open = false;
-
-    private async Task OnKeyDownAsync(KeyboardEventArgs e)
-    {
-        if (e.Key != "Escape")
-            return;
-
-        _open = false;
-        await _toggle.FocusAsync();
-    }
-
     /// <summary>
-    /// Выбранная ступень сразу видна в выводе, и панель закрывается, чтобы его
-    /// открыть. «Неполный таджвид» оставляет её открытой: счёты выбираются здесь же.
+    /// Выбранная ступень сразу видна в выводе, и панель закрывается: на телефоне —
+    /// чтобы его открыть, на широком экране — потому что выбор сделан, как и у сур.
+    /// «Неполный таджвид» оставляет её открытой: счёты выбираются здесь же.
     /// </summary>
     private async Task ChooseModeAsync(ReadingMode mode)
     {
         if (mode != ReadingMode.Variants)
-            _open = false;
+            Close();
 
         await ChoiceChanged.InvokeAsync(Choice.WithMode(mode));
     }
