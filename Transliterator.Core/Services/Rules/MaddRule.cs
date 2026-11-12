@@ -82,7 +82,7 @@ namespace Transliterator.Core.Services.Rules
             int muttasil = reading.Count(TajweedRuleIds.MaddMuttasil, Obligatory);
             int munfasil = reading.Count(TajweedRuleIds.MaddMunfasil, Obligatory);
 
-            // Силя читается только в таджвиде, и в «Своих вариантах» её выключают
+            // Силя читается только в таджвиде, и в «Неполном таджвиде» её выключают
             // по одному (I4). Выключенная — как в обычном чтении: ه с краткой гласной.
             bool sila = reading.Tajweed && reading.Reads(TajweedRuleIds.MaddSila);
 

@@ -85,7 +85,7 @@ namespace Transliterator.Tests.RulesTests
         public void Translation_IsShownNextToTheName_WhereverThePageShowsARule()
         {
             // Правило на странице видно в трёх местах — у счёта и у переключателя
-            // в «Своих вариантах» (I3, I4) и в «Правилах этого чтения»; перевод должен
+            // в «Неполном таджвиде» (I3, I4) и в «Правилах этого чтения»; перевод должен
             // стоять рядом с названием во всех.
             var picker = File.ReadAllText(Path.Combine(DocsTests.ReadmeTests.RepositoryRoot(),
                                                        "Transliterator.Web", "Components", "ReadingPicker.razor"));
@@ -158,7 +158,7 @@ namespace Transliterator.Tests.RulesTests
         [MemberData(nameof(VariantRules))]
         public void VariantRule_IsExplained_WhereItsCountIsChosen(string id)
         {
-            // «Свои варианты» (I3) показывают рядом со счётом описание и пример,
+            // «Неполный таджвид» (I3) показывает рядом со счётом описание и пример,
             // и пример пересчитывается под выбранный счёт: так видно, что счёт меняет.
             // Пример, в котором разные счёты пишутся одинаково, ничего не объяснит.
             var rule = Catalog.Rules.Single(r => r.Id == id);
