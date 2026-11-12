@@ -68,6 +68,75 @@ namespace Transliterator.Tests.RulesTests
             Assert.Equal(6, choice.WithMode(ReadingMode.Variants).ToOptions().Count(TajweedRuleIds.MaddArid, 2));
         }
 
+        // ---- Правила, выключенные по одному (I4) ----
+
+        [Fact]
+        public void SwitchedOffRules_ComeBack_WithTheTier()
+        {
+            // Выбор хранится в браузере вместе со ступенью — одной записью.
+            var choice = ReadingChoice.Default.WithMode(ReadingMode.Variants)
+                                      .WithCount(TajweedRuleIds.MaddArid, 4)
+                                      .WithRule(TajweedRuleIds.QalqalahSughra, on: false)
+                                      .WithRule(TajweedRuleIds.Ikhfa, on: false);
+
+            var restored = ReadingChoice.Parse(choice.Serialize(), Catalog);
+
+            Assert.Equal(ReadingMode.Variants, restored.Mode);
+            Assert.Equal(4, restored.Counts[TajweedRuleIds.MaddArid]);
+            Assert.Equal(new[] { TajweedRuleIds.Ikhfa, TajweedRuleIds.QalqalahSughra }.Order(), restored.Off.Order());
+            Assert.Equal(choice.Serialize(), restored.Serialize());
+        }
+
+        [Fact]
+        public void SwitchedBackOn_IsRead() =>
+            Assert.Empty(ReadingChoice.Default.WithRule(TajweedRuleIds.MaddSila, on: false)
+                                      .WithRule(TajweedRuleIds.MaddSila, on: true).Off);
+
+        [Fact]
+        public void Serialize_DoesNotDependOnTheOrderOfSwitching()
+        {
+            // По строке страница узнаёт, изменился ли выбор: один выбор — одна строка.
+            var one = ReadingChoice.Default.WithRule(TajweedRuleIds.Iqlab, false).WithRule(TajweedRuleIds.Ikhfa, false);
+            var other = ReadingChoice.Default.WithRule(TajweedRuleIds.Ikhfa, false).WithRule(TajweedRuleIds.Iqlab, false);
+
+            Assert.Equal(one.Serialize(), other.Serialize());
+        }
+
+        [Fact]
+        public void SavedBeforeTheSwitches_ReadsEveryRule()
+        {
+            // Запись, сделанная до I4, переключателей не знает: все правила читаются.
+            var restored = ReadingChoice.Parse("{\"mode\":\"variants\",\"counts\":{\"madd-arid\":4}}", Catalog);
+
+            Assert.Equal(ReadingMode.Variants, restored.Mode);
+            Assert.Empty(restored.Off);
+        }
+
+        [Fact]
+        public void RulesThatCannotBeSwitchedOff_AreDropped()
+        {
+            // Вакф и идгам без гунны по одному не выключаются (решение владельца),
+            // а правила, которого нет в каталоге, нет и на странице.
+            var restored = ReadingChoice.Parse(
+                "{\"mode\":\"variants\",\"off\":[\"waqf\",\"idgham-bila-ghunna\",\"gone\",\"iqlab\"]}", Catalog);
+
+            Assert.Equal(new[] { TajweedRuleIds.Iqlab }, restored.Off);
+        }
+
+        [Fact]
+        public void SwitchedOffRules_ApplyOnlyInVariants()
+        {
+            // Полный таджвид — все правила; обычное чтение их не читает и так.
+            // Выбор при этом помнится: вернулся к вариантам — он на месте.
+            var choice = ReadingChoice.Default.WithRule(TajweedRuleIds.MaddSila, on: false);
+
+            Assert.Same(ReadingOptions.FullTajweed, choice.ToOptions());
+            Assert.Same(ReadingOptions.Plain, choice.WithMode(ReadingMode.Plain).ToOptions());
+            Assert.False(choice.WithMode(ReadingMode.Variants).ToOptions().Reads(TajweedRuleIds.MaddSila));
+            Assert.Equal("иннаhу каан", TransliterationPipeline.Transliterate("إِنَّهُۥ كَانَ",
+                reading: choice.WithMode(ReadingMode.Variants).ToOptions()));
+        }
+
         [Fact]
         public void Variants_ChangeTheOutput() =>
             Assert.Equal("ар-рохIииииим", TransliterationPipeline.Transliterate("ٱلرَّحِيمِ", reading:

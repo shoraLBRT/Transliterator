@@ -20,14 +20,22 @@ namespace Transliterator.Core.Services.Rules
     /// </summary>
     public class QalqalahRule
     {
-        public void Apply(IList<Segment> segments)
+        /// <param name="minor">Читается ли малый отзвук — кальканя сугра (I4).</param>
+        /// <param name="major">Читается ли большой отзвук на паузе — кальканя кубра (I4).</param>
+        /// <remarks>
+        /// Выключенный отзвук не становится другим: буква остаётся без пометы, как
+        /// в обычном чтении. Малый на паузе не подменяет выключенный большой.
+        /// </remarks>
+        public void Apply(IList<Segment> segments, bool minor = true, bool major = true)
         {
             for (int i = 0; i < segments.Count; i++)
             {
                 if (!IsQalqalahLetter(segments[i]))
                     continue;
 
-                segments[i].Qalqalah = IsAtPause(segments, i) ? Qalqalah.Major : Qalqalah.Minor;
+                var echo = IsAtPause(segments, i) ? Qalqalah.Major : Qalqalah.Minor;
+                if (echo == Qalqalah.Major ? major : minor)
+                    segments[i].Qalqalah = echo;
             }
         }
 

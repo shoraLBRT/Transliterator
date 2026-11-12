@@ -28,24 +28,32 @@ namespace Transliterator.Core.Services.Rules
     /// </summary>
     public class NasalRule
     {
-        /// <param name="tajweed">
+        /// <param name="reading">
         /// В обычном чтении (I2) нун и мим читаются как написаны — изхар перед
         /// всем, кроме такой же буквы: нун с нуном и мим с мимом сливаются в любом
         /// чтении. Шадда, которой мусхаф отметил идгам на стыке слов, снимается:
         /// <c>مِن رَّبِّهِمْ</c> → «мин роббиhим».
+        /// <para>
+        /// Идгам с гунной, икляб и ихфа выключаются и по одному (I4): нун, на котором
+        /// сработало бы выключенное правило, читается так же, как в обычном чтении,
+        /// а остальные — как при таджвиде. Идгам без гунны так не выключается: слияние
+        /// с ر меняет условия эмфазы, которую считает следующая стадия.
+        /// </para>
         /// </param>
-        public void Apply(IList<Segment> segments, bool tajweed = true)
+        public void Apply(IList<Segment> segments, ReadingOptions? reading = null)
         {
+            reading ??= ReadingOptions.FullTajweed;
+
             for (int i = 0; i < segments.Count; i++)
             {
                 var segment = segments[i];
                 if (!IsSakin(segment))
                     continue;
 
-                if (!tajweed)
+                if (!reading.Tajweed)
                     ApplyPlain(segments, i);
                 else if (segment.Letter == ArabicScript.NunStr)
-                    ApplyNunSakina(segments, i);
+                    ApplyNunSakina(segments, i, reading);
                 else if (segment.Letter == ArabicScript.MeemStr)
                     ApplyMeemSakina(segments, i);
             }
@@ -70,7 +78,7 @@ namespace Transliterator.Core.Services.Rules
         // ------------------------------------------------------------------
         // Нун сакина и танвин
         // ------------------------------------------------------------------
-        private static void ApplyNunSakina(IList<Segment> segments, int index)
+        private static void ApplyNunSakina(IList<Segment> segments, int index, ReadingOptions reading)
         {
             // Идгам, икляб и ихфа работают в том числе на стыке слов, поэтому
             // сосед ищется за границей слова, но не за паузой: после остановки
@@ -92,7 +100,10 @@ namespace Transliterator.Core.Services.Rules
 
             if (next == ArabicScript.Ba)
             {
-                Iqlab(nun);
+                if (reading.Reads(TajweedRuleIds.Iqlab))
+                    Iqlab(nun);
+                else
+                    ApplyPlain(segments, index);
                 return;
             }
 
@@ -109,18 +120,30 @@ namespace Transliterator.Core.Services.Rules
                     return;
                 }
 
+                bool withGhunna = ArabicScript.IdghamWithGhunna.Contains(next);
+
+                // Выключенный идгам с гунной (I4): нун читается как написан, а с таким
+                // же нуном сливается и без таджвида — как в обычном чтении.
+                if (withGhunna && !reading.Reads(TajweedRuleIds.IdghamBiGhunna))
+                {
+                    ApplyPlain(segments, index);
+                    return;
+                }
+
                 // Идгам: нун не исчезает, а становится следующей буквой — ровно как
                 // лям артикля перед солнечной. Механизм слияния общий для всех стадий,
                 // здесь решается только одно: остаётся ли на шве назализация.
-                Idgham.Merge(segments, index, nextIndex,
-                             ghunna: ArabicScript.IdghamWithGhunna.Contains(next));
+                Idgham.Merge(segments, index, nextIndex, ghunna: withGhunna);
                 return;
             }
 
             // Ихфа: нун не звучит целиком и не исчезает — остаётся назализация,
             // окрашенная следующей буквой. Букву при этом не меняем: прячется звук,
-            // а не написание.
-            nun.Ghunna = true;
+            // а не написание. Выключенная ихфа (I4) — чистый нун, как в обычном чтении.
+            if (reading.Reads(TajweedRuleIds.Ikhfa))
+                nun.Ghunna = true;
+            else
+                ApplyPlain(segments, index);
         }
 
         /// <summary>

@@ -122,7 +122,8 @@
       "Examples": [
         { "Arabic": "مَن يَقُولُ", "Transliteration": "май-йаqууль" }
       ],
-      "Tier": "Tajweed"
+      "Tier": "Tajweed",
+      "Switchable": true
     },
     {
       "Id": "idgham-bila-ghunna",
@@ -146,7 +147,8 @@
       "Examples": [
         { "Arabic": "مِنۢ بَعْدِ", "Transliteration": "мим ба'д" }
       ],
-      "Tier": "Tajweed"
+      "Tier": "Tajweed",
+      "Switchable": true
     },
     {
       "Id": "ikhfa",
@@ -158,7 +160,8 @@
       "Examples": [
         { "Arabic": "مِن شَرِّ", "Transliteration": "мин щарр" }
       ],
-      "Tier": "Tajweed"
+      "Tier": "Tajweed",
+      "Switchable": true
     },
     {
       "Id": "idgham-mithlayn",
@@ -314,7 +317,8 @@
         { "Arabic": "إِنَّهُۥ كَانَ", "Transliteration": "иннаhуу каан" },
         { "Arabic": "مَالَهُۥٓ أَخْلَدَ", "Transliteration": "мааляhууу ахъляд" }
       ],
-      "Tier": "Tajweed"
+      "Tier": "Tajweed",
+      "Switchable": true
     },
     {
       "Id": "madd-badal",
@@ -350,7 +354,8 @@
       "Examples": [
         { "Arabic": "يَلِدْ وَلَمْ", "Transliteration": "йалид уалям" }
       ],
-      "Tier": "Tajweed"
+      "Tier": "Tajweed",
+      "Switchable": true
     },
     {
       "Id": "qalqalah-kubra",
@@ -362,7 +367,8 @@
       "Examples": [
         { "Arabic": "ٱلْفَلَقِ", "Transliteration": "аль-фаляq" }
       ],
-      "Tier": "Tajweed"
+      "Tier": "Tajweed",
+      "Switchable": true
     }
   ]
 }
