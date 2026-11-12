@@ -24,6 +24,24 @@ namespace Transliterator.Tests.DocsTests
                 Assert.Equal(example.Groups[2].Value, TransliterationPipeline.Transliterate(example.Groups[1].Value)));
         }
 
+        [Fact]
+        public void SecondTier_IsCalledPartialTajweed_AndItsNoteNamesBothChoices()
+        {
+            // Решение владельца к I5: вторая ступень — «Неполный таджвид» и под полем,
+            // и в панели (оба места берут имя из ModeName), а пояснение говорит и про
+            // счёт мадда, и про правила, которые можно не читать (I4).
+            var picker = Regex.Replace(File.ReadAllText(Path.Combine(ReadmeTests.RepositoryRoot(),
+                                                                     "Transliterator.Web", "Components", "ReadingPicker.razor")), @"\s+", " ");
+
+            Assert.Contains("ReadingMode.Variants => \"Неполный таджвид\"", picker);
+            Assert.DoesNotContain("Свои варианты", picker);
+
+            var note = Regex.Match(picker, "string ModeNote.*?ReadingMode.Variants => \"([^\"]+)\"");
+            Assert.True(note.Success, "the second tier has no note in the panel");
+            Assert.Contains("мадд", note.Groups[1].Value);
+            Assert.Contains("можно не читать", note.Groups[1].Value);
+        }
+
         private static readonly Dictionary<string, int> Numbers = new()
         {
             ["два"] = 2, ["две"] = 2, ["три"] = 3, ["четыре"] = 4, ["пять"] = 5, ["шесть"] = 6,

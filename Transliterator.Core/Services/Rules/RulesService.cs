@@ -88,7 +88,7 @@ namespace Transliterator.Core.Services.Rules
 
             // Стадия 10: кальканя. Идёт последней: безгласность, от которой она
             // зависит, — итог всех предыдущих стадий. В обычном чтении отзвука нет,
-            // а в «Своих вариантах» малый и большой отзвук выключаются по одному (I4).
+            // а в «Неполном таджвиде» малый и большой отзвук выключаются по одному (I4).
             if (reading.Tajweed)
                 _qalqalahRule.Apply(segments,
                                     minor: reading.Reads(TajweedRuleIds.QalqalahSughra),
