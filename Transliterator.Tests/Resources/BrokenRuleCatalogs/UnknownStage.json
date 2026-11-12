@@ -1,14 +1,37 @@
 {
-  "Stages": [ { "Number": 3, "Name": "Разметка пауз (вакф)", "Class": "WaqfRule" } ],
+  "Stages": [
+    {
+      "Number": 3,
+      "Name": {
+        "ru": "Разметка пауз (вакф)",
+        "en": "Stage"
+      },
+      "Class": "WaqfRule"
+    }
+  ],
   "Rules": [
     {
       "Id": "madd-lazim",
       "Stage": 9,
-      "Name": "Мадд лязим",
-      "Translation": "удлинение",
+      "Name": {
+        "ru": "Мадд лязим",
+        "en": "Rule"
+      },
+      "Translation": {
+        "ru": "удлинение",
+        "en": "translation"
+      },
       "ArabicName": "المد اللازم",
-      "Description": "Правило ссылается на стадию, которой в каталоге нет.",
-      "Examples": [ { "Arabic": "وَلَا ٱلضَّآلِّينَ", "Transliteration": "уаля-дIдIоооооллиин" } ],
+      "Description": {
+        "ru": "Правило ссылается на стадию, которой в каталоге нет.",
+        "en": "A rule for a broken catalog."
+      },
+      "Examples": [
+        {
+          "Arabic": "وَلَا ٱلضَّآلِّينَ",
+          "Transliteration": "уаля-дIдIоооооллиин"
+        }
+      ],
       "Tier": "Base"
     }
   ]

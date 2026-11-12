@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Variant.heavy" xml:space="preserve">
+    <value>heavy, emphatic</value>
+  </data>
+  <data name="Variant.soft" xml:space="preserve">
+    <value>soft, after a light lam</value>
+  </data>
+  <data name="Variant.sukun" xml:space="preserve">
+    <value>without a vowel, in a closed syllable</value>
+  </data>
+  <data name="Variant.waqf" xml:space="preserve">
+    <value>at a pause</value>
+  </data>
+  <data name="Variant.initial" xml:space="preserve">
+    <value>at the start of a word</value>
+  </data>
+  <data name="Variant.hiatus" xml:space="preserve">
+    <value>hamza between vowels</value>
+  </data>
+  <data name="Variant.final" xml:space="preserve">
+    <value>at the end of a word</value>
+  </data>
+  <data name="Variant.ghunna" xml:space="preserve">
+    <value>nasal, with ghunnah</value>
+  </data>
+  <data name="Variant.qalqalah" xml:space="preserve">
+    <value>with an echo, qalqalah</value>
+  </data>
+  <data name="Variant.qalqalah-strong" xml:space="preserve">
+    <value>with a strong echo at a pause</value>
+  </data>
+  <data name="Profile.NameEmpty" xml:space="preserve">
+    <value>The profile name cannot be empty.</value>
+  </data>
+  <data name="Profile.NameUnchanged" xml:space="preserve">
+    <value>The name has not changed.</value>
+  </data>
+  <data name="Profile.NameTaken" xml:space="preserve">
+    <value>A profile named “{0}” already exists.</value>
+  </data>
+  <data name="Profile.NotFound" xml:space="preserve">
+    <value>Profile “{0}” was not found.</value>
+  </data>
+  <data name="Profile.NotCopied" xml:space="preserve">
+    <value>Profile “{0}” was not copied. {1}</value>
+  </data>
+  <data name="Profile.BuiltInNotEditable" xml:space="preserve">
+    <value>The built-in profile “{0}” cannot be edited: make a copy.</value>
+  </data>
+  <data name="Profile.BuiltInLocked" xml:space="preserve">
+    <value>The built-in profile “{0}” cannot be changed or deleted.</value>
+  </data>
+  <data name="Profile.CopySuffix" xml:space="preserve">
+    <value>copy</value>
+  </data>
+  <data name="Profile.NotSavedFull" xml:space="preserve">
+    <value>Profile “{0}” was not saved: browser storage is full. The previously saved version is kept; delete a profile you no longer need.</value>
+  </data>
+  <data name="Profile.NotSavedUnavailable" xml:space="preserve">
+    <value>Profile “{0}” was not saved: browser storage is unavailable.</value>
+  </data>
+  <data name="Profile.NotDeletedUnavailable" xml:space="preserve">
+    <value>Profile “{0}” was not deleted: browser storage is unavailable.</value>
+  </data>
+</root>

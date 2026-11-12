@@ -1,3 +1,4 @@
+using Transliterator.Core.Localization;
 using Transliterator.Core.Repositories;
 using Transliterator.Domain.Entities;
 using Transliterator.Domain.Exceptions;
@@ -11,7 +12,7 @@ namespace Transliterator.Core.Services
     /// </summary>
     /// <remarks>
     /// Сообщения о неподходящем имени написаны для пользователя, а не для журнала:
-    /// редактор показывает их прямо под полем имени.
+    /// редактор показывает их прямо под полем имени — на языке интерфейса (D7, <see cref="CoreText"/>).
     /// </remarks>
     public class ProfileEditor
     {
@@ -19,7 +20,7 @@ namespace Transliterator.Core.Services
 
         public ProfileEditor(UserProfileRepository profiles) => _profiles = profiles;
 
-        /// <summary>Свободное имя для копии: «Standard (копия)», «Standard (копия 2)».</summary>
+        /// <summary>Свободное имя для копии: «Standard (копия)», «Standard (копия 2)»; в английском интерфейсе — «Standard (copy)».</summary>
         public Task<string> SuggestCopyNameAsync(string sourceName) => _profiles.FreeCopyNameAsync(sourceName);
 
         /// <summary>
@@ -33,15 +34,15 @@ namespace Transliterator.Core.Services
             var trimmed = name?.Trim();
 
             if (string.IsNullOrEmpty(trimmed))
-                return "Имя профиля не может быть пустым.";
+                return CoreText.Get("Profile.NameEmpty");
 
             if (renaming is not null && trimmed == renaming)
-                return "Имя не изменилось.";
+                return CoreText.Get("Profile.NameUnchanged");
 
             var taken = (await _profiles.GetAllProfilesAsync())
                 .FirstOrDefault(p => p.Name != renaming && string.Equals(p.Name, trimmed, StringComparison.OrdinalIgnoreCase));
 
-            return taken is null ? null : $"Профиль «{taken.Name}» уже есть.";
+            return taken is null ? null : CoreText.Format("Profile.NameTaken", taken.Name);
         }
 
         /// <summary>
@@ -56,11 +57,11 @@ namespace Transliterator.Core.Services
         {
             var name = await RequireNameAsync(newName);
             var source = await _profiles.GetProfileAsync(sourceName)
-                ?? throw new TransliterationException($"Профиль «{sourceName}» не найден.");
+                ?? throw new TransliterationException(CoreText.Format("Profile.NotFound", sourceName));
 
             if (RequiredProfileKeys.Missing(source.Rules) is { Count: > 0 } missing)
                 throw new TransliterationException(
-                    $"Профиль «{sourceName}» не скопирован. {ProfileJson.MissingKeysProblem(missing)}");
+                    CoreText.Format("Profile.NotCopied", sourceName, ProfileJson.MissingKeysProblem(missing)));
 
             var copy = new TransliterationProfile(name, source.Description)
             {
@@ -107,7 +108,7 @@ namespace Transliterator.Core.Services
 
             if (await _profiles.IsBuiltInAsync(profile.Name))
                 throw new TransliterationException(
-                    $"Встроенный профиль «{profile.Name}» не редактируется: создайте копию.");
+                    CoreText.Format("Profile.BuiltInNotEditable", profile.Name));
 
             profile.Rules[key] = value ?? string.Empty;
             await _profiles.SaveAsync(profile);
@@ -148,10 +149,10 @@ namespace Transliterator.Core.Services
         private async Task<TransliterationProfile> RequireUserProfileAsync(string name)
         {
             if (await _profiles.IsBuiltInAsync(name))
-                throw new TransliterationException($"Встроенный профиль «{name}» нельзя изменить или удалить.");
+                throw new TransliterationException(CoreText.Format("Profile.BuiltInLocked", name));
 
             return await _profiles.GetProfileAsync(name)
-                ?? throw new TransliterationException($"Профиль «{name}» не найден.");
+                ?? throw new TransliterationException(CoreText.Format("Profile.NotFound", name));
         }
     }
 }

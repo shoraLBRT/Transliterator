@@ -4,6 +4,7 @@ using Transliterator.Core.Services;
 using Transliterator.Core.Services.Rules;
 using Transliterator.Domain.Entities;
 using Transliterator.Domain.Exceptions;
+using Transliterator.Domain.Localization;
 using Xunit;
 
 namespace Transliterator.Tests.RulesTests
@@ -65,19 +66,63 @@ namespace Transliterator.Tests.RulesTests
             Assert.All(Catalog.Rules, rule => Assert.Matches(arabic, rule.ArabicName));
         }
 
+        /// <summary>
+        /// Перевод названия на каждом языке страницы — буквами этого языка, со строчной
+        /// буквы. Третий язык страницы без строки здесь роняет тест, а не проходит молча.
+        /// </summary>
+        private static readonly Dictionary<string, Regex> LowercaseWords = new()
+        {
+            ["ru"] = new Regex(@"^[а-яё][а-яё «»-]*$"),
+            ["en"] = new Regex(@"^[a-z][a-z ""'-]*$"),
+        };
+
         [Fact]
-        public void EveryRule_HasATranslation_InRussian_ThatIsNotItsName()
+        public void EveryRule_HasATranslation_InEveryPageLanguage_ThatIsNotItsName()
         {
             // Перевод названия (I7) — то, что поймёт человек без арабского: короткий,
-            // по-русски, со строчной буквы (на странице он стоит в скобках после
-            // названия) и не повтор самого названия.
-            var russian = new Regex(@"^[а-яё][а-яё «»-]*$");
+            // на языке страницы, со строчной буквы (на странице он стоит в скобках после
+            // названия) и не повтор самого названия (D7: на каждом языке).
+            Assert.Equal(PageLanguages.All.Select(l => l.Code).Order(), LowercaseWords.Keys.Order());
 
             Assert.All(Catalog.Rules, rule =>
             {
-                Assert.Matches(russian, rule.Translation);
-                Assert.NotEqual(rule.Name, rule.Translation, StringComparer.OrdinalIgnoreCase);
-                Assert.True(rule.Translation.Length <= 40, $"translation of '{rule.Id}' is not short: {rule.Translation}");
+                foreach (var language in PageLanguages.All)
+                {
+                    var translation = rule.Translation.For(language.Code);
+
+                    Assert.Matches(LowercaseWords[language.Code], translation);
+                    Assert.NotEqual(rule.Name.For(language.Code), translation, StringComparer.OrdinalIgnoreCase);
+                    Assert.True(translation.Length <= 40, $"translation of '{rule.Id}' is not short: {translation}");
+                }
+            });
+        }
+
+        [Fact]
+        public void EveryText_OfTheCatalog_ExistsInEveryPageLanguage()
+        {
+            // Загрузчик и сам отказывается от каталога без перевода; тест говорит,
+            // чего именно не хватает, а не только что каталог не загрузился.
+            var texts = Catalog.Stages.Select(stage => ($"stage {stage.Number} name", stage.Name))
+                .Concat(Catalog.Rules.SelectMany(rule => new[]
+                {
+                    ($"{rule.Id} name", rule.Name),
+                    ($"{rule.Id} translation", rule.Translation),
+                    ($"{rule.Id} description", rule.Description),
+                }));
+
+            Assert.All(texts, text => Assert.Empty(text.Item2.MissingLanguages()));
+        }
+
+        [Fact]
+        public void EnglishTexts_AreNotRussian()
+        {
+            // Английский текст, скопированный из русского, тоже «есть» — но не перевод.
+            var cyrillic = new Regex("[а-яА-ЯёЁ]");
+
+            Assert.All(Catalog.Rules, rule =>
+            {
+                Assert.DoesNotMatch(cyrillic, rule.Name.For("en"));
+                Assert.DoesNotMatch(cyrillic, rule.Description.For("en"));
             });
         }
 
@@ -90,8 +135,8 @@ namespace Transliterator.Tests.RulesTests
             var picker = File.ReadAllText(Path.Combine(DocsTests.ReadmeTests.RepositoryRoot(),
                                                        "Transliterator.Web", "Components", "ReadingPicker.razor"));
 
-            var names = Regex.Matches(picker, @"class=""reading-rule-name"">@rule\.Name</span>").Count;
-            var translations = Regex.Matches(picker, @"@rule\.Name</span>\s*<span class=""reading-rule-translation"">\(@rule\.Translation\)</span>").Count;
+            var names = Regex.Matches(picker, @"class=""reading-rule-name"">@rule\.Name\.Current</span>").Count;
+            var translations = Regex.Matches(picker, @"@rule\.Name\.Current</span>\s*<span class=""reading-rule-translation"">\(@rule\.Translation\.Current\)</span>").Count;
 
             Assert.Equal(3, names);
             Assert.Equal(names, translations);
@@ -164,7 +209,7 @@ namespace Transliterator.Tests.RulesTests
             var rule = Catalog.Rules.Single(r => r.Id == id);
             var example = rule.Examples.First();
 
-            Assert.False(string.IsNullOrWhiteSpace(rule.Description));
+            Assert.False(rule.Description.MissingLanguages().Count > 0);
 
             var variants = ReadingChoice.Default.WithMode(ReadingMode.Variants);
             var outputs = rule.Counts.Select(count => Transliterate(example.Arabic, variants.WithCount(id, count))).ToList();
@@ -197,7 +242,8 @@ namespace Transliterator.Tests.RulesTests
         [Theory]
         [InlineData("UnknownStage", "unknown stage")]
         [InlineData("BadDefaultCount", "default count outside its counts")]
-        [InlineData("NoTranslation", "no translation of its name")]
+        [InlineData("NoTranslation", "no translation of its name in ru, en")]
+        [InlineData("NoEnglishTranslation", "no translation of its name in en")]
         [InlineData("SwitchableBaseRule", "switchable but not in the tajweed tier")]
         public void BrokenCatalog_FailsToLoad(string name, string message)
         {

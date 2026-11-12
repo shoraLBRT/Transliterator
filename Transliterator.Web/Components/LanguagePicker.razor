@@ -1,0 +1,30 @@
+@* Переключатель языка интерфейса (D7). Язык сам выбирается по браузеру, а здесь
+   его видно и можно сменить; выбор запоминается в браузере. Каждый язык подписан
+   на самом себе («Русский», «English») и коротко — кодом: так его узнаёт тот,
+   кто текущего языка не читает. Языки берутся из PageLanguages — третий появится
+   здесь сам. *@
+
+<div class="language-switch" role="group" aria-label="@L["Language.Label"]">
+    @foreach (var language in PageLanguages.All)
+    {
+        var current = language == PageLanguages.Current;
+
+        <button type="button" class="language-option" lang="@language.Code" title="@language.NativeName"
+                aria-pressed="@(current ? "true" : "false")"
+                @onclick="() => ChooseAsync(language)">@language.Code.ToUpperInvariant()</button>
+    }
+</div>
+
+@code {
+    /// <summary>Выбран другой язык. Страница запоминает выбор и загружается заново.</summary>
+    [Parameter]
+    public EventCallback<PageLanguage> Chosen { get; set; }
+
+    private async Task ChooseAsync(PageLanguage language)
+    {
+        if (language == PageLanguages.Current)
+            return;
+
+        await Chosen.InvokeAsync(language);
+    }
+}

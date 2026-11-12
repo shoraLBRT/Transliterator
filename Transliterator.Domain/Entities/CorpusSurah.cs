@@ -1,3 +1,5 @@
+using Transliterator.Domain.Localization;
+
 namespace Transliterator.Domain.Entities
 {
     /// <summary>
@@ -21,7 +23,11 @@ namespace Transliterator.Domain.Entities
 
         public string ArabicName { get; set; } = string.Empty;
 
-        public string RussianName { get; set; } = string.Empty;
+        /// <summary>
+        /// Имя суры на каждом языке страницы (D7): «Аль-Фатиха», «Al-Fatiha».
+        /// Сура без имени на каком-нибудь из них не читается.
+        /// </summary>
+        public LocalizedText Name { get; set; } = new();
 
         /// <summary>
         /// Редакция арабского текста. От неё зависит половина ожидаемых значений:

@@ -9,8 +9,11 @@
 @implements IDisposable
 
 <div class="shell @(HasText ? "is-active" : null) @(Panels.Current is not null ? "has-panel" : null)">
+    @* Язык интерфейса (D7): в углу страницы, видно сразу, ещё до поля. *@
+    <LanguagePicker Chosen="ChangeLanguageAsync" />
+
     <main class="stage">
-        <h1 class="visually-hidden">Транслитерация Корана кириллицей</h1>
+        <h1 class="visually-hidden">@L["Page.Heading"]</h1>
 
         @* Подсказка печатается скриптом и сменяет себя. Экранному диктору она не
            читается: для него у поля есть постоянная подпись, а текст, меняющийся
@@ -18,7 +21,7 @@
         <p class="hint" aria-hidden="true"><span class="hint-text" @ref="_hint"></span></p>
 
         <div class="composer">
-            <label for="arabic" class="visually-hidden">Арабский текст для транслитерации</label>
+            <label for="arabic" class="visually-hidden">@L["Composer.Label"]</label>
             <textarea id="arabic" class="composer-input" dir="rtl" lang="ar" rows="1"
                       spellcheck="false" autocomplete="off" placeholder="@_placeholder"
                       value="@_arabic" @oninput="OnInput" @ref="_input"></textarea>
@@ -35,7 +38,7 @@
 
                 @if (HasText)
                 {
-                    <button type="button" class="icon-button" title="Очистить" aria-label="Очистить поле" @onclick="ClearAsync">
+                    <button type="button" class="icon-button" title="@L["Composer.ClearTitle"]" aria-label="@L["Composer.ClearLabel"]" @onclick="ClearAsync">
                         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" /></svg>
                     </button>
                 }
@@ -49,7 +52,7 @@
            выбрано сейчас («Полный таджвид», «Профиль: Standard»). *@
         @if (_catalog is not null || _profile is not null)
         {
-            <aside class="side-rail" aria-label="Как читать и писать">
+            <aside class="side-rail" aria-label="@L["Rail.Label"]">
                 @if (_catalog is not null)
                 {
                     <ReadingPicker Catalog="_catalog" Choice="_reading" ChoiceChanged="ChangeReadingAsync"
@@ -58,8 +61,8 @@
 
                 @if (_profile is not null)
                 {
-                    <ProfilePicker Profile="_profile" DefaultProfile="@ProfileName" Preview="@_result"
-                                   ProfileChanged="ChangeProfileAsync" />
+                    <ProfilePicker Profile="_profile" DefaultProfile="@DefaultProfile" Preview="@_result"
+                                   ProfileChanged="ChangeProfileAsync" ProfileDeleted="ResetProfileAsync" />
                 }
             </aside>
         }
@@ -71,23 +74,23 @@
         else if (_result.Length > 0)
         {
             <section class="result" aria-labelledby="result-title">
-                <h2 id="result-title" class="visually-hidden">Транслитерация</h2>
+                <h2 id="result-title" class="visually-hidden">@L["Result.Title"]</h2>
                 <p class="result-text">@_result</p>
 
                 <button type="button" class="copy-button" @onclick="CopyAsync">
                     @if (_copyState == CopyState.Copied)
                     {
                         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>
-                        <span>Скопировано</span>
+                        <span>@L["Copy.Done"]</span>
                     }
                     else if (_copyState == CopyState.Failed)
                     {
-                        <span>Выделите текст вручную</span>
+                        <span>@L["Copy.Failed"]</span>
                     }
                     else
                     {
                         <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2" /><path d="M5 15V6a2 2 0 0 1 2-2h9" /></svg>
-                        <span>Копировать</span>
+                        <span>@L["Copy.Action"]</span>
                     }
                 </button>
             </section>
@@ -95,7 +98,7 @@
     </main>
 
     <footer class="footer">
-        <span>Кириллица по правилам таджвида</span>
+        <span>@L["Footer.Tagline"]</span>
         <span aria-hidden="true">·</span>
         <a href="@FeedbackLink.RepositoryUrl" target="_blank" rel="noopener">GitHub</a>
         <FeedbackButton Arabic="@_arabic" Transliteration="@_result" />
@@ -104,9 +107,11 @@
 
 @code {
     /// <summary>
-    /// Профиль, которым страница пишет, пока человек не выбрал другой (E4).
+    /// Профиль, которым страница пишет, пока человек не выбрал другой (E4): у каждого
+    /// языка свой — с английским интерфейсом латиница (D7). Сохранённый выбор важнее:
+    /// кто выбрал Standard и переключил язык, тот остаётся на Standard.
     /// </summary>
-    private const string ProfileName = "Standard";
+    private static string DefaultProfile => PageLanguages.Current.DefaultProfile;
 
     /// <summary>Ключ хранилища браузера с именем выбранного профиля (E4).</summary>
     private const string ProfileKey = "transliterator.profile";
@@ -115,21 +120,20 @@
     private const string FallbackPlaceholder = "بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ";
 
     /// <summary>
+    /// Фразы подсказки — ресурсы <c>Hint.1</c>, <c>Hint.2</c>… по порядку (D7).
     /// Короткие, чтобы на телефоне помещаться в две строки и успевать прочитаться
     /// за паузу: подсказка — не инструкция, а первое знакомство со страницей.
     /// Пример с арабским текстом — обещание: вставив его, человек получит ровно
-    /// показанное, и это проверяет <c>PageHintTests</c>.
+    /// показанное профилем языка по умолчанию, и это проверяет <c>PageHintTests</c>.
     /// </summary>
-    private static readonly string[] Hints =
-    {
-        "Транслит арабского текста на кириллицу",
-        "بِسْمِ ٱللَّه — бисми-лляяh",
-        "Транслит с правилами таджвида",
-        "الْحَمْدُ لِلَّه — аль-хIамду лилляяh",
-        "Арабский текст — русскими буквами",
-        "مَالِكِ يَوْمِ الدِّين — маалики йауми-ддиин",
-        "Суры для примера — под полем ввода"
-    };
+    private string[] Hints() =>
+        L.GetAllStrings(includeParentCultures: true)
+         .Where(s => s.Name.StartsWith(HintPrefix, StringComparison.Ordinal))
+         .OrderBy(s => int.Parse(s.Name[HintPrefix.Length..], System.Globalization.CultureInfo.InvariantCulture))
+         .Select(s => s.Value)
+         .ToArray();
+
+    private const string HintPrefix = "Hint.";
 
     private enum CopyState { Idle, Copied, Failed }
 
@@ -168,9 +172,9 @@
         _surahs = await LoadSurahsAsync();
         _placeholder = _surahs.FirstOrDefault(s => s.Number == 1)?.Ayahs.FirstOrDefault()?.Arabic ?? FallbackPlaceholder;
 
-        _profile = await Profiles.GetProfileAsync(ProfileName);
+        _profile = await Profiles.GetProfileAsync(DefaultProfile);
         if (_profile is null)
-            _error = $"Профиль {ProfileName} не загрузился. Перезагрузите страницу.";
+            _error = L["Error.ProfileNotLoaded", DefaultProfile];
 
         _catalog = LoadCatalog();
     }
@@ -200,7 +204,10 @@
         {
             if (firstRender)
             {
-                await JS.InvokeVoidAsync("page.typewriter", _hint, Hints, _input);
+                await JS.InvokeVoidAsync("page.setDocument", PageLanguages.Current.Code,
+                                         L["Page.Title"].Value, L["Page.Description"].Value);
+                await RestoreDraftAsync();
+                await JS.InvokeVoidAsync("page.typewriter", _hint, Hints(), _input);
                 await JS.InvokeVoidAsync("page.autosize", _input);
                 await RestoreReadingAsync();
                 await RestoreProfileAsync();
@@ -258,6 +265,34 @@
     }
 
     /// <summary>
+    /// Текст поля, отложенный сменой языка (D7): страница перезагрузилась, а текст
+    /// и его транслитерация на месте.
+    /// </summary>
+    private async Task RestoreDraftAsync()
+    {
+        if (await PageCulture.TakeDraftAsync(JS) is not { Length: > 0 } draft)
+            return;
+
+        _arabic = draft;
+        _resizePending = true;
+        Calculate();
+        StateHasChanged();
+    }
+
+    /// <summary>Выбор языка запоминается, и страница загружается заново на нём.</summary>
+    private async Task ChangeLanguageAsync(PageLanguage language)
+    {
+        try
+        {
+            await PageCulture.SwitchAsync(JS, language, _arabic);
+        }
+        catch (JSException ex)
+        {
+            Logger.LogWarning(ex, "Language could not be switched");
+        }
+    }
+
+    /// <summary>
     /// Выбранный профиль помнится по имени. Нет такого больше — удалён в другой
     /// вкладке, хранилище очищено — страница остаётся на профиле по умолчанию.
     /// </summary>
@@ -279,6 +314,29 @@
         catch (Exception ex)
         {
             Logger.LogWarning(ex, "Stored profile could not be read");
+        }
+    }
+
+    /// <summary>
+    /// Свой профиль удалён — страница возвращается к профилю языка по умолчанию,
+    /// и выбор забывается: это не выбор человека, и при смене языка профиль
+    /// по умолчанию снова сменится вместе с ним.
+    /// </summary>
+    private async Task ResetProfileAsync()
+    {
+        if (await Profiles.GetProfileAsync(DefaultProfile) is not { } profile)
+            return;
+
+        _profile = profile;
+        Calculate();
+
+        try
+        {
+            await JS.InvokeVoidAsync("page.save", ProfileKey, string.Empty);
+        }
+        catch (JSException ex)
+        {
+            Logger.LogWarning(ex, "Profile choice could not be reset");
         }
     }
 

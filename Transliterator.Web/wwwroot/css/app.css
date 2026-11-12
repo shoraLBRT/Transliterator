@@ -69,6 +69,7 @@ button {
 /* Пустая страница держит поле ближе к центру, как стартовый экран чата.
    Появился текст — поле поднимается, освобождая место результату. */
 .shell {
+    position: relative;
     display: flex;
     flex-direction: column;
     min-height: 100vh;
@@ -79,6 +80,52 @@ button {
 
 .shell.is-active {
     padding-top: 7vh;
+}
+
+/* ---- Язык интерфейса (D7) ----
+   В правом верхнем углу: видно сразу, ничего не закрывает — ни поле, ни колонку
+   панели слева, ни кнопку обратной связи внизу справа. */
+
+.language-switch {
+    position: absolute;
+    top: 0.9rem;
+    right: 1.25rem;
+    z-index: 5;
+    display: inline-flex;
+    padding: 0.15rem;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: var(--paper);
+}
+
+.language-option {
+    min-width: 2.5rem;
+    min-height: 2rem;
+    padding: 0.2rem 0.6rem;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--ink-muted);
+    font: inherit;
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+}
+
+.language-option:hover {
+    color: var(--foam-700);
+}
+
+.language-option[aria-pressed="true"] {
+    background: var(--foam-100);
+    color: var(--foam-700);
+    cursor: default;
+}
+
+.language-option:focus-visible {
+    outline: 2px solid var(--foam-700);
+    outline-offset: 1px;
 }
 
 .stage {

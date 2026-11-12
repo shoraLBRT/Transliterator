@@ -8,23 +8,26 @@
     <meta name="theme-color" content="#fbf7ef" />
     <title>Транслитерация Корана</title>
     <base href="/" />
-    <link rel="stylesheet" href="css/app.css" />
+    <!-- ?v= — первые 8 знаков SHA-256 файла (переводы строк как LF). Браузер не берёт
+         из кеша прежний page.js или app.css к новой сборке: файл изменился — изменился
+         и адрес. Сверяет PageAssetVersionTests и подсказывает новое значение. -->
+    <link rel="stylesheet" href="css/app.css?v=bbfc0b98" />
 </head>
 
 <body>
     <div id="app">
         <div class="boot" role="status">
             <span class="boot-dot" aria-hidden="true"></span>
-            <span>Загрузка…</span>
+            <span data-shell="loading">Загрузка…</span>
         </div>
     </div>
 
     <div id="blazor-error-ui">
-        Произошла непредвиденная ошибка.
-        <a href="" class="reload">Перезагрузить</a>
+        <span data-shell="error">Произошла непредвиденная ошибка.</span>
+        <a href="" class="reload" data-shell="reload">Перезагрузить</a>
     </div>
 
-    <script src="js/page.js"></script>
+    <script src="js/page.js?v=35292ec5"></script>
     <script src="_framework/blazor.webassembly.js"></script>
 </body>
 

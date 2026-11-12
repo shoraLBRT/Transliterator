@@ -8,11 +8,20 @@
     <!-- Как и в ядре: обращение к API, которого нет в браузере (файловые хранилища
          профилей и корпуса), ломает сборку, а не падает на старте страницы. -->
     <WarningsAsErrors>$(WarningsAsErrors);CA1416</WarningsAsErrors>
+
+    <!-- Интерфейс на нескольких языках (D7). Строки — ресурсы .resx: русский —
+         нейтральный язык сборки, остальные — спутниковые сборки (en/…resources.dll),
+         которые Blazor грузит под культуру, поставленную до старта.
+         Данные культур — все, а не кусок под язык браузера: язык страницы выбирается
+         после загрузки, и у браузера на английском не нашлось бы русской культуры. -->
+    <NeutralLanguage>ru</NeutralLanguage>
+    <BlazorWebAssemblyLoadAllGlobalizationData>true</BlazorWebAssemblyLoadAllGlobalizationData>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="8.0.31" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="8.0.31" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.Extensions.Localization" Version="8.0.31" />
   </ItemGroup>
 
   <ItemGroup>

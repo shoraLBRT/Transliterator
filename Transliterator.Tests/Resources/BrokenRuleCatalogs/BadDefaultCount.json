@@ -1,16 +1,43 @@
 {
-  "Stages": [ { "Number": 3, "Name": "Разметка пауз (вакф)", "Class": "WaqfRule" } ],
+  "Stages": [
+    {
+      "Number": 3,
+      "Name": {
+        "ru": "Разметка пауз (вакф)",
+        "en": "Stage"
+      },
+      "Class": "WaqfRule"
+    }
+  ],
   "Rules": [
     {
       "Id": "waqf",
       "Stage": 3,
-      "Name": "Вакф",
-      "Translation": "остановка",
+      "Name": {
+        "ru": "Вакф",
+        "en": "Rule"
+      },
+      "Translation": {
+        "ru": "остановка",
+        "en": "translation"
+      },
       "ArabicName": "الوقف",
-      "Description": "Счёт по умолчанию вне допустимых.",
-      "Examples": [ { "Arabic": "أَحَدٌ", "Transliteration": "ахIад" } ],
+      "Description": {
+        "ru": "Счёт по умолчанию вне допустимых.",
+        "en": "A rule for a broken catalog."
+      },
+      "Examples": [
+        {
+          "Arabic": "أَحَدٌ",
+          "Transliteration": "ахIад"
+        }
+      ],
       "Tier": "Base",
-      "Counts": [ 2, 4, 6 ],
+      "Counts": [
+        2,
+        4,
+        6
+      ],
       "DefaultCount": 5
     }
   ]

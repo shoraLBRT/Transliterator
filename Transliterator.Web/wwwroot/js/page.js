@@ -1,5 +1,43 @@
 // Мелочи страницы, которых нет в Blazor: печать подсказки, высота поля по тексту
 // и буфер обмена. Всё здесь — удобство: без этого файла страница остаётся рабочей.
+
+// Оболочка страницы до запуска приложения (D7): «Загрузка…» и полоса ошибки
+// показываются раньше, чем загрузятся ресурсы с переводами, поэтому их тексты
+// здесь. Язык выбирается так же, как в приложении (PageLanguages.Resolve):
+// сохранённый выбор, иначе первый подходящий язык браузера, иначе русский.
+// Языки здесь те же, что у страницы, — это проверяет тест PageLocalizationTests.
+(() => {
+    const Shell = {
+        ru: { loading: "Загрузка…", error: "Произошла непредвиденная ошибка.", reload: "Перезагрузить" },
+        en: { loading: "Loading…", error: "An unexpected error has occurred.", reload: "Reload" },
+    };
+
+    let stored = null;
+    try {
+        stored = window.localStorage.getItem("transliterator.language");
+    } catch {
+        // Хранилище недоступно — язык по браузеру.
+    }
+
+    const browser = (navigator.languages && navigator.languages.length > 0 ? navigator.languages : [navigator.language])
+        .filter(Boolean)
+        .map(tag => tag.split(/[-_]/)[0].toLowerCase());
+    const language = [stored, ...browser].find(code => code && Shell[code]) || "ru";
+    const texts = Shell[language];
+
+    document.documentElement.lang = language;
+
+    const apply = () => {
+        for (const element of document.querySelectorAll("[data-shell]"))
+            element.textContent = texts[element.dataset.shell];
+    };
+
+    if (document.readyState === "loading")
+        document.addEventListener("DOMContentLoaded", apply);
+    else
+        apply();
+})();
+
 window.page = (() => {
     const TypeDelay = 58;   // около 17 букв в секунду: быстрее читается как мельтешение
     const EraseDelay = 28;
@@ -152,12 +190,12 @@ window.page = (() => {
         return turnstileLoading;
     }
 
-    /** Ставит виджет в элемент и возвращает его номер. */
-    async function guard(element, siteKey) {
+    /** Ставит виджет в элемент и возвращает его номер. Язык виджета — язык страницы (D7). */
+    async function guard(element, siteKey, language) {
         const turnstile = await loadTurnstile();
         return turnstile.render(element, {
             sitekey: siteKey,
-            language: "ru",
+            language: language || "ru",
             theme: "light",
             appearance: "interaction-only",
         });
@@ -245,8 +283,53 @@ window.page = (() => {
         }
     }
 
+    /** Языки браузера по предпочтению — из них страница выбирает свой (D7). */
+    function browserLanguages() {
+        const languages = navigator.languages && navigator.languages.length > 0
+            ? navigator.languages
+            : [navigator.language];
+        return Array.from(languages).filter(Boolean);
+    }
+
+    /**
+     * Хранилище вкладки — для текста поля, который должен пережить перезагрузку
+     * при смене языка (D7). Недоступно — текст просто не переживает.
+     */
+    function sessionSave(key, value) {
+        try {
+            window.sessionStorage.setItem(key, value);
+        } catch {
+            // Перезагрузка начнёт с пустого поля.
+        }
+    }
+
+    function sessionTake(key) {
+        try {
+            const value = window.sessionStorage.getItem(key);
+            window.sessionStorage.removeItem(key);
+            return value;
+        } catch {
+            return null;
+        }
+    }
+
+    function reload() {
+        window.location.reload();
+    }
+
+    /**
+     * Язык документа, заголовок вкладки и описание для поисковиков — на языке
+     * интерфейса (D7). Строки приходят из ресурсов приложения.
+     */
+    function setDocument(language, title, description) {
+        document.documentElement.lang = language;
+        document.title = title;
+        document.querySelector('meta[name="description"]')?.setAttribute("content", description);
+    }
+
     return {
         typewriter, autosize, resize, copy, guard, guardToken, guardReset, guardRemove,
         load, save, storageSet, storageRemove, storageKeys,
+        browserLanguages, sessionSave, sessionTake, reload, setDocument,
     };
 })();

@@ -1,0 +1,323 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Page.Title" xml:space="preserve">
+    <value>Транслитерация Корана</value>
+    <comment>Browser tab title</comment>
+  </data>
+  <data name="Page.Description" xml:space="preserve">
+    <value>Транслитерация Корана кириллицей по правилам таджвида — прямо в браузере.</value>
+    <comment>meta description</comment>
+  </data>
+  <data name="Page.Heading" xml:space="preserve">
+    <value>Транслитерация Корана кириллицей</value>
+    <comment>Heading of the page, read by screen readers</comment>
+  </data>
+  <data name="Hint.1" xml:space="preserve">
+    <value>Транслит арабского текста на кириллицу</value>
+  </data>
+  <data name="Hint.2" xml:space="preserve">
+    <value>بِسْمِ ٱللَّه — бисми-лляяh</value>
+  </data>
+  <data name="Hint.3" xml:space="preserve">
+    <value>Транслит с правилами таджвида</value>
+  </data>
+  <data name="Hint.4" xml:space="preserve">
+    <value>الْحَمْدُ لِلَّه — аль-хIамду лилляяh</value>
+  </data>
+  <data name="Hint.5" xml:space="preserve">
+    <value>Арабский текст — русскими буквами</value>
+  </data>
+  <data name="Hint.6" xml:space="preserve">
+    <value>مَالِكِ يَوْمِ الدِّين — маалики йауми-ддиин</value>
+  </data>
+  <data name="Hint.7" xml:space="preserve">
+    <value>Суры для примера — под полем ввода</value>
+  </data>
+  <data name="Composer.Label" xml:space="preserve">
+    <value>Арабский текст для транслитерации</value>
+  </data>
+  <data name="Composer.ClearTitle" xml:space="preserve">
+    <value>Очистить</value>
+  </data>
+  <data name="Composer.ClearLabel" xml:space="preserve">
+    <value>Очистить поле</value>
+  </data>
+  <data name="Rail.Label" xml:space="preserve">
+    <value>Как читать и писать</value>
+  </data>
+  <data name="Result.Title" xml:space="preserve">
+    <value>Транслитерация</value>
+  </data>
+  <data name="Copy.Action" xml:space="preserve">
+    <value>Копировать</value>
+  </data>
+  <data name="Copy.Done" xml:space="preserve">
+    <value>Скопировано</value>
+  </data>
+  <data name="Copy.Failed" xml:space="preserve">
+    <value>Выделите текст вручную</value>
+  </data>
+  <data name="Footer.Tagline" xml:space="preserve">
+    <value>Кириллица по правилам таджвида</value>
+  </data>
+  <data name="Error.ProfileNotLoaded" xml:space="preserve">
+    <value>Профиль {0} не загрузился. Перезагрузите страницу.</value>
+    <comment>{0} — profile name</comment>
+  </data>
+  <data name="Language.Label" xml:space="preserve">
+    <value>Язык интерфейса</value>
+  </data>
+  <data name="Panel.CloseTitle" xml:space="preserve">
+    <value>Закрыть</value>
+  </data>
+  <data name="Panel.CloseLabel" xml:space="preserve">
+    <value>Закрыть панель</value>
+  </data>
+  <data name="Surah.Toggle" xml:space="preserve">
+    <value>Выбрать суру</value>
+  </data>
+  <data name="Surah.Title" xml:space="preserve">
+    <value>Готовые суры</value>
+  </data>
+  <data name="Surah.Caption" xml:space="preserve">
+    <value>Транслитерация этих сур сверена вручную</value>
+  </data>
+  <data name="Reading.Title" xml:space="preserve">
+    <value>Как читать</value>
+  </data>
+  <data name="Reading.ModesLabel" xml:space="preserve">
+    <value>Ступень чтения</value>
+  </data>
+  <data name="Mode.Full" xml:space="preserve">
+    <value>Полный таджвид</value>
+  </data>
+  <data name="Mode.Variants" xml:space="preserve">
+    <value>Неполный таджвид</value>
+  </data>
+  <data name="Mode.Plain" xml:space="preserve">
+    <value>Без таджвида</value>
+  </data>
+  <data name="ModeNote.Full" xml:space="preserve">
+    <value>Как требует таджвид</value>
+  </data>
+  <data name="ModeNote.Variants" xml:space="preserve">
+    <value>Таджвид, но сколько тянуть мадд — на выбор, а правила, которые только помечают звук, можно не читать</value>
+  </data>
+  <data name="ModeNote.Plain" xml:space="preserve">
+    <value>Обычное арабское чтение</value>
+  </data>
+  <data name="Reading.CountsNote" xml:space="preserve">
+    <value>Счёт — сколько тянется долгая гласная: два — обычная долгая, четыре и шесть — вдвое и втрое дольше. На письме долгота — повтор буквы, но букв не столько, сколько харакатов: два счёта — две буквы, четыре — три, пять — четыре, шесть — пять. Запись не считает харакаты буквами: она ставит долготы по порядку, и каждый счёт выглядит по-своему.</value>
+    <comment>Length scale; checked by PageHintTests against the renderer</comment>
+  </data>
+  <data name="Reading.CountLabel" xml:space="preserve">
+    <value>{0}: счёт</value>
+    <comment>{0} — rule name</comment>
+  </data>
+  <data name="Reading.SwitchableTitle" xml:space="preserve">
+    <value>Можно не читать</value>
+  </data>
+  <data name="Reading.SwitchableNote" xml:space="preserve">
+    <value>Эти правила не меняют того, от чего зависят другие. Выключенное читается, как в обычном чтении, остальное — как в полном таджвиде. Гунну ихфы и отзвук кальканя профиль Standard не пишет: их выключение видно в «Правилах этого чтения» и в своём профиле, где у них есть буква.</value>
+  </data>
+  <data name="Reading.SwitchLabel" xml:space="preserve">
+    <value>{0}: читать</value>
+    <comment>{0} — rule name</comment>
+  </data>
+  <data name="Reading.On" xml:space="preserve">
+    <value>читается</value>
+  </data>
+  <data name="Reading.Off" xml:space="preserve">
+    <value>не читается</value>
+  </data>
+  <data name="Reading.RulesSummary" xml:space="preserve">
+    <value>Правила этого чтения</value>
+  </data>
+  <data name="Reading.GroupOff" xml:space="preserve">
+    <value> · сейчас не читаются</value>
+  </data>
+  <data name="Group.Tajweed" xml:space="preserve">
+    <value>Только в таджвиде</value>
+  </data>
+  <data name="Group.Base" xml:space="preserve">
+    <value>В любом чтении</value>
+  </data>
+  <data name="RuleCount.One" xml:space="preserve">
+    <value>{0} правило</value>
+    <comment>1, 21, 31…</comment>
+  </data>
+  <data name="RuleCount.Few" xml:space="preserve">
+    <value>{0} правила</value>
+    <comment>2–4, 22–24… (Russian plural form; English uses the same text as Many)</comment>
+  </data>
+  <data name="RuleCount.Many" xml:space="preserve">
+    <value>{0} правил</value>
+    <comment>0, 5–20, 25…</comment>
+  </data>
+  <data name="Profile.Toggle" xml:space="preserve">
+    <value>Профиль: {0}</value>
+    <comment>Text of the side button (E6); {0} — profile name</comment>
+  </data>
+  <data name="Profile.Title" xml:space="preserve">
+    <value>Профиль записи</value>
+  </data>
+  <data name="Profile.Caption" xml:space="preserve">
+    <value>Профиль решает, какими буквами записать каждый звук</value>
+  </data>
+  <data name="Profile.ListLabel" xml:space="preserve">
+    <value>Профиль</value>
+  </data>
+  <data name="Profile.BuiltIn" xml:space="preserve">
+    <value>Встроенный</value>
+  </data>
+  <data name="Profile.Own" xml:space="preserve">
+    <value>Свой</value>
+  </data>
+  <data name="Profile.NewNameLabel" xml:space="preserve">
+    <value>Новое имя профиля</value>
+  </data>
+  <data name="Profile.Done" xml:space="preserve">
+    <value>Готово</value>
+  </data>
+  <data name="Profile.Cancel" xml:space="preserve">
+    <value>Отмена</value>
+  </data>
+  <data name="Profile.DeleteConfirm" xml:space="preserve">
+    <value>Удалить профиль «{0}»? Вернуть его будет нельзя.</value>
+    <comment>{0} — profile name</comment>
+  </data>
+  <data name="Profile.Delete" xml:space="preserve">
+    <value>Удалить</value>
+  </data>
+  <data name="Profile.Copy" xml:space="preserve">
+    <value>Создать копию</value>
+  </data>
+  <data name="Profile.Rename" xml:space="preserve">
+    <value>Переименовать</value>
+  </data>
+  <data name="Profile.Conflicts" xml:space="preserve">
+    <value>Спорных графем: {0}. Профиль сохранён, но некоторые буквы по выводу не отличить — подробности у букв ниже.</value>
+    <comment>{0} — count</comment>
+  </data>
+  <data name="Profile.PreviewLabel" xml:space="preserve">
+    <value>Вывод</value>
+  </data>
+  <data name="Profile.PreviewEmpty" xml:space="preserve">
+    <value>Введите текст в поле — здесь будет видно, как он пишется</value>
+  </data>
+  <data name="Profile.BuiltInNote" xml:space="preserve">
+    <value>Встроенный профиль не меняется — создайте копию, чтобы переписать графемы.</value>
+  </data>
+  <data name="Profile.SearchLabel" xml:space="preserve">
+    <value>Поиск по букве, записи или варианту</value>
+  </data>
+  <data name="Profile.SearchPlaceholder" xml:space="preserve">
+    <value>Поиск: буква, запись или вариант (х, пауза…)</value>
+  </data>
+  <data name="Profile.NoMatches" xml:space="preserve">
+    <value>Ни одна буква не подходит.</value>
+  </data>
+  <data name="Profile.ListError" xml:space="preserve">
+    <value>Свои профили не прочитались: хранилище браузера недоступно.</value>
+  </data>
+  <data name="Profile.NotRead" xml:space="preserve">
+    <value>Профиль «{0}» не прочитался.</value>
+    <comment>{0} — profile name</comment>
+  </data>
+  <data name="Profile.Failed" xml:space="preserve">
+    <value>Не получилось: хранилище браузера недоступно.</value>
+  </data>
+  <data name="Profile.ValueMissing" xml:space="preserve">
+    <value>не задана</value>
+  </data>
+  <data name="Profile.ValueEmpty" xml:space="preserve">
+    <value>не пишется</value>
+  </data>
+  <data name="Profile.ValueLabel" xml:space="preserve">
+    <value>Графема для {0}</value>
+    <comment>{0} — profile key</comment>
+  </data>
+  <data name="Conflict.Composed" xml:space="preserve">
+    <value>«{0}» у {1} = «{2}» у {3} + «{4}» у {5}: {1} по выводу не отличить от {3}, за которой идёт {5}.</value>
+    <comment>{0}, {2}, {4} — graphemes; {1}, {3}, {5} — Arabic letters</comment>
+  </data>
+  <data name="Conflict.Same" xml:space="preserve">
+    <value>«{0}» — так же пишется {1}: {2} и {1} по выводу не отличить.</value>
+    <comment>{0} — grapheme; {1}, {2} — Arabic letters</comment>
+  </data>
+  <data name="Feedback.Toggle" xml:space="preserve">
+    <value>Обратная связь</value>
+  </data>
+  <data name="Feedback.Title" xml:space="preserve">
+    <value>Ошибка в транслитерации или отзыв</value>
+  </data>
+  <data name="Feedback.MessageLabel" xml:space="preserve">
+    <value>Сообщение</value>
+  </data>
+  <data name="Feedback.Placeholder" xml:space="preserve">
+    <value>Что понравилось, что не так?</value>
+  </data>
+  <data name="Feedback.Attach" xml:space="preserve">
+    <value>Приложить текст из поля и транслитерацию — так ошибку проще повторить</value>
+  </data>
+  <data name="Feedback.Saved" xml:space="preserve">
+    <value>Написанное сохранено.</value>
+  </data>
+  <data name="Feedback.ViaGitHub" xml:space="preserve">
+    <value>Отправить через форму на GitHub</value>
+  </data>
+  <data name="Feedback.NeedsAccount" xml:space="preserve">
+    <value>— для неё нужен аккаунт.</value>
+  </data>
+  <data name="Feedback.ViewOnGitHub" xml:space="preserve">
+    <value>Посмотреть на GitHub</value>
+  </data>
+  <data name="Feedback.Sending" xml:space="preserve">
+    <value>Отправляется…</value>
+  </data>
+  <data name="Feedback.Send" xml:space="preserve">
+    <value>Отправить</value>
+  </data>
+  <data name="Feedback.Truncated" xml:space="preserve">
+    <value>Текст длинный, и в форму попадёт только его начало. Оставьте в поле только место с ошибкой.</value>
+  </data>
+  <data name="Feedback.Opened" xml:space="preserve">
+    <value>Форма открылась в новой вкладке — отправьте её там. Написанное здесь остаётся, пока страница открыта.</value>
+  </data>
+  <data name="Feedback.WillOpen" xml:space="preserve">
+    <value>Откроется форма на GitHub: там сообщение можно поправить и отправить. Нужен аккаунт GitHub.</value>
+  </data>
+  <data name="Feedback.OpenForm" xml:space="preserve">
+    <value>Открыть форму на GitHub</value>
+  </data>
+  <data name="Feedback.Received" xml:space="preserve">
+    <value>Спасибо, сообщение получено.</value>
+  </data>
+  <data name="Feedback.GuardFailed" xml:space="preserve">
+    <value>Проверка «не робот» не загрузилась — возможно, её блокирует расширение браузера.</value>
+  </data>
+  <data name="Feedback.NotVerified" xml:space="preserve">
+    <value>Проверка «не робот» не прошла. Попробуйте отправить ещё раз.</value>
+  </data>
+  <data name="Feedback.TooMany" xml:space="preserve">
+    <value>Слишком много сообщений подряд. Попробуйте через минуту.</value>
+  </data>
+  <data name="Feedback.Unreachable" xml:space="preserve">
+    <value>Сообщение не отправилось: нет связи с сервером.</value>
+  </data>
+  <data name="Feedback.Failed" xml:space="preserve">
+    <value>Сообщение не отправилось: сервер ответил ошибкой.</value>
+  </data>
+</root>

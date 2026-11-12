@@ -1,3 +1,4 @@
+using Transliterator.Core.Localization;
 using Microsoft.Extensions.Logging;
 using System.Text.Encodings.Web;
 using System.Text.Json;
@@ -34,8 +35,6 @@ namespace Transliterator.Core.Repositories
     {
         /// <summary>Префикс ключей профилей. Остальные ключи хранилища — чужие и не читаются.</summary>
         public const string KeyPrefix = "transliterator.profiles.";
-
-        private const string CopySuffix = "копия";
 
         /// <summary>Арабица и кириллица пишутся как есть, как и в файлах профилей.</summary>
         private static readonly JsonSerializerOptions _json = new()
@@ -148,14 +147,11 @@ namespace Transliterator.Core.Repositories
             }
             catch (StorageQuotaExceededException ex)
             {
-                throw new TransliterationException(
-                    $"Profile '{name}' was not saved: browser storage is full. " +
-                    "The previously saved version is kept; delete a profile you no longer need.", ex);
+                throw new TransliterationException(CoreText.Format("Profile.NotSavedFull", name), ex);
             }
             catch (Exception ex) when (ex is not TransliterationException)
             {
-                throw new TransliterationException(
-                    $"Profile '{name}' was not saved: browser storage is unavailable.", ex);
+                throw new TransliterationException(CoreText.Format("Profile.NotSavedUnavailable", name), ex);
             }
 
             _logger.LogInformation("Profile saved to browser storage: {Profile}", name);
@@ -174,18 +170,18 @@ namespace Transliterator.Core.Repositories
             }
             catch (Exception ex) when (ex is not TransliterationException)
             {
-                throw new TransliterationException(
-                    $"Profile '{profileName}' was not deleted: browser storage is unavailable.", ex);
+                throw new TransliterationException(CoreText.Format("Profile.NotDeletedUnavailable", profileName), ex);
             }
         }
 
         /// <summary>«Standard (копия)», затем «Standard (копия 2)» — первое свободное имя.</summary>
         public async Task<string> FreeCopyNameAsync(string name)
         {
-            var candidate = $"{name} ({CopySuffix})";
+            var copySuffix = CoreText.Get("Profile.CopySuffix");
+            var candidate = $"{name} ({copySuffix})";
 
             for (int n = 2; await ProfileExistsAsync(candidate); n++)
-                candidate = $"{name} ({CopySuffix} {n})";
+                candidate = $"{name} ({copySuffix} {n})";
 
             return candidate;
         }

@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Variant.heavy" xml:space="preserve">
+    <value>твёрдо, под эмфазой</value>
+  </data>
+  <data name="Variant.soft" xml:space="preserve">
+    <value>мягко, после мягкого ляма</value>
+  </data>
+  <data name="Variant.sukun" xml:space="preserve">
+    <value>без гласной, в закрытом слоге</value>
+  </data>
+  <data name="Variant.waqf" xml:space="preserve">
+    <value>на паузе</value>
+  </data>
+  <data name="Variant.initial" xml:space="preserve">
+    <value>в начале слова</value>
+  </data>
+  <data name="Variant.hiatus" xml:space="preserve">
+    <value>хамза между гласными</value>
+  </data>
+  <data name="Variant.final" xml:space="preserve">
+    <value>на конце слова</value>
+  </data>
+  <data name="Variant.ghunna" xml:space="preserve">
+    <value>в нос, с гунной</value>
+  </data>
+  <data name="Variant.qalqalah" xml:space="preserve">
+    <value>с отзвуком, кальканя</value>
+  </data>
+  <data name="Variant.qalqalah-strong" xml:space="preserve">
+    <value>с сильным отзвуком на паузе</value>
+  </data>
+  <data name="Profile.NameEmpty" xml:space="preserve">
+    <value>Имя профиля не может быть пустым.</value>
+  </data>
+  <data name="Profile.NameUnchanged" xml:space="preserve">
+    <value>Имя не изменилось.</value>
+  </data>
+  <data name="Profile.NameTaken" xml:space="preserve">
+    <value>Профиль «{0}» уже есть.</value>
+    <comment>{0} — profile name</comment>
+  </data>
+  <data name="Profile.NotFound" xml:space="preserve">
+    <value>Профиль «{0}» не найден.</value>
+    <comment>{0} — profile name</comment>
+  </data>
+  <data name="Profile.NotCopied" xml:space="preserve">
+    <value>Профиль «{0}» не скопирован. {1}</value>
+    <comment>{0} — profile name, {1} — missing keys</comment>
+  </data>
+  <data name="Profile.BuiltInNotEditable" xml:space="preserve">
+    <value>Встроенный профиль «{0}» не редактируется: создайте копию.</value>
+    <comment>{0} — profile name</comment>
+  </data>
+  <data name="Profile.BuiltInLocked" xml:space="preserve">
+    <value>Встроенный профиль «{0}» нельзя изменить или удалить.</value>
+    <comment>{0} — profile name</comment>
+  </data>
+  <data name="Profile.CopySuffix" xml:space="preserve">
+    <value>копия</value>
+    <comment>Suggested name of a copy: “Standard (copy)”, “Standard (copy 2)”</comment>
+  </data>
+  <data name="Profile.NotSavedFull" xml:space="preserve">
+    <value>Профиль «{0}» не сохранён: хранилище браузера заполнено. Прежняя версия осталась; удалите профиль, который больше не нужен.</value>
+    <comment>{0} — profile name</comment>
+  </data>
+  <data name="Profile.NotSavedUnavailable" xml:space="preserve">
+    <value>Профиль «{0}» не сохранён: хранилище браузера недоступно.</value>
+    <comment>{0} — profile name</comment>
+  </data>
+  <data name="Profile.NotDeletedUnavailable" xml:space="preserve">
+    <value>Профиль «{0}» не удалён: хранилище браузера недоступно.</value>
+    <comment>{0} — profile name</comment>
+  </data>
+</root>
