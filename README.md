@@ -58,8 +58,12 @@ tajweed needs.
 What this output shows:
 
 * **Madd length is rendered by repeating the grapheme**: two harakat means the
-  grapheme twice (`лляя`), four means three times (`ииим`), six means four
-  times. All three lengths stay distinguishable in writing.
+  grapheme twice (`лляя`), four means three times (`ииим`), five means four
+  times, six means five times (`дIдIоооооллиин`). The number of letters is not
+  the number of harakat, and that is not a mistake: the scale puts the lengths
+  in order and keeps every count you can choose distinguishable; it does not
+  count harakat as letters. One letter per haraka would stretch madd lazim to
+  six identical letters.
 * **The sun lam assimilates** into the following letter (`ррохIмаани`), while
   the moon lam stays itself and is set off with a hyphen (`аль-хIамду`).
 * **Emphasis colours the consonant's own vowel**: `а` after a heavy consonant is
@@ -270,7 +274,7 @@ original text never reaches the profile at all:
   from there as an ordinary nun sakina.
 * **The superscript alif** (`ٰ`), maddah and tatweel are removed by
   normalisation or turned into vowel length.
-* **Length** is stored in harakat (2/4/6) and only becomes a repeated grapheme
+* **Length** is stored in harakat (2/4/5/6) and only becomes a repeated grapheme
   at the final stage; there are no doubled vowels in a profile.
 
 ### Example profile

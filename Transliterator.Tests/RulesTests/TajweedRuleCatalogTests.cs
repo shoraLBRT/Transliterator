@@ -168,10 +168,8 @@ namespace Transliterator.Tests.RulesTests
             var variants = ReadingChoice.Default.WithMode(ReadingMode.Variants);
             var outputs = rule.Counts.Select(count => Transliterate(example.Arabic, variants.WithCount(id, count))).ToList();
 
-            // Повтор графемы различает только 2, 4 и 6: 5 пишется как 4 (G7).
-            var written = rule.Counts.Select(count => count == 5 ? 4 : count).Distinct();
-
-            Assert.Equal(written.Count(), outputs.Distinct().Count());
+            // Каждый счёт пишется по-своему: шкала сдвинута, и 5 больше не совпадает с 4 (G7).
+            Assert.Equal(rule.Counts.Count, outputs.Distinct().Count());
 
             // Пример показывает своё правило, а не соседнее: счёты остальных правил
             // его не меняют. Слово с маддом перед хамзой на паузе так не годится —

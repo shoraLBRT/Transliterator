@@ -70,7 +70,7 @@ namespace Transliterator.Tests.RulesTests
 
         [Fact]
         public void Variants_ChangeTheOutput() =>
-            Assert.Equal("ар-рохIиииим", TransliterationPipeline.Transliterate("ٱلرَّحِيمِ", reading:
+            Assert.Equal("ар-рохIииииим", TransliterationPipeline.Transliterate("ٱلرَّحِيمِ", reading:
                 ReadingChoice.Default.WithMode(ReadingMode.Variants).WithCount(TajweedRuleIds.MaddArid, 6).ToOptions()));
     }
 }
