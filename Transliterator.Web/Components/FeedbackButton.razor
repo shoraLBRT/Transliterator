@@ -12,14 +12,14 @@
    на узком — своя строка подвала, чтобы не перекрывать поле и результат. *@
 
 <div class="feedback">
-    <button type="button" class="feedback-toggle" title="Обратная связь"
+    <button type="button" class="feedback-toggle" title="@L["Feedback.Toggle"]"
             aria-expanded="@(_open ? "true" : "false")" aria-controls="feedback-panel"
             @onclick="ToggleAsync" @ref="_toggle">
         <svg viewBox="0 0 24 24" aria-hidden="true">
             <path d="M4 5.5A1.5 1.5 0 0 1 5.5 4h13A1.5 1.5 0 0 1 20 5.5v9a1.5 1.5 0 0 1-1.5 1.5H10l-4.5 4v-4h0A1.5 1.5 0 0 1 4 14.5z" />
             <path d="M8.5 9h7M8.5 12h4.5" />
         </svg>
-        <span class="feedback-label">Обратная связь</span>
+        <span class="feedback-label">@L["Feedback.Toggle"]</span>
     </button>
 
     @if (_open)
@@ -28,18 +28,18 @@
 
         <div id="feedback-panel" class="feedback-panel" role="dialog" aria-labelledby="feedback-title"
              @onkeydown="OnKeyDownAsync">
-            <h2 id="feedback-title" class="feedback-title">Ошибка в транслитерации или отзыв</h2>
+            <h2 id="feedback-title" class="feedback-title">@L["Feedback.Title"]</h2>
 
-            <label for="feedback-message" class="visually-hidden">Сообщение</label>
+            <label for="feedback-message" class="visually-hidden">@L["Feedback.MessageLabel"]</label>
             <textarea id="feedback-message" class="feedback-message" rows="4" maxlength="@FeedbackMessage.MessageLength"
-                      placeholder="Что понравилось, что не так?"
+                      placeholder="@L["Feedback.Placeholder"]"
                       @bind="_message" @bind:event="oninput" @bind:after="OnEdited" @ref="_messageInput"></textarea>
 
             @if (CanAttach)
             {
                 <label class="feedback-attach">
                     <input type="checkbox" @bind="_attach" @bind:after="OnEdited" />
-                    <span>Приложить текст из поля и транслитерацию — так ошибку проще повторить</span>
+                    <span>@L["Feedback.Attach"]</span>
                 </label>
             }
 
@@ -58,58 +58,49 @@
                 @if (OffersLink && Draft is { } fallback)
                 {
                     <p class="feedback-note">
-                        Написанное сохранено.
-                        <a href="@fallback.Url" target="_blank" rel="noopener">Отправить через форму на GitHub</a>
-                        — для неё нужен аккаунт.
+                        @L["Feedback.Saved"]
+                        <a href="@fallback.Url" target="_blank" rel="noopener">@L["Feedback.ViaGitHub"]</a>
+                        @L["Feedback.NeedsAccount"]
                     </p>
                 }
 
                 @if (_sent is { IssueUrl: { } issue })
                 {
                     <p class="feedback-note">
-                        <a href="@issue" target="_blank" rel="noopener">Посмотреть на GitHub</a>
+                        <a href="@issue" target="_blank" rel="noopener">@L["Feedback.ViewOnGitHub"]</a>
                     </p>
                 }
 
                 <button type="button" class="feedback-send" disabled="@(!CanSend || _sending || _guardId is null)"
                         @onclick="SendAsync">
-                    @(_sending ? "Отправляется…" : "Отправить")
+                    @(_sending ? L["Feedback.Sending"] : L["Feedback.Send"])
                 </button>
             }
             else
             {
                 @if (Draft is { Truncated: true })
                 {
-                    <p class="feedback-note">
-                        Текст длинный, и в форму попадёт только его начало. Оставьте в поле
-                        только место с ошибкой.
-                    </p>
+                    <p class="feedback-note">@L["Feedback.Truncated"]</p>
                 }
 
                 @if (_opened)
                 {
-                    <p class="feedback-note feedback-done" role="status">
-                        Форма открылась в новой вкладке — отправьте её там. Написанное здесь
-                        остаётся, пока страница открыта.
-                    </p>
+                    <p class="feedback-note feedback-done" role="status">@L["Feedback.Opened"]</p>
                 }
                 else
                 {
-                    <p class="feedback-note">
-                        Откроется форма на GitHub: там сообщение можно поправить и отправить.
-                        Нужен аккаунт GitHub.
-                    </p>
+                    <p class="feedback-note">@L["Feedback.WillOpen"]</p>
                 }
 
                 @if (Draft is { } draft)
                 {
                     <a class="feedback-send" href="@draft.Url" target="_blank" rel="noopener" @onclick="OnOpened">
-                        Открыть форму на GitHub
+                        @L["Feedback.OpenForm"]
                     </a>
                 }
                 else
                 {
-                    <button type="button" class="feedback-send" disabled>Открыть форму на GitHub</button>
+                    <button type="button" class="feedback-send" disabled>@L["Feedback.OpenForm"]</button>
                 }
             }
         </div>
@@ -172,18 +163,18 @@
         get
         {
             if (_sending)
-                return "Отправляется…";
+                return L["Feedback.Sending"];
             if (_sent is not null)
-                return "Спасибо, сообщение получено.";
+                return L["Feedback.Received"];
             if (_guardFailed)
-                return "Проверка «не робот» не загрузилась — возможно, её блокирует расширение браузера.";
+                return L["Feedback.GuardFailed"];
 
             return _failure switch
             {
-                FeedbackOutcome.NotVerified => "Проверка «не робот» не прошла. Попробуйте отправить ещё раз.",
-                FeedbackOutcome.TooMany => "Слишком много сообщений подряд. Попробуйте через минуту.",
-                FeedbackOutcome.Unreachable => "Сообщение не отправилось: нет связи с сервером.",
-                FeedbackOutcome.Failed => "Сообщение не отправилось: сервер ответил ошибкой.",
+                FeedbackOutcome.NotVerified => L["Feedback.NotVerified"],
+                FeedbackOutcome.TooMany => L["Feedback.TooMany"],
+                FeedbackOutcome.Unreachable => L["Feedback.Unreachable"],
+                FeedbackOutcome.Failed => L["Feedback.Failed"],
                 _ => string.Empty,
             };
         }
@@ -208,7 +199,7 @@
     {
         try
         {
-            _guardId = await JS.InvokeAsync<string>("page.guard", _guard, Settings.TurnstileSiteKey);
+            _guardId = await JS.InvokeAsync<string>("page.guard", _guard, Settings.TurnstileSiteKey, PageLanguages.Current.Code);
             _guardFailed = false;
         }
         catch (JSException ex)

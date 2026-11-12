@@ -1,0 +1,306 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Page.Title" xml:space="preserve">
+    <value>Quran Transliteration</value>
+  </data>
+  <data name="Page.Description" xml:space="preserve">
+    <value>Quran transliteration by the rules of tajweed — right in the browser.</value>
+  </data>
+  <data name="Page.Heading" xml:space="preserve">
+    <value>Quran transliteration in Latin letters</value>
+  </data>
+  <data name="Hint.1" xml:space="preserve">
+    <value>Arabic text in Latin letters</value>
+  </data>
+  <data name="Hint.2" xml:space="preserve">
+    <value>بِسْمِ ٱللَّه — bismi-llaah</value>
+  </data>
+  <data name="Hint.3" xml:space="preserve">
+    <value>Transliteration with the rules of tajweed</value>
+  </data>
+  <data name="Hint.4" xml:space="preserve">
+    <value>الْحَمْدُ لِلَّه — al-ḥamdu lillaah</value>
+  </data>
+  <data name="Hint.5" xml:space="preserve">
+    <value>Arabic text, readable without Arabic</value>
+  </data>
+  <data name="Hint.6" xml:space="preserve">
+    <value>مَالِكِ يَوْمِ الدِّين — maaliki yawmi-ddiin</value>
+  </data>
+  <data name="Hint.7" xml:space="preserve">
+    <value>Sample surahs are below the input field</value>
+  </data>
+  <data name="Composer.Label" xml:space="preserve">
+    <value>Arabic text to transliterate</value>
+  </data>
+  <data name="Composer.ClearTitle" xml:space="preserve">
+    <value>Clear</value>
+  </data>
+  <data name="Composer.ClearLabel" xml:space="preserve">
+    <value>Clear the field</value>
+  </data>
+  <data name="Rail.Label" xml:space="preserve">
+    <value>How to read and write</value>
+  </data>
+  <data name="Result.Title" xml:space="preserve">
+    <value>Transliteration</value>
+  </data>
+  <data name="Copy.Action" xml:space="preserve">
+    <value>Copy</value>
+  </data>
+  <data name="Copy.Done" xml:space="preserve">
+    <value>Copied</value>
+  </data>
+  <data name="Copy.Failed" xml:space="preserve">
+    <value>Select the text manually</value>
+  </data>
+  <data name="Footer.Tagline" xml:space="preserve">
+    <value>Transliteration by the rules of tajweed</value>
+  </data>
+  <data name="Error.ProfileNotLoaded" xml:space="preserve">
+    <value>Profile {0} did not load. Reload the page.</value>
+  </data>
+  <data name="Language.Label" xml:space="preserve">
+    <value>Interface language</value>
+  </data>
+  <data name="Panel.CloseTitle" xml:space="preserve">
+    <value>Close</value>
+  </data>
+  <data name="Panel.CloseLabel" xml:space="preserve">
+    <value>Close the panel</value>
+  </data>
+  <data name="Surah.Toggle" xml:space="preserve">
+    <value>Choose a surah</value>
+  </data>
+  <data name="Surah.Title" xml:space="preserve">
+    <value>Sample surahs</value>
+  </data>
+  <data name="Surah.Caption" xml:space="preserve">
+    <value>Their Cyrillic transliteration (Standard) is checked by hand</value>
+  </data>
+  <data name="Reading.Title" xml:space="preserve">
+    <value>How to read</value>
+  </data>
+  <data name="Reading.ModesLabel" xml:space="preserve">
+    <value>Reading level</value>
+  </data>
+  <data name="Mode.Full" xml:space="preserve">
+    <value>Full tajweed</value>
+  </data>
+  <data name="Mode.Variants" xml:space="preserve">
+    <value>Partial tajweed</value>
+  </data>
+  <data name="Mode.Plain" xml:space="preserve">
+    <value>Without tajweed</value>
+  </data>
+  <data name="ModeNote.Full" xml:space="preserve">
+    <value>As tajweed requires</value>
+  </data>
+  <data name="ModeNote.Variants" xml:space="preserve">
+    <value>Tajweed, but you choose how long to hold the madd, and rules that only mark a sound can be left out</value>
+  </data>
+  <data name="ModeNote.Plain" xml:space="preserve">
+    <value>Ordinary Arabic reading</value>
+  </data>
+  <data name="Reading.CountsNote" xml:space="preserve">
+    <value>A count is how long a long vowel is held: two is an ordinary long vowel, four and six are twice and three times as long. In writing, length is a repeated letter, but there are not as many letters as counts: two counts — two letters, four — three, five — four, six — five. The writing does not count harakat as letters: it puts the lengths in order, and each count looks different.</value>
+  </data>
+  <data name="Reading.CountLabel" xml:space="preserve">
+    <value>{0}: count</value>
+  </data>
+  <data name="Reading.SwitchableTitle" xml:space="preserve">
+    <value>Can be left out</value>
+  </data>
+  <data name="Reading.SwitchableNote" xml:space="preserve">
+    <value>These rules do not change what other rules depend on. A rule switched off is read as in ordinary reading, everything else as in full tajweed. The Standard and Latin profiles do not write the ghunnah of ikhfa or the qalqalah echo: switching them off shows in “Rules of this reading” and in your own profile, where they have a letter.</value>
+  </data>
+  <data name="Reading.SwitchLabel" xml:space="preserve">
+    <value>{0}: read</value>
+  </data>
+  <data name="Reading.On" xml:space="preserve">
+    <value>read</value>
+  </data>
+  <data name="Reading.Off" xml:space="preserve">
+    <value>not read</value>
+  </data>
+  <data name="Reading.RulesSummary" xml:space="preserve">
+    <value>Rules of this reading</value>
+  </data>
+  <data name="Reading.GroupOff" xml:space="preserve">
+    <value> · not read now</value>
+  </data>
+  <data name="Group.Tajweed" xml:space="preserve">
+    <value>Only in tajweed</value>
+  </data>
+  <data name="Group.Base" xml:space="preserve">
+    <value>In any reading</value>
+  </data>
+  <data name="RuleCount.One" xml:space="preserve">
+    <value>{0} rule</value>
+  </data>
+  <data name="RuleCount.Few" xml:space="preserve">
+    <value>{0} rules</value>
+  </data>
+  <data name="RuleCount.Many" xml:space="preserve">
+    <value>{0} rules</value>
+  </data>
+  <data name="Profile.Toggle" xml:space="preserve">
+    <value>Profile: {0}</value>
+  </data>
+  <data name="Profile.Title" xml:space="preserve">
+    <value>Writing profile</value>
+  </data>
+  <data name="Profile.Caption" xml:space="preserve">
+    <value>The profile decides which letters write each sound</value>
+  </data>
+  <data name="Profile.ListLabel" xml:space="preserve">
+    <value>Profile</value>
+  </data>
+  <data name="Profile.BuiltIn" xml:space="preserve">
+    <value>Built-in</value>
+  </data>
+  <data name="Profile.Own" xml:space="preserve">
+    <value>Your own</value>
+  </data>
+  <data name="Profile.NewNameLabel" xml:space="preserve">
+    <value>New profile name</value>
+  </data>
+  <data name="Profile.Done" xml:space="preserve">
+    <value>Done</value>
+  </data>
+  <data name="Profile.Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="Profile.DeleteConfirm" xml:space="preserve">
+    <value>Delete the profile “{0}”? It cannot be restored.</value>
+  </data>
+  <data name="Profile.Delete" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="Profile.Copy" xml:space="preserve">
+    <value>Make a copy</value>
+  </data>
+  <data name="Profile.Rename" xml:space="preserve">
+    <value>Rename</value>
+  </data>
+  <data name="Profile.Conflicts" xml:space="preserve">
+    <value>Ambiguous graphemes: {0}. The profile is saved, but some letters cannot be told apart in the output — see the letters below.</value>
+  </data>
+  <data name="Profile.PreviewLabel" xml:space="preserve">
+    <value>Output</value>
+  </data>
+  <data name="Profile.PreviewEmpty" xml:space="preserve">
+    <value>Type text in the field — you will see here how it is written</value>
+  </data>
+  <data name="Profile.BuiltInNote" xml:space="preserve">
+    <value>A built-in profile does not change — make a copy to rewrite the graphemes.</value>
+  </data>
+  <data name="Profile.SearchLabel" xml:space="preserve">
+    <value>Search by letter, spelling or variant</value>
+  </data>
+  <data name="Profile.SearchPlaceholder" xml:space="preserve">
+    <value>Search: letter, spelling or variant (ḫ, pause…)</value>
+  </data>
+  <data name="Profile.NoMatches" xml:space="preserve">
+    <value>No letter matches.</value>
+  </data>
+  <data name="Profile.ListError" xml:space="preserve">
+    <value>Your profiles could not be read: browser storage is unavailable.</value>
+  </data>
+  <data name="Profile.NotRead" xml:space="preserve">
+    <value>Profile “{0}” could not be read.</value>
+  </data>
+  <data name="Profile.Failed" xml:space="preserve">
+    <value>That did not work: browser storage is unavailable.</value>
+  </data>
+  <data name="Profile.ValueMissing" xml:space="preserve">
+    <value>not set</value>
+  </data>
+  <data name="Profile.ValueEmpty" xml:space="preserve">
+    <value>not written</value>
+  </data>
+  <data name="Profile.ValueLabel" xml:space="preserve">
+    <value>Grapheme for {0}</value>
+  </data>
+  <data name="Conflict.Composed" xml:space="preserve">
+    <value>“{0}” for {1} = “{2}” for {3} + “{4}” for {5}: in the output {1} cannot be told apart from {3} followed by {5}.</value>
+  </data>
+  <data name="Conflict.Same" xml:space="preserve">
+    <value>“{0}” — {1} is written the same way: in the output {2} and {1} cannot be told apart.</value>
+  </data>
+  <data name="Feedback.Toggle" xml:space="preserve">
+    <value>Feedback</value>
+  </data>
+  <data name="Feedback.Title" xml:space="preserve">
+    <value>A transliteration error or feedback</value>
+  </data>
+  <data name="Feedback.MessageLabel" xml:space="preserve">
+    <value>Message</value>
+  </data>
+  <data name="Feedback.Placeholder" xml:space="preserve">
+    <value>What did you like, what is wrong?</value>
+  </data>
+  <data name="Feedback.Attach" xml:space="preserve">
+    <value>Attach the text from the field and its transliteration — this makes the error easier to reproduce</value>
+  </data>
+  <data name="Feedback.Saved" xml:space="preserve">
+    <value>What you wrote is kept.</value>
+  </data>
+  <data name="Feedback.ViaGitHub" xml:space="preserve">
+    <value>Send it through the form on GitHub</value>
+  </data>
+  <data name="Feedback.NeedsAccount" xml:space="preserve">
+    <value>— it needs an account.</value>
+  </data>
+  <data name="Feedback.ViewOnGitHub" xml:space="preserve">
+    <value>View on GitHub</value>
+  </data>
+  <data name="Feedback.Sending" xml:space="preserve">
+    <value>Sending…</value>
+  </data>
+  <data name="Feedback.Send" xml:space="preserve">
+    <value>Send</value>
+  </data>
+  <data name="Feedback.Truncated" xml:space="preserve">
+    <value>The text is long, and only its beginning will get into the form. Leave only the part with the error in the field.</value>
+  </data>
+  <data name="Feedback.Opened" xml:space="preserve">
+    <value>The form opened in a new tab — send it there. What you wrote here stays while the page is open.</value>
+  </data>
+  <data name="Feedback.WillOpen" xml:space="preserve">
+    <value>A form on GitHub will open: there you can edit and send the message. A GitHub account is needed.</value>
+  </data>
+  <data name="Feedback.OpenForm" xml:space="preserve">
+    <value>Open the form on GitHub</value>
+  </data>
+  <data name="Feedback.Received" xml:space="preserve">
+    <value>Thank you, the message has been received.</value>
+  </data>
+  <data name="Feedback.GuardFailed" xml:space="preserve">
+    <value>The “not a robot” check did not load — a browser extension may be blocking it.</value>
+  </data>
+  <data name="Feedback.NotVerified" xml:space="preserve">
+    <value>The “not a robot” check failed. Try sending again.</value>
+  </data>
+  <data name="Feedback.TooMany" xml:space="preserve">
+    <value>Too many messages in a row. Try again in a minute.</value>
+  </data>
+  <data name="Feedback.Unreachable" xml:space="preserve">
+    <value>The message was not sent: no connection to the server.</value>
+  </data>
+  <data name="Feedback.Failed" xml:space="preserve">
+    <value>The message was not sent: the server responded with an error.</value>
+  </data>
+</root>

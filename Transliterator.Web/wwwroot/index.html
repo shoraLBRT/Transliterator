@@ -15,13 +15,13 @@
     <div id="app">
         <div class="boot" role="status">
             <span class="boot-dot" aria-hidden="true"></span>
-            <span>Загрузка…</span>
+            <span data-shell="loading">Загрузка…</span>
         </div>
     </div>
 
     <div id="blazor-error-ui">
-        Произошла непредвиденная ошибка.
-        <a href="" class="reload">Перезагрузить</a>
+        <span data-shell="error">Произошла непредвиденная ошибка.</span>
+        <a href="" class="reload" data-shell="reload">Перезагрузить</a>
     </div>
 
     <script src="js/page.js"></script>

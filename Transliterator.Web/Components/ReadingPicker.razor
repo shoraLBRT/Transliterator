@@ -27,9 +27,9 @@
 
         <div id="reading-menu" class="picker-panel reading-panel" role="dialog" aria-labelledby="reading-menu-title"
              tabindex="-1" @ref="PanelElement" @onkeydown="OnPanelKeyDownAsync">
-            <PanelHead Id="reading-menu-title" Title="Как читать" Close="CloseToToggleAsync" />
+            <PanelHead Id="reading-menu-title" Title="@L["Reading.Title"]" Close="CloseToToggleAsync" />
 
-            <div class="reading-modes" role="radiogroup" aria-label="Ступень чтения">
+            <div class="reading-modes" role="radiogroup" aria-label="@L["Reading.ModesLabel"]">
                 @foreach (var mode in Modes)
                 {
                     <button type="button" class="reading-mode" role="radio"
@@ -44,13 +44,7 @@
             @if (Choice.Mode == ReadingMode.Variants)
             {
                 <div class="reading-variants">
-                    <p class="reading-variants-note">
-                        Счёт — сколько тянется долгая гласная: два — обычная долгая, четыре и шесть —
-                        вдвое и втрое дольше. На письме долгота — повтор буквы, но букв не столько,
-                        сколько харакатов: два счёта — две буквы, четыре — три, пять — четыре,
-                        шесть — пять. Запись не считает харакаты буквами: она ставит долготы по порядку,
-                        и каждый счёт выглядит по-своему.
-                    </p>
+                    <p class="reading-variants-note">@L["Reading.CountsNote"]</p>
 
                     <ul class="reading-variant-list">
                         @foreach (var rule in Catalog.Rules.Where(r => r.HasVariants))
@@ -60,10 +54,10 @@
                             <li class="reading-variant">
                                 <span class="reading-variant-head">
                                     <span class="reading-rule-title">
-                                        <span class="reading-rule-name">@rule.Name</span>
-                                        <span class="reading-rule-translation">(@rule.Translation)</span>
+                                        <span class="reading-rule-name">@rule.Name.Current</span>
+                                        <span class="reading-rule-translation">(@rule.Translation.Current)</span>
                                     </span>
-                                    <span class="reading-counts" role="radiogroup" aria-label="@($"{rule.Name}: счёт")">
+                                    <span class="reading-counts" role="radiogroup" aria-label="@(L["Reading.CountLabel", rule.Name.Current])">
                                         @foreach (var count in rule.Counts)
                                         {
                                             <button type="button" class="reading-count" role="radio"
@@ -72,7 +66,7 @@
                                         }
                                     </span>
                                 </span>
-                                <span class="reading-rule-text">@rule.Description</span>
+                                <span class="reading-rule-text">@rule.Description.Current</span>
                                 @if (example is not null)
                                 {
                                     <span class="reading-example">
@@ -85,13 +79,8 @@
                         }
                     </ul>
 
-                    <h3 class="reading-variants-title">Можно не читать</h3>
-                    <p class="reading-variants-note">
-                        Эти правила не меняют того, от чего зависят другие. Выключенное читается,
-                        как в обычном чтении, остальное — как в полном таджвиде.
-                        Гунну ихфы и отзвук кальканя профиль Standard не пишет: их выключение видно
-                        в «Правилах этого чтения» и в своём профиле, где у них есть буква.
-                    </p>
+                    <h3 class="reading-variants-title">@L["Reading.SwitchableTitle"]</h3>
+                    <p class="reading-variants-note">@L["Reading.SwitchableNote"]</p>
 
                     <ul class="reading-variant-list">
                         @foreach (var rule in Catalog.Rules.Where(r => r.Switchable))
@@ -102,18 +91,18 @@
                             <li class="reading-variant @(on ? null : "is-off")">
                                 <span class="reading-variant-head">
                                     <span class="reading-rule-title">
-                                        <span class="reading-rule-name">@rule.Name</span>
-                                        <span class="reading-rule-translation">(@rule.Translation)</span>
+                                        <span class="reading-rule-name">@rule.Name.Current</span>
+                                        <span class="reading-rule-translation">(@rule.Translation.Current)</span>
                                     </span>
                                     <button type="button" class="reading-switch" role="switch"
                                             aria-checked="@(on ? "true" : "false")"
-                                            aria-label="@($"{rule.Name}: читать")"
+                                            aria-label="@(L["Reading.SwitchLabel", rule.Name.Current])"
                                             @onclick="() => SwitchRuleAsync(rule, !on)">
                                         <span class="reading-switch-track" aria-hidden="true"></span>
-                                        <span class="reading-switch-text">@(on ? "читается" : "не читается")</span>
+                                        <span class="reading-switch-text">@(on ? L["Reading.On"] : L["Reading.Off"])</span>
                                     </button>
                                 </span>
-                                <span class="reading-rule-text">@rule.Description</span>
+                                <span class="reading-rule-text">@rule.Description.Current</span>
                                 @if (example is not null)
                                 {
                                     <span class="reading-example">
@@ -129,7 +118,7 @@
             }
 
             <details class="reading-rules">
-                <summary>Правила этого чтения</summary>
+                <summary>@L["Reading.RulesSummary"]</summary>
 
                 @foreach (var group in Groups)
                 {
@@ -137,7 +126,7 @@
 
                     <h3 class="reading-group @(off ? "is-off" : null)">
                         <span>@GroupName(group.Key)</span>
-                        <span class="reading-group-count">@RuleCount(group.Count())@(off ? " · сейчас не читаются" : null)</span>
+                        <span class="reading-group-count">@L.Count("RuleCount", group.Count())@(off ? L["Reading.GroupOff"].Value : null)</span>
                     </h3>
                     <ul class="reading-list">
                         @foreach (var rule in group)
@@ -145,12 +134,12 @@
                             <li class="reading-rule @(IsOff(rule) ? "is-off" : null)">
                                 <span class="reading-rule-head">
                                     <span class="reading-rule-title">
-                                        <span class="reading-rule-name">@rule.Name</span>
-                                        <span class="reading-rule-translation">(@rule.Translation)</span>
+                                        <span class="reading-rule-name">@rule.Name.Current</span>
+                                        <span class="reading-rule-translation">(@rule.Translation.Current)</span>
                                     </span>
                                     <span class="reading-rule-arabic" dir="rtl" lang="ar">@rule.ArabicName</span>
                                 </span>
-                                <span class="reading-rule-text">@rule.Description</span>
+                                <span class="reading-rule-text">@rule.Description.Current</span>
                             </li>
                         }
                     </ul>
@@ -201,44 +190,27 @@
     private bool IsOff(TajweedTier tier) =>
         Choice.Mode == ReadingMode.Plain && tier == TajweedTier.Tajweed;
 
-    /// <summary>«13 правил», «1 правило», «2 правила».</summary>
-    private static string RuleCount(int count)
-    {
-        var word = (count % 100) switch
-        {
-            >= 11 and <= 14 => "правил",
-            _ => (count % 10) switch
-            {
-                1 => "правило",
-                >= 2 and <= 4 => "правила",
-                _ => "правил",
-            },
-        };
-
-        return $"{count} {word}";
-    }
-
     private string ExampleOf(TajweedRuleExample example) =>
         Transliterate?.Invoke(example.Arabic) ?? example.Transliteration;
 
-    private static string ModeName(ReadingMode mode) => mode switch
+    private string ModeName(ReadingMode mode) => mode switch
     {
-        ReadingMode.Variants => "Неполный таджвид",
-        ReadingMode.Plain => "Без таджвида",
-        _ => "Полный таджвид",
+        ReadingMode.Variants => L["Mode.Variants"],
+        ReadingMode.Plain => L["Mode.Plain"],
+        _ => L["Mode.Full"],
     };
 
-    private static string ModeNote(ReadingMode mode) => mode switch
+    private string ModeNote(ReadingMode mode) => mode switch
     {
-        ReadingMode.Variants => "Таджвид, но сколько тянуть мадд — на выбор, а правила, которые только помечают звук, можно не читать",
-        ReadingMode.Plain => "Обычное арабское чтение",
-        _ => "Как требует таджвид",
+        ReadingMode.Variants => L["ModeNote.Variants"],
+        ReadingMode.Plain => L["ModeNote.Plain"],
+        _ => L["ModeNote.Full"],
     };
 
-    private static string GroupName(TajweedTier tier) => tier switch
+    private string GroupName(TajweedTier tier) => tier switch
     {
-        TajweedTier.Tajweed => "Только в таджвиде",
-        _ => "В любом чтении",
+        TajweedTier.Tajweed => L["Group.Tajweed"],
+        _ => L["Group.Base"],
     };
 
     /// <summary>

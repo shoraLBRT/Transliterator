@@ -40,17 +40,17 @@
 
         <div id="profile-menu" class="picker-panel profile-panel" role="dialog" aria-labelledby="profile-menu-title"
              tabindex="-1" @ref="PanelElement" @onkeydown="OnPanelKeyDownAsync">
-            <PanelHead Id="profile-menu-title" Title="Профиль записи" Close="CloseToToggleAsync" />
-            <p class="picker-caption">Профиль решает, какими буквами записать каждый звук</p>
+            <PanelHead Id="profile-menu-title" Title="@L["Profile.Title"]" Close="CloseToToggleAsync" />
+            <p class="picker-caption">@L["Profile.Caption"]</p>
 
-            <div class="reading-modes" role="radiogroup" aria-label="Профиль">
+            <div class="reading-modes" role="radiogroup" aria-label="@L["Profile.ListLabel"]">
                 @foreach (var item in _profiles)
                 {
                     <button type="button" class="reading-mode" role="radio"
                             aria-checked="@(item.Name == Profile.Name ? "true" : "false")"
                             @onclick="() => SelectAsync(item.Name)">
                         <span class="reading-mode-name">@item.Name</span>
-                        <span class="reading-mode-note">@(item.BuiltIn ? "Встроенный" : "Свой")</span>
+                        <span class="reading-mode-note">@(item.BuiltIn ? L["Profile.BuiltIn"] : L["Profile.Own"])</span>
                     </button>
                 }
             </div>
@@ -60,11 +60,11 @@
                 {
                     case Mode.Rename:
                         <form class="profile-name-form" @onsubmit="RenameAsync" @onsubmit:preventDefault>
-                            <label for="profile-name" class="visually-hidden">Новое имя профиля</label>
+                            <label for="profile-name" class="visually-hidden">@L["Profile.NewNameLabel"]</label>
                             <input id="profile-name" class="profile-input" autocomplete="off" spellcheck="false"
                                    @bind="_name" @bind:event="oninput" @bind:after="CheckNameAsync" @ref="_nameInput" />
-                            <button type="submit" class="profile-button is-primary" disabled="@(_nameProblem is not null)">Готово</button>
-                            <button type="button" class="profile-button" @onclick="Cancel">Отмена</button>
+                            <button type="submit" class="profile-button is-primary" disabled="@(_nameProblem is not null)">@L["Profile.Done"]</button>
+                            <button type="button" class="profile-button" @onclick="Cancel">@L["Profile.Cancel"]</button>
                         </form>
 
                         @if (_nameProblem is not null)
@@ -74,20 +74,20 @@
                         break;
 
                     case Mode.Delete:
-                        <p class="profile-note">Удалить профиль «@Profile.Name»? Вернуть его будет нельзя.</p>
+                        <p class="profile-note">@L["Profile.DeleteConfirm", Profile.Name]</p>
                         <div class="profile-buttons">
-                            <button type="button" class="profile-button is-danger" @onclick="DeleteAsync">Удалить</button>
-                            <button type="button" class="profile-button" @onclick="Cancel">Отмена</button>
+                            <button type="button" class="profile-button is-danger" @onclick="DeleteAsync">@L["Profile.Delete"]</button>
+                            <button type="button" class="profile-button" @onclick="Cancel">@L["Profile.Cancel"]</button>
                         </div>
                         break;
 
                     default:
                         <div class="profile-buttons">
-                            <button type="button" class="profile-button is-primary" @onclick="CopyAsync">Создать копию</button>
+                            <button type="button" class="profile-button is-primary" @onclick="CopyAsync">@L["Profile.Copy"]</button>
                             @if (!IsBuiltIn)
                             {
-                                <button type="button" class="profile-button" @onclick="StartRenameAsync">Переименовать</button>
-                                <button type="button" class="profile-button is-danger" @onclick="StartDelete">Удалить</button>
+                                <button type="button" class="profile-button" @onclick="StartRenameAsync">@L["Profile.Rename"]</button>
+                                <button type="button" class="profile-button is-danger" @onclick="StartDelete">@L["Profile.Delete"]</button>
                             }
                         </div>
                         break;
@@ -100,33 +100,30 @@
 
                 @if (ShownConflicts.Count > 0)
                 {
-                    <p class="profile-note is-warning" role="status">
-                        Спорных графем: @ShownConflicts.Count. Профиль сохранён, но некоторые
-                        буквы по выводу не отличить — подробности у букв ниже.
-                    </p>
+                    <p class="profile-note is-warning" role="status">@L["Profile.Conflicts", ShownConflicts.Count]</p>
                 }
             </div>
 
             <div class="profile-preview" aria-live="polite">
-                <span class="profile-preview-label">Вывод</span>
-                <span class="profile-preview-text">@(string.IsNullOrEmpty(Preview) ? "Введите текст в поле — здесь будет видно, как он пишется" : Preview)</span>
+                <span class="profile-preview-label">@L["Profile.PreviewLabel"]</span>
+                <span class="profile-preview-text">@(string.IsNullOrEmpty(Preview) ? L["Profile.PreviewEmpty"] : Preview)</span>
             </div>
 
             <div class="profile-rules">
                 @if (IsBuiltIn)
                 {
-                    <p class="profile-note">Встроенный профиль не меняется — создайте копию, чтобы переписать графемы.</p>
+                    <p class="profile-note">@L["Profile.BuiltInNote"]</p>
                 }
 
-                <input type="search" class="profile-input profile-search" aria-label="Поиск по букве, записи или варианту"
-                       placeholder="Поиск: буква, запись или вариант (х, пауза…)" spellcheck="false" autocomplete="off"
+                <input type="search" class="profile-input profile-search" aria-label="@L["Profile.SearchLabel"]"
+                       placeholder="@L["Profile.SearchPlaceholder"]" spellcheck="false" autocomplete="off"
                        @bind="_query" @bind:event="oninput" />
 
                 @{ var groups = RuleTable.Filter(_groups, _query); }
 
                 @if (groups.Count == 0)
                 {
-                    <p class="profile-note">Ни одна буква не подходит.</p>
+                    <p class="profile-note">@L["Profile.NoMatches"]</p>
                 }
 
                 <ul class="profile-list">
@@ -170,7 +167,7 @@
     public TransliterationProfile Profile { get; set; } = default!;
 
     /// <summary>Текст кнопки сбоку: что она выбирает и что выбрано (E6).</summary>
-    private string ToggleText => $"Профиль: {Profile.Name}";
+    private string ToggleText => L["Profile.Toggle", Profile.Name];
 
     /// <summary>
     /// Профиль по умолчанию: стоит в списке первым, и к нему страница возвращается,
@@ -189,6 +186,13 @@
     /// </summary>
     [Parameter]
     public EventCallback<TransliterationProfile> ProfileChanged { get; set; }
+
+    /// <summary>
+    /// Свой профиль удалён. Страница возвращается к профилю по умолчанию и забывает
+    /// выбор: к профилю по умолчанию её вернуло удаление, а не человек (D7).
+    /// </summary>
+    [Parameter]
+    public EventCallback ProfileDeleted { get; set; }
 
     private enum Mode { None, Rename, Delete }
 
@@ -281,7 +285,7 @@
         catch (Exception ex)
         {
             Logger.LogError(ex, "Profiles could not be listed");
-            _error = "Свои профили не прочитались: хранилище браузера недоступно.";
+            _error = L["Profile.ListError"];
         }
     }
 
@@ -295,7 +299,7 @@
         if (await Profiles.GetProfileAsync(name) is { } profile)
             await ProfileChanged.InvokeAsync(profile);
         else
-            _error = $"Профиль «{name}» не прочитался.";
+            _error = L["Profile.NotRead", name];
     }
 
     /// <summary>
@@ -353,8 +357,7 @@
             _mode = Mode.None;
             await LoadProfilesAsync();
 
-            if (await Profiles.GetProfileAsync(DefaultProfile) is { } profile)
-                await ProfileChanged.InvokeAsync(profile);
+            await ProfileDeleted.InvokeAsync();
         });
     }
 
@@ -392,7 +395,7 @@
         {
             // Необработанное исключение в WebAssembly гасит страницу целиком.
             Logger.LogError(ex, "Profile action failed");
-            _error = "Не получилось: хранилище браузера недоступно.";
+            _error = L["Profile.Failed"];
         }
     }
 
@@ -427,26 +430,17 @@
             .OfType<(string Arabic, string Output)>()
             .ToList();
 
-        // Арабская буква внутри русской фразы — в bdi: иначе алгоритм двунаправленного
-        // текста утаскивает за ней соседнюю пунктуацию.
+        // Арабская буква внутри фразы — в bdi: иначе алгоритм двунаправленного текста
+        // утаскивает за ней соседнюю пунктуацию. Фраза — из ресурсов (D7), и буквы
+        // и графемы подставляются в неё уже экранированными: графема своего профиля —
+        // ввод пользователя.
+        var text = conflict.IsComposed
+            ? L["Conflict.Composed", Encode(Grapheme(letter)), Arabic(letter), Encode(Grapheme(first)), Arabic(first),
+                Encode(Grapheme(conflict.Parts[1])), Arabic(conflict.Parts[1])].Value
+            : L["Conflict.Same", Encode(Grapheme(letter)), Arabic(first), Arabic(letter)].Value;
+
         return @<p class="profile-warning" role="status">
-                    @if (conflict.IsComposed)
-                    {
-                        var second = conflict.Parts[1];
-                        <span>
-                            «@Grapheme(letter)» у <bdi lang="ar">@letter</bdi> = «@Grapheme(first)» у
-                            <bdi lang="ar">@first</bdi> + «@Grapheme(second)» у <bdi lang="ar">@second</bdi>:
-                            <bdi lang="ar">@letter</bdi> по выводу не отличить от <bdi lang="ar">@first</bdi>,
-                            за которой идёт <bdi lang="ar">@second</bdi>.
-                        </span>
-                    }
-                    else
-                    {
-                        <span>
-                            «@Grapheme(letter)» — так же пишется <bdi lang="ar">@first</bdi>:
-                            <bdi lang="ar">@letter</bdi> и <bdi lang="ar">@first</bdi> по выводу не отличить.
-                        </span>
-                    }
+                    <span>@((MarkupString)text)</span>
                     @foreach (var (arabic, output) in examples)
                     {
                         <span class="profile-example">
@@ -457,6 +451,10 @@
     }
 
     private string Grapheme(string letter) => Profile.Rules.GetValueOrDefault(letter) ?? string.Empty;
+
+    private static string Encode(string text) => System.Net.WebUtility.HtmlEncode(text);
+
+    private static string Arabic(string letter) => $"<bdi lang=\"ar\">{Encode(letter)}</bdi>";
 
     /// <summary>Слово из корпуса с этой буквой и его вывод текущим профилем.</summary>
     private (string Arabic, string Output)? Example(string letter)
@@ -500,13 +498,13 @@
         if (IsBuiltIn || value is null)
             return value switch
             {
-                null => @<span class="profile-value is-missing">не задана</span>,
-                "" => @<span class="profile-value is-empty">не пишется</span>,
+                null => @<span class="profile-value is-missing">@L["Profile.ValueMissing"]</span>,
+                "" => @<span class="profile-value is-empty">@L["Profile.ValueEmpty"]</span>,
                 _ => @<span class="profile-value">@value</span>
             };
 
-        return @<input class="profile-input profile-value-input" value="@value" aria-label="@($"Графема для {key}")"
-                       placeholder="не пишется" spellcheck="false" autocomplete="off"
+        return @<input class="profile-input profile-value-input" value="@value" aria-label="@(L["Profile.ValueLabel", key])"
+                       placeholder="@L["Profile.ValueEmpty"]" spellcheck="false" autocomplete="off"
                        @oninput="e => SetRuleAsync(key, e.Value?.ToString() ?? string.Empty)" />;
     }
 }
