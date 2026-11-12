@@ -1,3 +1,4 @@
+using Transliterator.Core.Localization;
 using Transliterator.Core.Services.Phonology;
 
 namespace Transliterator.Core.Services
@@ -6,10 +7,10 @@ namespace Transliterator.Core.Services
     public sealed record RuleVariant(string Name, string Key, string Value)
     {
         /// <summary>
-        /// Что вариант значит, по-русски: <c>heavy</c> — «твёрдо, под эмфазой».
+        /// Что вариант значит, на языке интерфейса: <c>heavy</c> — «твёрдо, под эмфазой».
         /// <c>null</c> — имя рендереру неизвестно (опечатка в своём профиле).
         /// </summary>
-        public string? Note => RuleTable.VariantNotes.GetValueOrDefault(Name);
+        public string? Note => RuleTable.NoteOf(Name);
     }
 
     /// <summary>
@@ -36,21 +37,17 @@ namespace Transliterator.Core.Services
         /// Пояснения к вариантам для того, кто не знает английского (E7). Имена
         /// вариантов — это то, что знает рендерер, и ключи профилей на них держатся;
         /// на странице рядом с именем показывается пояснение, и по нему же ищется.
+        /// Пояснение — на языке интерфейса (D7): ресурсы <see cref="CoreText"/>, ключ
+        /// <c>Variant.&lt;имя&gt;</c>.
         /// </summary>
-        public static IReadOnlyDictionary<string, string> VariantNotes { get; } =
-            new Dictionary<string, string>(StringComparer.Ordinal)
-            {
-                [CyrillicRenderer.HeavyVariant] = "твёрдо, под эмфазой",
-                [CyrillicRenderer.SoftVariant] = "мягко, после мягкого ляма",
-                [CyrillicRenderer.SukunVariant] = "без гласной, в закрытом слоге",
-                [CyrillicRenderer.WaqfVariant] = "на паузе",
-                [CyrillicRenderer.InitialVariant] = "в начале слова",
-                [CyrillicRenderer.HiatusVariant] = "хамза между гласными",
-                [CyrillicRenderer.FinalVariant] = "на конце слова",
-                [CyrillicRenderer.GhunnaVariant] = "в нос, с гунной",
-                [CyrillicRenderer.QalqalahVariant] = "с отзвуком, кальканя",
-                [CyrillicRenderer.QalqalahStrongVariant] = "с сильным отзвуком на паузе",
-            };
+        public static IReadOnlyDictionary<string, string> VariantNotes =>
+            CyrillicRenderer.KnownVariants.ToDictionary(name => name, Note, StringComparer.Ordinal);
+
+        /// <summary>Пояснение варианта на языке интерфейса; <c>null</c> — вариант рендереру неизвестен.</summary>
+        public static string? NoteOf(string variant) =>
+            CyrillicRenderer.KnownVariants.Contains(variant) ? Note(variant) : null;
+
+        private static string Note(string variant) => CoreText.Get("Variant." + variant);
 
         /// <summary>
         /// Группы в порядке профиля: буква стоит там, где в профиле впервые встретился
@@ -88,7 +85,8 @@ namespace Transliterator.Core.Services
         /// Поиск. Группа находится целиком — по своей букве, по ключу или имени любого
         /// своего варианта (<c>heavy</c> показывает все буквы, у которых такой вариант
         /// есть, вместе с их базовыми графемами), по графеме — тому, как буква пишется
-        /// («х»), — и по русскому пояснению варианта («пауз» находит <c>waqf</c>, E7).
+        /// («х»), — и по пояснению варианта на языке интерфейса («пауз» находит <c>waqf</c>, E7; в английском — «pause», D7).
+        /// Кириллица ищется в любом интерфейсе: графемы своего профиля — буквы, а не перевод.
         /// </summary>
         public static IReadOnlyList<RuleGroup> Filter(IReadOnlyList<RuleGroup> groups, string? query)
         {

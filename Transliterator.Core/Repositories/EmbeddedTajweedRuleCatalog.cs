@@ -2,6 +2,7 @@ using System.Reflection;
 using System.Text.Json;
 using Transliterator.Domain.Entities;
 using Transliterator.Domain.Exceptions;
+using Transliterator.Domain.Localization;
 
 namespace Transliterator.Core.Repositories
 {
@@ -75,14 +76,22 @@ namespace Transliterator.Core.Repositories
                     throw new TransliterationException($"Tajweed rule catalog {resourceName}: {message}");
             }
 
+            // Каждый текст — на каждом языке страницы (D7): иначе в английском
+            // интерфейсе осталось бы русское описание, и заметил бы это только читатель.
+            void RequireTexts(LocalizedText? text, string message)
+            {
+                var missing = text?.MissingLanguages() ?? PageLanguages.All.Select(l => l.Code).ToList();
+                Require(missing.Count == 0, $"{message} in {string.Join(", ", missing)}");
+            }
+
             Require(catalog.Stages.Count > 0, "no stages");
 
             var stages = new HashSet<int>();
             foreach (var stage in catalog.Stages)
             {
                 Require(stages.Add(stage.Number), $"stage {stage.Number} is declared twice");
-                Require(!string.IsNullOrWhiteSpace(stage.Name) && !string.IsNullOrWhiteSpace(stage.Class),
-                        $"stage {stage.Number} has no name or class");
+                Require(!string.IsNullOrWhiteSpace(stage.Class), $"stage {stage.Number} has no class");
+                RequireTexts(stage.Name, $"stage {stage.Number} has no name");
             }
 
             var ids = new HashSet<string>();
@@ -91,14 +100,13 @@ namespace Transliterator.Core.Repositories
                 Require(!string.IsNullOrWhiteSpace(rule.Id), "a rule has no id");
                 Require(ids.Add(rule.Id), $"rule '{rule.Id}' is declared twice");
                 Require(stages.Contains(rule.Stage), $"rule '{rule.Id}' refers to unknown stage {rule.Stage}");
-                Require(!string.IsNullOrWhiteSpace(rule.Name)
-                        && !string.IsNullOrWhiteSpace(rule.ArabicName)
-                        && !string.IsNullOrWhiteSpace(rule.Description),
-                        $"rule '{rule.Id}' has no name, Arabic name or description");
+                Require(!string.IsNullOrWhiteSpace(rule.ArabicName), $"rule '{rule.Id}' has no Arabic name");
+                RequireTexts(rule.Name, $"rule '{rule.Id}' has no name");
+                RequireTexts(rule.Description, $"rule '{rule.Id}' has no description");
 
                 // Перевод названия (I7) обязателен, как и само название: без него
                 // «Мадд лязим» на странице — арабское слово русскими буквами.
-                Require(!string.IsNullOrWhiteSpace(rule.Translation), $"rule '{rule.Id}' has no translation of its name");
+                RequireTexts(rule.Translation, $"rule '{rule.Id}' has no translation of its name");
                 Require(rule.Examples.Count > 0, $"rule '{rule.Id}' has no examples");
 
                 // Счёт по умолчанию — один из допустимых: его конвейер берёт, пока

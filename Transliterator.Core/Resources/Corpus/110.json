@@ -1,7 +1,7 @@
 {
   "Number": 110,
   "ArabicName": "سُورَةُ ٱلنَّصْرِ",
-  "RussianName": "Ан-Наср",
+  "Name": { "ru": "Ан-Наср", "en": "An-Nasr" },
   "TextEdition": "uthmani-wasl",
   "Ayahs": [
     {

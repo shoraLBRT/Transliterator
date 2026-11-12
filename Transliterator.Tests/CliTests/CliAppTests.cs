@@ -240,7 +240,7 @@ namespace Transliterator.Tests.CliTests
             var corpus = await new EmbeddedCorpusRepository(NullLogger<EmbeddedCorpusRepository>.Instance).GetAllSurahsAsync();
 
             Assert.Equal(CliApp.Success, run.ExitCode);
-            Assert.All(corpus, surah => Assert.Contains($"{surah.Number,3}  {surah.RussianName} ({surah.ArabicName})", run.Out));
+            Assert.All(corpus, surah => Assert.Contains($"{surah.Number,3}  {surah.Name.For("ru")} ({surah.ArabicName})", run.Out));
         }
 
         [Fact]
@@ -277,7 +277,7 @@ namespace Transliterator.Tests.CliTests
             var run = await RunAsync(Array.Empty<string>(), input: "2\n112\n2\n");
 
             Assert.Equal(CliApp.Success, run.ExitCode);
-            Assert.True(run.Out.IndexOf(Surah(112).RussianName, StringComparison.Ordinal) < run.Out.IndexOf("Surah number:", StringComparison.Ordinal));
+            Assert.True(run.Out.IndexOf(Surah(112).Name.For("ru"), StringComparison.Ordinal) < run.Out.IndexOf("Surah number:", StringComparison.Ordinal));
             Assert.True(run.Out.IndexOf("Standard (default)", StringComparison.Ordinal) < run.Out.IndexOf("Profile (", StringComparison.Ordinal));
             Assert.EndsWith("=== Transliteration (Standard) ===\n" + CorpusExpectation(112), run.Out);
         }

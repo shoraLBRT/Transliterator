@@ -1,13 +1,33 @@
 {
-  "Stages": [ { "Number": 9, "Name": "Длительность мадда", "Class": "MaddRule" } ],
+  "Stages": [
+    {
+      "Number": 9,
+      "Name": {
+        "ru": "Длительность мадда",
+        "en": "Stage"
+      },
+      "Class": "MaddRule"
+    }
+  ],
   "Rules": [
     {
       "Id": "madd-lazim",
       "Stage": 9,
-      "Name": "Мадд лязим",
+      "Name": {
+        "ru": "Мадд лязим",
+        "en": "Rule"
+      },
       "ArabicName": "المد اللازم",
-      "Description": "У правила нет перевода названия.",
-      "Examples": [ { "Arabic": "وَلَا ٱلضَّآلِّينَ", "Transliteration": "уаля-дIдIоооооллиин" } ],
+      "Description": {
+        "ru": "У правила нет перевода названия.",
+        "en": "A rule for a broken catalog."
+      },
+      "Examples": [
+        {
+          "Arabic": "وَلَا ٱلضَّآلِّينَ",
+          "Transliteration": "уаля-дIдIоооооллиин"
+        }
+      ],
       "Tier": "Tajweed"
     }
   ]

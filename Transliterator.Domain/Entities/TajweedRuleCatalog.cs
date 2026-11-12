@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using Transliterator.Domain.Localization;
 
 namespace Transliterator.Domain.Entities
 {
@@ -34,7 +35,8 @@ namespace Transliterator.Domain.Entities
         /// <summary>Номер стадии из <c>ROADMAP.md</c>: от 3 до 10.</summary>
         public int Number { get; set; }
 
-        public string Name { get; set; } = string.Empty;
+        /// <summary>Имя стадии на каждом языке страницы (D7).</summary>
+        public LocalizedText Name { get; set; } = new();
 
         /// <summary>
         /// Класс, который исполняет стадию (<c>WaqfRule</c>, <c>NasalRule</c>…).
@@ -53,8 +55,12 @@ namespace Transliterator.Domain.Entities
         /// <summary>Номер стадии, которая исполняет правило.</summary>
         public int Stage { get; set; }
 
-        /// <summary>Название по-русски: «Мадд лязим».</summary>
-        public string Name { get; set; } = string.Empty;
+        /// <summary>
+        /// Название на каждом языке страницы (D7): «Мадд лязим», «Madd lazim».
+        /// Тексты правила — <see cref="LocalizedText"/>: каталог без текста на каком-нибудь
+        /// языке страницы не загружается.
+        /// </summary>
+        public LocalizedText Name { get; set; } = new();
 
         /// <summary>
         /// Перевод названия для того, кто не знает арабского (I7): «Мадд лязим» —
@@ -63,13 +69,13 @@ namespace Transliterator.Domain.Entities
         /// короткое пояснение, что правило делает: повтор названия ничего не объяснит.
         /// Страница пишет его в скобках после названия везде, где показывает правило.
         /// </summary>
-        public string Translation { get; set; } = string.Empty;
+        public LocalizedText Translation { get; set; } = new();
 
         /// <summary>Арабский термин: <c>مد لازم</c>.</summary>
         public string ArabicName { get; set; } = string.Empty;
 
         /// <summary>Коротко и понятно тому, кто не учил таджвид.</summary>
-        public string Description { get; set; } = string.Empty;
+        public LocalizedText Description { get; set; } = new();
 
         /// <summary>
         /// Примеры с выводом по профилю <c>Standard</c>. Каждый сверяется тестом

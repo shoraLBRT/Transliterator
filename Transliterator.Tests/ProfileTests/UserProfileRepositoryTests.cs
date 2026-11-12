@@ -194,7 +194,7 @@ namespace Transliterator.Tests.ProfileTests
             var error = await Assert.ThrowsAsync<TransliterationException>(
                 () => repository.SaveProfileAsync(Mine(ba: "bb")));
 
-            Assert.Contains("storage is full", error.Message);
+            Assert.Contains("хранилище браузера заполнено", error.Message);
             Assert.IsType<StorageQuotaExceededException>(error.InnerException);
             Assert.Equal("b", (await repository.GetProfileAsync("Мой"))!.Rules["ب"]);
         }

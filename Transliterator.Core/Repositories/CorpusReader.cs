@@ -65,7 +65,8 @@ namespace Transliterator.Core.Repositories
             Require(fileName == FileNameFor(surah.Number),
                     $"file name does not match surah number {surah.Number}");
             Require(!string.IsNullOrWhiteSpace(surah.ArabicName), "arabic name is empty");
-            Require(!string.IsNullOrWhiteSpace(surah.RussianName), "russian name is empty");
+            Require(surah.Name is not null && surah.Name.MissingLanguages().Count == 0,
+                    $"surah name is missing in {string.Join(", ", surah.Name?.MissingLanguages() ?? new[] { "every language" })}");
             Require(CorpusTextEdition.IsKnown(surah.TextEdition),
                     $"unknown text edition '{surah.TextEdition}'");
             Require(surah.Ayahs.Count > 0, "surah has no ayahs");

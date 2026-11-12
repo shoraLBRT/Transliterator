@@ -45,7 +45,7 @@ namespace Transliterator.Tests.CorpusTests
             {
               "Number": 110,
               "ArabicName": "سُورَةُ ٱلنَّصْرِ",
-              "RussianName": "Ан-Наср",
+              "Name": { "ru": "Ан-Наср", "en": "An-Nasr" },
               "TextEdition": "uthmani-wasl",
               "Ayahs": [
                 { "Number": 1, "Arabic": "إِذَا جَآءَ نَصْرُ ٱللَّهِ",
@@ -66,7 +66,8 @@ namespace Transliterator.Tests.CorpusTests
             Assert.NotNull(surah);
             Assert.Equal(110, surah!.Number);
             Assert.Equal("سُورَةُ ٱلنَّصْرِ", surah.ArabicName);
-            Assert.Equal("Ан-Наср", surah.RussianName);
+            Assert.Equal("Ан-Наср", surah.Name.For("ru"));
+            Assert.Equal("An-Nasr", surah.Name.For("en"));
             Assert.Equal(CorpusTextEdition.UthmaniWasl, surah.TextEdition);
             Assert.Equal(2, surah.Ayahs.Count);
             Assert.Equal("إِذَا جَآءَ نَصْرُ اللَّهِ", surah.Ayahs[0].ArabicImlai);
@@ -114,7 +115,9 @@ namespace Transliterator.Tests.CorpusTests
         [InlineData("\"Number\": 2, \"Arabic\"", "\"Number\": 3, \"Arabic\"")]
         [InlineData("\"Expected\": \"каана\"", "\"Expected\": \"\"")]
         [InlineData("\"Arabic\": \"كَانَ\"", "\"Arabic\": \"\"")]
-        [InlineData("\"RussianName\": \"Ан-Наср\"", "\"RussianName\": \" \"")]
+        [InlineData("\"ru\": \"Ан-Наср\"", "\"ru\": \" \"")]
+        // Имя — на каждом языке страницы (D7): без английского сура не читается.
+        [InlineData(", \"en\": \"An-Nasr\"", "")]
         [InlineData("\"ArabicName\": \"سُورَةُ ٱلنَّصْرِ\"", "\"ArabicName\": \"\"")]
         // Пара написаний бита с обеих сторон. Аят с васлей без современного написания —
         // непроверенная ветка DetectImlaiWasl (B1). Лишнее написание у аята без васли —

@@ -193,6 +193,41 @@ namespace Transliterator.Tests.ProfileTests
             Assert.Equal(known.Order(), RuleTable.VariantNotes.Keys.Order());
         }
 
+        [Theory]
+        [InlineData("pause", "waqf")]
+        [InlineData("emphatic", "heavy")]
+        [InlineData("start of a word", "initial")]
+        public void Search_InTheEnglishInterface_FindsTheVariantByItsEnglishNote(string query, string variant)
+        {
+            // Поиск — на языке интерфейса (D7): в английском пояснения английские.
+            using var _ = TestCulture.Use("en");
+
+            var found = RuleTable.Filter(RuleTable.Group(TestProfiles.Latin.Rules), query);
+
+            Assert.NotEmpty(found);
+            Assert.All(found, group => Assert.Contains(group.Variants, v => v.Name == variant));
+        }
+
+        [Fact]
+        public void Search_InTheEnglishInterface_StillFindsACyrillicGrapheme()
+        {
+            // Графема своего профиля — буква, а не перевод: «х» ищется в любом интерфейсе.
+            using var _ = TestCulture.Use("en");
+
+            var found = RuleTable.Filter(RuleTable.Group(TestProfiles.Standard.Rules), "х");
+
+            Assert.Equal(new[] { "ح", "خ" }, found.Select(g => g.BaseKey).Order());
+        }
+
+        [Fact]
+        public void EveryVariantNote_ExistsInEnglish()
+        {
+            using var _ = TestCulture.Use("en");
+
+            Assert.All(RuleTable.VariantNotes, pair =>
+                Assert.Matches("^[a-z][a-z ,]+$", pair.Value));
+        }
+
         [Fact]
         public void SearchWithoutMatches_IsEmpty()
         {

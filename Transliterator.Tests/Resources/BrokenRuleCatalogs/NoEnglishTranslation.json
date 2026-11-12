@@ -1,0 +1,37 @@
+{
+  "Stages": [
+    {
+      "Number": 9,
+      "Name": {
+        "ru": "Длительность мадда",
+        "en": "Stage"
+      },
+      "Class": "MaddRule"
+    }
+  ],
+  "Rules": [
+    {
+      "Id": "madd-lazim",
+      "Stage": 9,
+      "Name": {
+        "ru": "Мадд лязим",
+        "en": "Rule"
+      },
+      "Translation": {
+        "ru": "обязательное удлинение"
+      },
+      "ArabicName": "المد اللازم",
+      "Description": {
+        "ru": "У правила нет английского перевода названия.",
+        "en": "The rule has no English translation of its name."
+      },
+      "Examples": [
+        {
+          "Arabic": "وَلَا ٱلضَّآلِّينَ",
+          "Transliteration": "уаля-дIдIоооооллиин"
+        }
+      ],
+      "Tier": "Tajweed"
+    }
+  ]
+}

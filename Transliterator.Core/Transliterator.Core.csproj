@@ -9,6 +9,10 @@
          а не падать на старте страницы: проверку включает SupportedPlatform ниже,
          а эта строка переводит её из предупреждения в ошибку. -->
     <WarningsAsErrors>$(WarningsAsErrors);CA1416</WarningsAsErrors>
+
+    <!-- Тексты для человека (D7) — ресурсы .resx: нейтральный язык сборки русский,
+         остальные языки страницы — спутниковые сборки (CoreText.en.resx). -->
+    <NeutralLanguage>ru</NeutralLanguage>
   </PropertyGroup>
 
   <ItemGroup>

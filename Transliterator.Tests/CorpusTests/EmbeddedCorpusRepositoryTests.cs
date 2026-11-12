@@ -47,7 +47,7 @@ namespace Transliterator.Tests.CorpusTests
             foreach (var (disk, resource) in onDisk.Zip(embedded))
             {
                 Assert.Equal(disk.ArabicName, resource.ArabicName);
-                Assert.Equal(disk.RussianName, resource.RussianName);
+                Assert.Equal(disk.Name, resource.Name);
                 Assert.Equal(disk.TextEdition, resource.TextEdition);
                 Assert.Equal(disk.Ayahs.Select(a => (a.Number, a.Arabic, a.ArabicImlai, a.Expected)),
                              resource.Ayahs.Select(a => (a.Number, a.Arabic, a.ArabicImlai, a.Expected)));

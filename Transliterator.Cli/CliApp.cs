@@ -4,6 +4,7 @@ using Transliterator.Core.Services;
 using Transliterator.Domain.Entities;
 using Transliterator.Domain.Exceptions;
 using Transliterator.Domain.Interfaces;
+using Transliterator.Domain.Localization;
 
 namespace Transliterator.Cli
 {
@@ -291,7 +292,7 @@ namespace Transliterator.Cli
                 output.WriteLine("  The corpus is empty.");
 
             foreach (var surah in surahs)
-                output.WriteLine($"  {surah.Number,3}  {surah.RussianName} ({surah.ArabicName})");
+                output.WriteLine($"  {surah.Number,3}  {surah.Name.For(PageLanguages.Default.Code)} ({surah.ArabicName})");
 
             return Success;
         }

@@ -1,7 +1,7 @@
 {
   "Number": 113,
   "ArabicName": "سُورَةُ ٱلْفَلَقِ",
-  "RussianName": "Аль-Фаляк",
+  "Name": { "ru": "Аль-Фаляк", "en": "Al-Falaq" },
   "TextEdition": "uthmani-wasl",
   "Ayahs": [
     {
