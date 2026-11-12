@@ -217,6 +217,24 @@ svg {
     transition: background-color 0.15s ease, border-color 0.15s ease;
 }
 
+/* Текст кнопки не переносится: длинное имя своего профиля обрезается многоточием
+   с конца, и подпись «Профиль:» в начале остаётся видна (E6). */
+.picker {
+    min-width: 0;
+    max-width: 100%;
+}
+
+.picker-toggle {
+    max-width: 100%;
+}
+
+.picker-toggle-text {
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
 .picker-toggle:hover,
 .picker-toggle[aria-expanded="true"] {
     background: var(--foam-50);
@@ -310,6 +328,7 @@ svg {
 /* ---- Ступени чтения ---- */
 
 .composer-tools {
+    min-width: 0;
     display: flex;
     flex-wrap: wrap;
     align-items: center;

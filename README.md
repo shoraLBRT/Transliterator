@@ -124,8 +124,10 @@ all the work in the browser. There is no server, and the page is published from
   pre-filled new-issue form on GitHub that the person submits with their own
   account. The text from the field and its transliteration are attached only
   when the person ticks the box.
-* **Profile** — the third button under the field, named after the current
-  profile (`Standard` by default). It picks a built-in profile (`Standard`,
+* **Profile** — the third button under the field. It says what it picks and
+  what is picked now: "Профиль: Standard" by default, your own profile under its
+  own name ("Профиль: Мой"); a long name is cut with an ellipsis, the caption
+  stays. It picks a built-in profile (`Standard`,
   `Latin`) or your own; "Создать копию" makes your own copy at once, and its
   graphemes can be rewritten in a searchable table, for example `ع` as `ʿ`
   instead of `'`. The panel repeats the output, so a change is seen while typing.

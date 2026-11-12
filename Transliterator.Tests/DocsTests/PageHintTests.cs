@@ -42,6 +42,32 @@ namespace Transliterator.Tests.DocsTests
             Assert.Contains("можно не читать", note.Groups[1].Value);
         }
 
+        [Fact]
+        public void ProfileButton_SaysWhatItChooses_AndKeepsTheCaptionVisible()
+        {
+            // Решение владельца к E6: на кнопке профиля подпись перед именем —
+            // «Профиль: Standard», свой профиль — своим именем («Профиль: Мой»).
+            // Подпись — часть текста кнопки (а значит, и её имени для диктора),
+            // и длинное имя обрезается с конца, не съедая подпись. aria-label нет
+            // нарочно: отдельная строка для диктора разошлась бы с видимой.
+            var root = ReadmeTests.RepositoryRoot();
+            var picker = Regex.Replace(File.ReadAllText(Path.Combine(root, "Transliterator.Web", "Components", "ProfilePicker.razor")), @"\s+", " ");
+
+            Assert.Contains("ToggleText => $\"Профиль: {Profile.Name}\"", picker);
+
+            var toggle = Regex.Match(picker, "<button [^>]*aria-controls=\"profile-menu\"[^>]*>(.*?)</button>");
+            Assert.True(toggle.Success, "the profile button is not found");
+            Assert.Contains("<span class=\"picker-toggle-text\">@ToggleText</span>", toggle.Groups[1].Value);
+            Assert.DoesNotContain("@Profile.Name", toggle.Groups[1].Value);
+            Assert.DoesNotContain("aria-label", toggle.Value);
+
+            var css = Regex.Replace(File.ReadAllText(Path.Combine(root, "Transliterator.Web", "wwwroot", "css", "app.css")), @"\s+", " ");
+            var text = Regex.Match(css, @"\.picker-toggle-text \{([^}]*)\}");
+            Assert.True(text.Success, "the button text has no style");
+            Assert.Contains("text-overflow: ellipsis", text.Groups[1].Value);
+            Assert.Contains("white-space: nowrap", text.Groups[1].Value);
+        }
+
         private static readonly Dictionary<string, int> Numbers = new()
         {
             ["два"] = 2, ["две"] = 2, ["три"] = 3, ["четыре"] = 4, ["пять"] = 5, ["шесть"] = 6,
