@@ -1,0 +1,12 @@
+<Project>
+  <!--
+    habze: the single source of the version. release-please updates <Version> in its Release PR
+    (extra-files xml updater, xpath /Project/PropertyGroup/Version); never edit it by hand.
+    Merge this PropertyGroup into an existing Directory.Build.props at the solution root.
+    The .NET SDK derives AssemblyVersion/FileVersion from it and appends +<commit sha> to
+    InformationalVersion (SourceRevisionId); show InformationalVersion in UI, CLI and logs.
+  -->
+  <PropertyGroup>
+    <Version>0.0.0</Version>
+  </PropertyGroup>
+</Project>

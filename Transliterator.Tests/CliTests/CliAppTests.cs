@@ -253,6 +253,16 @@ namespace Transliterator.Tests.CliTests
                 option => Assert.Contains(option, run.Out));
         }
 
+        [Fact]
+        public async Task Version_PrintsTheBuildVersion()
+        {
+            var run = await RunAsync(new[] { "--version" });
+
+            Assert.Equal(CliApp.Success, run.ExitCode);
+            Assert.Equal($"Transliterator {CliApp.InformationalVersion}\n", run.Out);
+            Assert.Matches(@"^\d+\.\d+\.\d+", CliApp.InformationalVersion);
+        }
+
         [Theory]
         [InlineData("--frobnicate")]
         [InlineData("--file")]

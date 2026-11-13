@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Reflection;
 using System.Text;
 using Transliterator.Core.Services;
 using Transliterator.Domain.Entities;
@@ -68,6 +69,7 @@ namespace Transliterator.Cli
                 return arguments.Command switch
                 {
                     CliCommand.Help => Help(console.Out),
+                    CliCommand.Version => Version(console.Out),
                     CliCommand.ListProfiles => await ListProfilesAsync(console.Out),
                     CliCommand.ListSurahs => await ListSurahsAsync(console.Out),
                     CliCommand.Interactive => await InteractiveAsync(arguments, console),
@@ -316,11 +318,26 @@ namespace Transliterator.Cli
                   -p, --profile <name>   Profile to write with (see --profiles). Default: Standard.
                       --profiles         List the profiles.
                       --surahs           List the surahs in the corpus.
+                      --version          Show the version.
                   -h, --help             Show this help.
 
                 Only the transliteration goes to standard output; messages go to standard error.
                 Without arguments the application asks for the input and the profile.
                 """);
+            return Success;
+        }
+
+        /// <summary>
+        /// Полная версия сборки: номер из Directory.Build.props (его ведёт release-please)
+        /// и после «+» коммит, из которого она собрана.
+        /// </summary>
+        public static string InformationalVersion =>
+            typeof(CliApp).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion
+            ?? "unknown";
+
+        private static int Version(TextWriter output)
+        {
+            output.WriteLine($"Transliterator {InformationalVersion}");
             return Success;
         }
 
