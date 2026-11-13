@@ -101,11 +101,28 @@
         <span>@L["Footer.Tagline"]</span>
         <span aria-hidden="true">·</span>
         <a href="@FeedbackLink.RepositoryUrl" target="_blank" rel="noopener">GitHub</a>
+        <span aria-hidden="true">·</span>
+        <span class="footer-version" title="@BuildVersion">v@(ShortVersion)</span>
         <FeedbackButton Arabic="@_arabic" Transliteration="@_result" />
     </footer>
 </div>
 
 @code {
+    /// <summary>
+    /// Версия сборки: номер из Directory.Build.props (его ведёт release-please) и после «+»
+    /// коммит. В подвале — номер и семь знаков коммита, полностью — во всплывающей подсказке.
+    /// </summary>
+    private static readonly string BuildVersion =
+        typeof(App).Assembly
+            .GetCustomAttributes(typeof(System.Reflection.AssemblyInformationalVersionAttribute), false)
+            .OfType<System.Reflection.AssemblyInformationalVersionAttribute>()
+            .FirstOrDefault()?.InformationalVersion ?? "unknown";
+
+    private static string ShortVersion =>
+        BuildVersion.IndexOf('+') is var plus and >= 0 && BuildVersion.Length > plus + 8
+            ? BuildVersion[..(plus + 8)]
+            : BuildVersion;
+
     /// <summary>
     /// Профиль, которым страница пишет, пока человек не выбрал другой (E4): у каждого
     /// языка свой — с английским интерфейсом латиница (D7). Сохранённый выбор важнее:

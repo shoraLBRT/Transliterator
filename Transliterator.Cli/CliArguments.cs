@@ -8,7 +8,8 @@ namespace Transliterator.Cli
         Interactive,
         ListProfiles,
         ListSurahs,
-        Help
+        Help,
+        Version
     }
 
     public enum InputSource
@@ -52,7 +53,7 @@ namespace Transliterator.Cli
         {
             string? text = null, file = null, profile = null, positionalProfile = null;
             int? surah = null;
-            bool stdin = false, help = false, listProfiles = false, listSurahs = false;
+            bool stdin = false, help = false, version = false, listProfiles = false, listSurahs = false;
             var positional = 0;
 
             for (var i = 0; i < args.Count; i++)
@@ -61,6 +62,9 @@ namespace Transliterator.Cli
                 {
                     case "-h" or "--help" or "/?":
                         help = true;
+                        break;
+                    case "--version":
+                        version = true;
                         break;
                     case "--profiles":
                         listProfiles = true;
@@ -102,6 +106,8 @@ namespace Transliterator.Cli
 
             if (help)
                 return new CliArguments(CliCommand.Help);
+            if (version)
+                return new CliArguments(CliCommand.Version);
             if (listProfiles)
                 return new CliArguments(CliCommand.ListProfiles);
             if (listSurahs)
