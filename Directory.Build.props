@@ -7,6 +7,6 @@
     InformationalVersion (SourceRevisionId); show InformationalVersion in UI, CLI and logs.
   -->
   <PropertyGroup>
-    <Version>0.0.0</Version>
+    <Version>0.1.0</Version>
   </PropertyGroup>
 </Project>
