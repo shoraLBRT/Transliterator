@@ -1089,8 +1089,9 @@ svg {
     height: 2.4rem;
 }
 
-/* Основная графема — второе главное в строке. */
-.profile-row:not(.is-variant) .profile-value {
+/* Основная графема — второе главное в строке. Пустая и незаданная остаются
+   тихой курсивной подписью: это не запись, а пояснение. */
+.profile-row:not(.is-variant) .profile-value:not(.is-empty, .is-missing) {
     font-size: 1.05rem;
     font-weight: 600;
     color: var(--ink);
@@ -1154,6 +1155,15 @@ svg {
 
 .profile-row.is-variant .profile-value-input {
     font-size: 0.8rem;
+}
+
+/* Пустая графема у поля — та же тихая подпись, что у встроенного профиля. */
+.profile-value-input::placeholder {
+    font-size: 0.8rem;
+    font-weight: 400;
+    font-style: italic;
+    color: var(--ink-muted);
+    opacity: 1;
 }
 
 /* Предупреждение о спорной графеме (E5) — под основной графемой, на два столбца. */
