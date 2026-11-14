@@ -367,7 +367,7 @@
     <value>Своя запись</value>
   </data>
   <data name="About.Profiles" xml:space="preserve">
-    <value>Если вы привыкли к другим обозначениям, запись можно поменять: в панели профиля нажмите «{0}» и поправьте буквы в «{1}».</value>
+    <value>Если вы привыкли к другим обозначениям, запись можно поменять: в панели профиля нажмите «{0}» и поправьте буквы — они под стрелкой «{1}».</value>
     <comment>{0}, {1} are the button texts Profile.Create and Profile.Settings</comment>
   </data>
   <data name="About.ThanksTitle" xml:space="preserve">

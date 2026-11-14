@@ -32,7 +32,7 @@ namespace Transliterator.Tests.DocsTests
         public void StageCount_IsTheNumberOfRowsInTheRoadmapTable()
         {
             var roadmap = File.ReadAllText(Path.Combine(ReadmeTests.RepositoryRoot(), "docs", "ROADMAP.md"));
-            var table = Regex.Match(roadmap, @"^## Стадии конвейера\s*\n(.*?)\n\s*\n", RegexOptions.Multiline | RegexOptions.Singleline);
+            var table = Regex.Match(roadmap, @"^## Стадии конвейера\s*\n(.*?)^---", RegexOptions.Multiline | RegexOptions.Singleline);
 
             Assert.True(table.Success, "the pipeline stage table is not found");
 
