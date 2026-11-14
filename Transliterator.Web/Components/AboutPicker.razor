@@ -1,0 +1,108 @@
+@inherits PanelPicker
+
+@* «О приложении» (D8): что это за страница и зачем она тому, кто пришёл впервые.
+   Круглая кнопка «?» — ещё одна кнопка сбоку и ведёт себя, как ступень чтения
+   и профиль (D6): одна панель на страницу, шапка с крестиком, Escape возвращает
+   фокус на кнопку. Подписи рядом у неё нет: выбирать здесь нечего, а имя для
+   экранного диктора — скрытый текст кнопки.
+   Текст — короткие абзацы с подзаголовками. Чтобы он не разошёлся со страницей,
+   в нём нет ничего вписанного руками, что страница знает сама: «как пишет
+   страница» считает конвейер текущим профилем и ступенью, число стадий — константа
+   конвейера (её сверяет тест), имена кнопок профиля — те же строки, что на кнопках. *@
+
+<div class="picker">
+    <button type="button" class="picker-toggle about-toggle" aria-expanded="@(IsOpen ? "true" : "false")"
+            aria-controls="about-menu" title="@L["About.Toggle"]" @onclick="ToggleAsync" @ref="ToggleButton">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M9.25 9.25a2.75 2.75 0 1 1 3.9 2.5c-.7.33-1.15 1-1.15 1.78v.72" />
+            <path d="M12 17.25v.01" />
+        </svg>
+        <span class="visually-hidden">@L["About.Toggle"]</span>
+    </button>
+
+    @if (IsOpen)
+    {
+        <div class="picker-backdrop" @onclick="Close"></div>
+
+        <div id="about-menu" class="picker-panel about-panel" role="dialog" aria-labelledby="about-menu-title"
+             tabindex="-1" @ref="PanelElement" @onkeydown="OnPanelKeyDownAsync">
+            <PanelHead Id="about-menu-title" Title="@L["About.Title"]" Close="CloseToToggleAsync" />
+
+            <div class="about-body">
+                <section class="about-section">
+                    <h3 class="about-heading">@L["About.WhyTitle"]</h3>
+                    <p>@L["About.Why"]</p>
+                </section>
+
+                <section class="about-section">
+                    <h3 class="about-heading">@L["About.ExampleTitle"]</h3>
+                    <p class="about-arabic" dir="rtl" lang="ar">@ExampleArabic</p>
+                    <dl class="about-example">
+                        <div class="about-example-row is-usual">
+                            <dt>@L["About.ExampleUsual"]</dt>
+                            <dd>@L["About.ExampleTypical"]</dd>
+                        </div>
+                        @if (Ours is { } ours)
+                        {
+                            <div class="about-example-row is-ours">
+                                <dt>@L["About.ExampleOurs"]</dt>
+                                <dd>@ours</dd>
+                            </div>
+                        }
+                    </dl>
+                    <p>@L["About.ExampleNote"]</p>
+                </section>
+
+                <section class="about-section">
+                    <h3 class="about-heading">@L["About.HowTitle"]</h3>
+                    <p>@L["About.How", L.Count("StageCount", TransliterationService.StageCount)]</p>
+                </section>
+
+                <section class="about-section">
+                    <h3 class="about-heading">@L["About.ProfilesTitle"]</h3>
+                    <p>@L["About.Profiles", L["Profile.Create"].Value, L["Profile.Settings"].Value]</p>
+                </section>
+
+                <section class="about-section">
+                    <h3 class="about-heading">@L["About.ThanksTitle"]</h3>
+                    <p>@L["About.Thanks"]</p>
+                    <button type="button" class="about-feedback" @onclick="OpenFeedbackAsync">@L["About.FeedbackAction"]</button>
+                </section>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    /// <summary>
+    /// Пример на двух словах: в привычной записи ح и ه сливаются в одну «х»,
+    /// а долгий гласный не виден — у страницы это разные буквы.
+    /// </summary>
+    public const string ExampleArabic = "ٱلْحَمْدُ لِلَّهِ";
+
+    /// <summary>
+    /// Транслитерация текущим профилем и ступенью страницы — та же, что у примеров
+    /// правил. Без неё — или когда она вернула <c>null</c> — строки «как пишет
+    /// страница» нет: вписанный руками вывод разошёлся бы с настоящим.
+    /// </summary>
+    [Parameter]
+    public Func<string, string?>? Transliterate { get; set; }
+
+    /// <summary>Открыть форму отзыва (H1, H3) — она у подвала страницы.</summary>
+    [Parameter]
+    public EventCallback OpenFeedback { get; set; }
+
+    protected override string Panel => "about";
+
+    private string? Ours => Transliterate?.Invoke(ExampleArabic);
+
+    /// <summary>
+    /// Панель закрывается, и фокус уходит в поле отзыва: форма открывается своей
+    /// кнопкой у подвала, рядом с ней же и закрывается.
+    /// </summary>
+    private async Task OpenFeedbackAsync()
+    {
+        Close();
+        await OpenFeedback.InvokeAsync();
+    }
+}

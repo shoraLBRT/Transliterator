@@ -36,18 +36,21 @@ namespace Transliterator.Tests.DocsTests
 
             Assert.Contains("<ReadingPicker", side);
             Assert.Contains("<ProfilePicker", side);
+            Assert.Contains("<AboutPicker", side);
             Assert.DoesNotContain("<SurahPicker", side);
 
             Assert.Single(Regex.Matches(app, "<SurahPicker"));
             Assert.Single(Regex.Matches(app, "<ReadingPicker"));
             Assert.Single(Regex.Matches(app, "<ProfilePicker"));
+            Assert.Single(Regex.Matches(app, "<AboutPicker"));
         }
 
         [Theory]
         [InlineData("SurahPicker.razor", "surah-menu")]
         [InlineData("ReadingPicker.razor", "reading-menu")]
         [InlineData("ProfilePicker.razor", "profile-menu")]
-        public void AllThreePanels_BehaveAlike(string file, string panel)
+        [InlineData("AboutPicker.razor", "about-menu")]
+        public void AllPanels_BehaveAlike(string file, string panel)
         {
             // Одно поведение на все панели: общий учёт открытой (одна на страницу),
             // шапка с крестиком и имя диалога из неё.
@@ -200,6 +203,45 @@ namespace Transliterator.Tests.DocsTests
             Assert.Equal("Create profile", PageStrings.Web("en")["Profile.Create"]);
             Assert.Equal("Настройки профиля", PageStrings.Web("ru")["Profile.Settings"]);
             Assert.Equal("Profile settings", PageStrings.Web("en")["Profile.Settings"]);
+        }
+
+        /// <summary>
+        /// «О приложении» (D8): круглая кнопка «?» сбоку с именем для диктора, в панели —
+        /// подзаголовки, пример «как пишут обычно» и «как пишет страница» (её считает
+        /// конвейер, а не текст), имена кнопок профиля из тех же строк, что на кнопках,
+        /// и кнопка, открывающая форму отзыва.
+        /// </summary>
+        [Fact]
+        public void AboutButton_OpensAPanelThatExplainsThePage()
+        {
+            var about = Regex.Replace(Web("Components", "AboutPicker.razor"), @"\s+", " ");
+
+            var toggle = Regex.Match(about, "<button [^>]*aria-controls=\"about-menu\"[^>]*>(.*?)</button>");
+            Assert.True(toggle.Success, "the about button is not found");
+            Assert.Contains("<span class=\"visually-hidden\">@L[\"About.Toggle\"]</span>", toggle.Groups[1].Value);
+            Assert.Contains("class=\"picker-panel about-panel\"", about);
+
+            foreach (var heading in new[] { "WhyTitle", "ExampleTitle", "HowTitle", "ProfilesTitle", "ThanksTitle" })
+                Assert.Contains($"<h3 class=\"about-heading\">@L[\"About.{heading}\"]</h3>", about);
+
+            Assert.Contains("private string? Ours => Transliterate?.Invoke(ExampleArabic);", about);
+            Assert.Contains("<dd>@ours</dd>", about);
+            Assert.Contains("L[\"About.Profiles\", L[\"Profile.Create\"].Value, L[\"Profile.Settings\"].Value]", about);
+            Assert.Contains("@onclick=\"OpenFeedbackAsync\">@L[\"About.FeedbackAction\"]</button>", about);
+
+            var app = Regex.Replace(Web("App.razor"), @"\s+", " ");
+            Assert.Contains("<AboutPicker Transliterate=\"TransliterateExample\" OpenFeedback=\"OpenFeedbackAsync\" />", app);
+            Assert.Contains("<FeedbackButton Arabic=\"@_arabic\" Transliteration=\"@_result\" @ref=\"_feedback\" />", app);
+
+            Assert.Equal("О приложении", PageStrings.Web("ru")["About.Toggle"]);
+            Assert.Equal("About", PageStrings.Web("en")["About.Toggle"]);
+
+            foreach (var language in new[] { "ru", "en" })
+            {
+                var profiles = PageStrings.Web(language)["About.Profiles"];
+                Assert.Contains("{0}", profiles);
+                Assert.Contains("{1}", profiles);
+            }
         }
 
         [Fact]

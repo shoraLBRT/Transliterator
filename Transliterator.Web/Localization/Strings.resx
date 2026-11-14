@@ -327,4 +327,68 @@
   <data name="Feedback.Failed" xml:space="preserve">
     <value>Сообщение не отправилось: сервер ответил ошибкой.</value>
   </data>
+  <data name="About.Toggle" xml:space="preserve">
+    <value>О приложении</value>
+  </data>
+  <data name="About.Title" xml:space="preserve">
+    <value>О приложении</value>
+  </data>
+  <data name="About.WhyTitle" xml:space="preserve">
+    <value>Зачем эта страница</value>
+  </data>
+  <data name="About.Why" xml:space="preserve">
+    <value>Страница записывает арабский текст Корана буквами, понятными тем, кто не читает по-арабски. На многих сайтах такая запись — транслитерация — сделана с ошибками: разные арабские звуки сливаются в одну букву, а правила чтения теряются.</value>
+  </data>
+  <data name="About.ExampleTitle" xml:space="preserve">
+    <value>Пример</value>
+  </data>
+  <data name="About.ExampleUsual" xml:space="preserve">
+    <value>Как пишут обычно</value>
+  </data>
+  <data name="About.ExampleTypical" xml:space="preserve">
+    <value>Альхамдулиллях</value>
+    <comment>Typical mistaken transliteration seen on many sites; not quoted from any named site</comment>
+  </data>
+  <data name="About.ExampleOurs" xml:space="preserve">
+    <value>Как пишет страница</value>
+    <comment>The value next to it is computed live by the pipeline with the current profile</comment>
+  </data>
+  <data name="About.ExampleNote" xml:space="preserve">
+    <value>В обычной записи одна «х» стоит и за ح, и за ه, хотя звучат они по-разному, и не видно, где гласный долгий. Здесь у разных звуков разные буквы, а долгота видна.</value>
+  </data>
+  <data name="About.HowTitle" xml:space="preserve">
+    <value>Как это устроено</value>
+  </data>
+  <data name="About.How" xml:space="preserve">
+    <value>Текст проходит конвейер, в нём {0}. По порядку учитываются правила таджвида — паузы, слияние звуков, носовые звуки, твёрдость и мягкость, долгота гласных, отзвук, — и только потом текст становится буквами.</value>
+    <comment>{0} is the stage count with its noun (StageCount), taken from the pipeline</comment>
+  </data>
+  <data name="About.ProfilesTitle" xml:space="preserve">
+    <value>Своя запись</value>
+  </data>
+  <data name="About.Profiles" xml:space="preserve">
+    <value>Если вы привыкли к другим обозначениям, запись можно поменять: в панели профиля нажмите «{0}» и поправьте буквы — они под стрелкой «{1}».</value>
+    <comment>{0}, {1} are the button texts Profile.Create and Profile.Settings</comment>
+  </data>
+  <data name="About.ThanksTitle" xml:space="preserve">
+    <value>Спасибо</value>
+  </data>
+  <data name="About.Thanks" xml:space="preserve">
+    <value>Спасибо всем, кто пишет отзывы: по ним страница становится точнее. И спасибо, что делитесь ею с теми, кому она пригодится.</value>
+  </data>
+  <data name="About.FeedbackAction" xml:space="preserve">
+    <value>Написать отзыв</value>
+  </data>
+  <data name="StageCount.One" xml:space="preserve">
+    <value>{0} стадия</value>
+    <comment>1, 21, 31…</comment>
+  </data>
+  <data name="StageCount.Few" xml:space="preserve">
+    <value>{0} стадии</value>
+    <comment>2–4, 22–24… (Russian plural form; English uses the same text as Many)</comment>
+  </data>
+  <data name="StageCount.Many" xml:space="preserve">
+    <value>{0} стадий</value>
+    <comment>0, 5–20, 25…</comment>
+  </data>
 </root>

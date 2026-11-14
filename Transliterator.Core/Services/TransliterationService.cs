@@ -17,6 +17,15 @@ public class TransliterationService : ITransliterationService
 {
     private const string DefaultProfileName = "Standard";
 
+    /// <summary>
+    /// Сколько стадий у конвейера: нормализация, разбор, стадии правил
+    /// <see cref="RulesService"/> и рендеринг. Это число называет и страница
+    /// в «О приложении» (D8). Тест сверяет его с конструктором <see cref="RulesService"/>
+    /// и с таблицей «Стадии конвейера» в <c>docs/ROADMAP.md</c>: стадия, добавленная
+    /// без него, роняет тест, а не расходится с текстом страницы.
+    /// </summary>
+    public const int StageCount = 11;
+
     private readonly IProfileRepository _profileRepository;
     private readonly ArabicNormalizer _normalizer;
     private readonly ArabicParser _parser;
