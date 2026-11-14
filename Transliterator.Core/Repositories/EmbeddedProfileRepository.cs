@@ -31,8 +31,8 @@ namespace Transliterator.Core.Repositories
     {
         /// <summary>
         /// Имя ресурса собирается компилятором из корневого пространства имён
-        /// и пути к файлу: <c>Resources\Profiles\Standard.json</c> превращается
-        /// в <c>Transliterator.Core.Resources.Profiles.Standard.json</c>.
+        /// и пути к файлу: <c>Resources\Profiles\Cyrillic.json</c> превращается
+        /// в <c>Transliterator.Core.Resources.Profiles.Cyrillic.json</c>.
         /// </summary>
         public const string DefaultResourcePrefix = "Transliterator.Core.Resources.Profiles.";
 

@@ -129,7 +129,7 @@ namespace Transliterator.Tests.DocsTests
         public void EnglishInterface_WritesInLatin_ByDefault()
         {
             // Решение владельца (D7): с английским интерфейсом по умолчанию латиница.
-            Assert.Equal("Standard", PageLanguages.Russian.DefaultProfile);
+            Assert.Equal("Cyrillic", PageLanguages.Russian.DefaultProfile);
             Assert.Equal("Latin", PageLanguages.English.DefaultProfile);
 
             // Профиль по умолчанию — встроенный: страница загружает его до всякого выбора.

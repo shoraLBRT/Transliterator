@@ -5,20 +5,20 @@ namespace Transliterator.Tests
 {
     /// <summary>
     /// Профили для тестов берутся из настоящего ресурса, а не из копии в коде:
-    /// прежняя хардкодированная копия успела разойтись с Standard.json,
+    /// прежняя хардкодированная копия успела разойтись с Cyrillic.json,
     /// и тесты проверяли поведение, которого в приложении уже не было.
     /// </summary>
     public static class TestProfiles
     {
-        private static readonly Lazy<TransliterationProfile> _standard = new(() => Load("Standard"));
+        private static readonly Lazy<TransliterationProfile> _cyrillic = new(() => Load("Cyrillic"));
         private static readonly Lazy<TransliterationProfile> _latin = new(() => Load("Latin"));
 
-        public static TransliterationProfile Standard => _standard.Value;
+        public static TransliterationProfile Cyrillic => _cyrillic.Value;
 
         public static TransliterationProfile Latin => _latin.Value;
 
         /// <summary>Все профили, которые приложение раздаёт из ресурсов.</summary>
-        public static IEnumerable<TransliterationProfile> All => new[] { Standard, Latin };
+        public static IEnumerable<TransliterationProfile> All => new[] { Cyrillic, Latin };
 
         private static TransliterationProfile Load(string name)
         {

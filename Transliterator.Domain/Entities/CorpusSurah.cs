@@ -11,7 +11,7 @@ namespace Transliterator.Domain.Entities
     /// ровно так, как разъехались хардкод-профиль и <c>Standard.json</c>.
     /// </para>
     /// <para>
-    /// <see cref="CorpusAyah.Expected"/> задан по профилю <c>Standard</c>:
+    /// <see cref="CorpusAyah.Expected"/> задан по профилю <c>Cyrillic</c>:
     /// это решение о системе записи, а не снимок вывода программы. Расхождение
     /// «вывод ≠ ожидание» — повод завести баг, а не поправить ожидание.
     /// </para>
@@ -68,7 +68,7 @@ namespace Transliterator.Domain.Entities
         public string ArabicImlai { get; set; } = string.Empty;
 
         /// <summary>
-        /// Ожидаемая транслитерация по профилю <c>Standard</c>. Одна на оба
+        /// Ожидаемая транслитерация по профилю <c>Cyrillic</c>. Одна на оба
         /// написания: орфография — способ записи, а не способ чтения.
         /// </summary>
         public string Expected { get; set; } = string.Empty;

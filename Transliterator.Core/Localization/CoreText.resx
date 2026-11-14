@@ -70,7 +70,7 @@
   </data>
   <data name="Profile.CopySuffix" xml:space="preserve">
     <value>копия</value>
-    <comment>Suggested name of a copy: “Standard (copy)”, “Standard (copy 2)”</comment>
+    <comment>Suggested name of a copy: “Cyrillic (copy)”, “Cyrillic (copy 2)”</comment>
   </data>
   <data name="Profile.NotSavedFull" xml:space="preserve">
     <value>Профиль «{0}» не сохранён: хранилище браузера заполнено. Прежняя версия осталась; удалите профиль, который больше не нужен.</value>

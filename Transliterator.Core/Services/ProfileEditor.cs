@@ -20,7 +20,7 @@ namespace Transliterator.Core.Services
 
         public ProfileEditor(UserProfileRepository profiles) => _profiles = profiles;
 
-        /// <summary>Свободное имя для копии: «Standard (копия)», «Standard (копия 2)»; в английском интерфейсе — «Standard (copy)».</summary>
+        /// <summary>Свободное имя для копии: «Cyrillic (копия)», «Cyrillic (копия 2)»; в английском интерфейсе — «Cyrillic (copy)».</summary>
         public Task<string> SuggestCopyNameAsync(string sourceName) => _profiles.FreeCopyNameAsync(sourceName);
 
         /// <summary>

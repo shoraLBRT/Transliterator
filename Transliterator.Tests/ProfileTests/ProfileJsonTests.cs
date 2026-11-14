@@ -40,7 +40,7 @@ namespace Transliterator.Tests.ProfileTests
         private static TransliterationProfile Mine(string name = "Мой") =>
             new(name, "профиль из браузера")
             {
-                Rules = new Dictionary<string, string>(TestProfiles.Standard.Rules) { ["ب"] = "b" }
+                Rules = new Dictionary<string, string>(TestProfiles.Cyrillic.Rules) { ["ب"] = "b" }
             };
 
         private void SaveExport(TransliterationProfile profile) =>
@@ -70,7 +70,7 @@ namespace Transliterator.Tests.ProfileTests
 
         [Theory]
         [InlineData("Мой", "Мой.json")]
-        [InlineData("Standard (копия)", "Standard (копия).json")]
+        [InlineData("Cyrillic (копия)", "Cyrillic (копия).json")]
         [InlineData("мой/новый: v2?", "мой_новый_ v2_.json")]
         [InlineData("...", "profile.json")]
         public void FileName_FollowsTheProfileName(string name, string expected)
@@ -81,7 +81,7 @@ namespace Transliterator.Tests.ProfileTests
         [Fact]
         public void Export_KeepsArabicAndCyrillicReadable()
         {
-            var json = ProfileJson.Export(TestProfiles.Standard);
+            var json = ProfileJson.Export(TestProfiles.Cyrillic);
 
             Assert.Contains("\"ب\": \"б\"", json);
             Assert.DoesNotContain("\\u", json);
@@ -160,7 +160,7 @@ namespace Transliterator.Tests.ProfileTests
         {
             // Правила полные: профиль без обязательного ключа импорт отвергает (F6).
             var json = System.Text.Json.JsonSerializer.Serialize(
-                new { Name = "  Мой  ", Rules = TestProfiles.Standard.Rules });
+                new { Name = "  Мой  ", Rules = TestProfiles.Cyrillic.Rules });
 
             var result = ProfileJson.Import(json);
 
@@ -173,7 +173,7 @@ namespace Transliterator.Tests.ProfileTests
         {
             // Отвергается сразу, а не когда ключ понадобится тексту, и перечень —
             // весь: чинить файл по одному ключу за попытку никто не станет.
-            var rules = new Dictionary<string, string>(TestProfiles.Standard.Rules);
+            var rules = new Dictionary<string, string>(TestProfiles.Cyrillic.Rules);
             // Ключи без своих вариантов: вариант без базового ключа — другая ошибка.
             rules.Remove("ع");
             rules.Remove("ِ");
@@ -194,7 +194,7 @@ namespace Transliterator.Tests.ProfileTests
         public void Import_AcceptsAProfileWithoutOptionalKeys()
         {
             // Цифры и необязательные варианты профиль вправе не задавать.
-            var rules = TestProfiles.Standard.Rules
+            var rules = TestProfiles.Cyrillic.Rules
                 .Where(r => RequiredProfileKeys.All.Contains(r.Key))
                 .ToDictionary(r => r.Key, r => r.Value);
             var json = System.Text.Json.JsonSerializer.Serialize(new { Name = "Мой", Rules = rules });
@@ -217,14 +217,14 @@ namespace Transliterator.Tests.ProfileTests
         public async Task ImportOfABuiltInName_CannotOverwriteIt()
         {
             var storage = BrowserStorage();
-            var fake = Mine("Standard");
+            var fake = Mine("Cyrillic");
 
             var result = await new ProfileEditor(storage).ImportAsync(ProfileJson.Export(fake));
 
-            Assert.Equal("Standard", result.RenamedFrom);
-            Assert.Equal("Standard (копия)", result.Profile!.Name);
-            Assert.Equal("б", (await storage.GetProfileAsync("Standard"))!.Rules["ب"]);
-            Assert.Equal("b", (await storage.GetProfileAsync("Standard (копия)"))!.Rules["ب"]);
+            Assert.Equal("Cyrillic", result.RenamedFrom);
+            Assert.Equal("Cyrillic (копия)", result.Profile!.Name);
+            Assert.Equal("б", (await storage.GetProfileAsync("Cyrillic"))!.Rules["ب"]);
+            Assert.Equal("b", (await storage.GetProfileAsync("Cyrillic (копия)"))!.Rules["ب"]);
         }
 
         [Fact]

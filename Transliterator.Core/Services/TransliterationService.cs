@@ -15,7 +15,7 @@ using Transliterator.Domain.Phonology;
 /// </summary>
 public class TransliterationService : ITransliterationService
 {
-    private const string DefaultProfileName = "Standard";
+    private const string DefaultProfileName = ProfileNames.Cyrillic;
 
     /// <summary>
     /// Сколько стадий у конвейера: нормализация, разбор, стадии правил
@@ -53,7 +53,7 @@ public class TransliterationService : ITransliterationService
 
         ValidateProfile(profile);
 
-        return new TransliterationResult(arabicText, Run(arabicText, profile), profileName);
+        return new TransliterationResult(arabicText, Run(arabicText, profile), profile.Name);
     }
 
     /// <inheritdoc />
@@ -131,7 +131,7 @@ public class TransliterationService : ITransliterationService
     /// Ключ — тот же, что в самом профиле: «буква» либо «буква|вариант»
     /// (<c>"ر|heavy"</c>, <c>"ة|waqf"</c>). Проверять ключ по алфавиту нельзя:
     /// вариантов у правил больше, чем букв, и их набор задаёт профиль, а не код.
-    /// Пустое значение — законная запись: так в <c>Standard</c> заданы отзвук
+    /// Пустое значение — законная запись: так в <c>Cyrillic</c> заданы отзвук
     /// кальканя и начальная хамза.
     /// </para>
     /// </summary>
@@ -175,7 +175,14 @@ public class TransliterationService : ITransliterationService
     private static string ResolveProfileName(string? profile) =>
         string.IsNullOrWhiteSpace(profile) ? DefaultProfileName : profile;
 
+    /// <summary>
+    /// Профиль по имени, а нет такого — по прежнему имени встроенного (E8):
+    /// <c>Cyrillic</c> — это <c>Cyrillic</c>.
+    /// </summary>
     private async Task<TransliterationProfile> LoadProfileAsync(string profileName) =>
         await _profileRepository.GetProfileAsync(profileName)
+        ?? (ProfileNames.Current(profileName) is var current && current != profileName
+                ? await _profileRepository.GetProfileAsync(current)
+                : null)
         ?? throw new TransliterationException($"Profile '{profileName}' not found");
 }

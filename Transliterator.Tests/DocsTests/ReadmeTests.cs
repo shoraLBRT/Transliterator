@@ -15,7 +15,7 @@ namespace Transliterator.Tests.DocsTests
     /// Примеры в README — не иллюстрация, а обещание (F3). Прежде README показывал
     /// профиль, которого в коде не было, и вывод, которого конвейер уже не давал.
     /// Здесь каждый пример сверяется с тем, откуда он взят: фрагмент Аль-Фатихи —
-    /// с корпусом, прогоны — с конвейером, выдержка профиля — со <c>Standard.json</c>.
+    /// с корпусом, прогоны — с конвейером, выдержка профиля — со <c>Cyrillic.json</c>.
     /// </summary>
     /// <remarks>
     /// Примеры находятся по невидимым меткам <c>&lt;!-- readme-example:имя --&gt;</c>
@@ -144,19 +144,19 @@ namespace Transliterator.Tests.DocsTests
 
         [Theory]
         [MemberData(nameof(Readmes))]
-        public void ProfileExample_IsAnExcerptOfStandardJson(string name)
+        public void ProfileExample_IsAnExcerptOfCyrillicJson(string name)
         {
             var excerpt = JsonSerializer.Deserialize<TransliterationProfile>(Block(Readme(name), "profile"))!;
-            var standard = TestProfiles.Standard;
+            var cyrillic = TestProfiles.Cyrillic;
 
-            Assert.Equal(standard.Name, excerpt.Name);
+            Assert.Equal(cyrillic.Name, excerpt.Name);
             Assert.EndsWith("...", excerpt.Description);
-            Assert.StartsWith(excerpt.Description[..^3], standard.Description);
+            Assert.StartsWith(excerpt.Description[..^3], cyrillic.Description);
             Assert.NotEmpty(excerpt.Rules);
             Assert.All(excerpt.Rules, rule =>
             {
-                Assert.True(standard.Rules.ContainsKey(rule.Key), $"Standard.json has no key '{rule.Key}'");
-                Assert.Equal(standard.Rules[rule.Key], rule.Value);
+                Assert.True(cyrillic.Rules.ContainsKey(rule.Key), $"Cyrillic.json has no key '{rule.Key}'");
+                Assert.Equal(cyrillic.Rules[rule.Key], rule.Value);
             });
         }
 

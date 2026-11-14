@@ -106,7 +106,7 @@ namespace Transliterator.Core.Repositories
         /// <summary>
         /// Профиль ищется по имени, а имя — это имя файла без расширения:
         /// <see cref="GetProfileAsync"/> сам дописывает ".json", и полное имя
-        /// файла превращалось бы в "Standard.json.json".
+        /// файла превращалось бы в "Cyrillic.json.json".
         /// </summary>
         public async Task<IEnumerable<TransliterationProfile>> GetAllProfilesAsync()
         {

@@ -1,6 +1,6 @@
 @using Transliterator.Core.Repositories
 @using Transliterator.Core.Services
-@inject IProfileRepository Profiles
+@inject UserProfileRepository Profiles
 @inject ICorpusRepository Corpus
 @inject ITransliterationService Transliteration
 @inject IJSRuntime JS
@@ -49,7 +49,7 @@
            страницы, и панель открывается колонкой рядом с полем и выводом, отодвигая
            их, а не закрывая. На телефоне двум колонкам нет места: кнопки стоят строкой
            под полем, панель — поверх вывода, как прежде. У каждой кнопки подписано, что
-           выбрано сейчас («Полный таджвид», «Профиль: Standard»). *@
+           выбрано сейчас («Полный таджвид», «Профиль: Cyrillic»). *@
         @if (_catalog is not null || _profile is not null)
         {
             <aside class="side-rail" aria-label="@L["Rail.Label"]">
@@ -129,7 +129,7 @@
     /// <summary>
     /// Профиль, которым страница пишет, пока человек не выбрал другой (E4): у каждого
     /// языка свой — с английским интерфейсом латиница (D7). Сохранённый выбор важнее:
-    /// кто выбрал Standard и переключил язык, тот остаётся на Standard.
+    /// кто выбрал Cyrillic и переключил язык, тот остаётся на Cyrillic.
     /// </summary>
     private static string DefaultProfile => PageLanguages.Current.DefaultProfile;
 
@@ -315,16 +315,27 @@
     /// <summary>
     /// Выбранный профиль помнится по имени. Нет такого больше — удалён в другой
     /// вкладке, хранилище очищено — страница остаётся на профиле по умолчанию.
+    /// Имя, сохранённое прежней версией страницы, переписывается на нынешнее (E8):
+    /// <c>Standard</c> — это <c>Cyrillic</c>, а свой профиль, чьё имя занял
+    /// встроенный, переехал под имя копии, и выбор переезжает вместе с ним.
     /// </summary>
     private async Task RestoreProfileAsync()
     {
         var stored = await JS.InvokeAsync<string?>("page.load", ProfileKey);
-        if (string.IsNullOrEmpty(stored) || stored == _profile?.Name)
+        if (string.IsNullOrEmpty(stored))
             return;
 
         try
         {
-            if (await Profiles.GetProfileAsync(stored) is not { } profile)
+            var moved = await Profiles.MoveShadowedAsync();
+            var name = moved.TryGetValue(stored, out var renamed) ? renamed
+                     : await Profiles.ProfileExistsAsync(stored) ? stored
+                     : ProfileNames.Current(stored);
+
+            if (name != stored)
+                await JS.InvokeVoidAsync("page.save", ProfileKey, name);
+
+            if (name == _profile?.Name || await Profiles.GetProfileAsync(name) is not { } profile)
                 return;
 
             _profile = profile;

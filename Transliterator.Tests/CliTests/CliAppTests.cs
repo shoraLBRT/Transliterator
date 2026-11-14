@@ -17,7 +17,7 @@ namespace Transliterator.Tests.CliTests
     public class CliAppTests : IDisposable
     {
         private const string Basmala = "بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ";
-        private const string BasmalaStandard = "бисми-лляяhи-ррохIмаани-ррохIиим";
+        private const string BasmalaCyrillic = "бисми-лляяhи-ррохIмаани-ррохIиим";
         private const string BasmalaLatin = "bismi-llaahi-rroḥmaani-rroḥiim";
 
         private readonly string _directory = Path.Combine(Path.GetTempPath(), "transliterator-cli-" + Guid.NewGuid().ToString("N"));
@@ -67,7 +67,7 @@ namespace Transliterator.Tests.CliTests
             var run = await RunAsync(new[] { Basmala });
 
             Assert.Equal(CliApp.Success, run.ExitCode);
-            Assert.Equal(BasmalaStandard + "\n", run.Out);
+            Assert.Equal(BasmalaCyrillic + "\n", run.Out);
             Assert.Equal(string.Empty, run.Error);
         }
 
@@ -84,14 +84,27 @@ namespace Transliterator.Tests.CliTests
             Assert.Equal(BasmalaLatin + "\n", run.Out);
         }
 
+        [Theory]
+        [InlineData("--profile", "Cyrillic")]
+        [InlineData("--profile", "Standard")]   // прежнее имя Cyrillic (E8) по-прежнему работает
+        [InlineData("-p", "standard")]
+        public async Task Profile_Cyrillic_IsAlsoFoundByItsFormerName(params string[] profile)
+        {
+            var run = await RunAsync(new[] { Basmala }.Concat(profile).ToArray());
+
+            Assert.Equal(CliApp.Success, run.ExitCode);
+            Assert.Equal(BasmalaCyrillic + "\n", run.Out);
+            Assert.Equal(string.Empty, run.Error);
+        }
+
         [Fact]
         public async Task UnknownProfile_ListsTheAvailableOnes()
         {
-            var run = await RunAsync(new[] { Basmala, "--profile", "Cyrillic" });
+            var run = await RunAsync(new[] { Basmala, "--profile", "Arabic" });
 
             Assert.Equal(CliApp.UsageError, run.ExitCode);
             Assert.Equal(string.Empty, run.Out);
-            Assert.Contains("Latin, Standard", run.Error);
+            Assert.Contains("Cyrillic, Latin", run.Error);
         }
 
         // --- сура из корпуса ---
@@ -183,13 +196,13 @@ namespace Transliterator.Tests.CliTests
         [InlineData]                            // перенаправленный ввод читается и без флага
         [InlineData("--stdin")]
         [InlineData("-")]
-        [InlineData("--profile", "Standard")]
+        [InlineData("--profile", "Cyrillic")]
         public async Task Stdin_IsRead(params string[] args)
         {
             var run = await RunAsync(args, input: Basmala + "\n", redirected: true);
 
             Assert.Equal(CliApp.Success, run.ExitCode);
-            Assert.Equal(BasmalaStandard + "\n", run.Out);
+            Assert.Equal(BasmalaCyrillic + "\n", run.Out);
         }
 
         [Fact]
@@ -229,7 +242,7 @@ namespace Transliterator.Tests.CliTests
 
             Assert.Equal(CliApp.Success, run.ExitCode);
             Assert.Contains("Latin ", run.Out);
-            Assert.Contains("Standard (default)  Расширенная кириллица.", run.Out);
+            Assert.Contains("Cyrillic (default)  Расширенная кириллица.", run.Out);
             Assert.DoesNotContain("Ключ вида", run.Out);
         }
 
@@ -268,7 +281,7 @@ namespace Transliterator.Tests.CliTests
         [InlineData("--file")]
         [InlineData(Basmala, "--surah", "112")]
         [InlineData(Basmala, "Latin", "extra")]
-        [InlineData(Basmala, "Latin", "--profile", "Standard")]
+        [InlineData(Basmala, "Latin", "--profile", "Cyrillic")]
         [InlineData("--file", "a.txt", "Latin")]
         public async Task UsageError_PointsToHelp(params string[] args)
         {
@@ -284,18 +297,19 @@ namespace Transliterator.Tests.CliTests
         [Fact]
         public async Task Interactive_Surah_ShowsTheListsBeforeAsking()
         {
-            var run = await RunAsync(Array.Empty<string>(), input: "2\n112\n2\n");
+            var run = await RunAsync(Array.Empty<string>(), input: "2\n112\n1\n");
 
             Assert.Equal(CliApp.Success, run.ExitCode);
             Assert.True(run.Out.IndexOf(Surah(112).Name.For("ru"), StringComparison.Ordinal) < run.Out.IndexOf("Surah number:", StringComparison.Ordinal));
-            Assert.True(run.Out.IndexOf("Standard (default)", StringComparison.Ordinal) < run.Out.IndexOf("Profile (", StringComparison.Ordinal));
-            Assert.EndsWith("=== Transliteration (Standard) ===\n" + CorpusExpectation(112), run.Out);
+            Assert.True(run.Out.IndexOf("Cyrillic (default)", StringComparison.Ordinal) < run.Out.IndexOf("Profile (", StringComparison.Ordinal));
+            Assert.EndsWith("=== Transliteration (Cyrillic) ===\n" + CorpusExpectation(112), run.Out);
         }
 
         [Theory]
-        [InlineData("", BasmalaStandard)]  // Enter — профиль по умолчанию
-        [InlineData("1", BasmalaLatin)]    // номер из списка
+        [InlineData("", BasmalaCyrillic)]  // Enter — профиль по умолчанию
+        [InlineData("2", BasmalaLatin)]    // номер из списка: Cyrillic, Latin
         [InlineData("Latin", BasmalaLatin)]
+        [InlineData("Standard", BasmalaCyrillic)]  // прежнее имя Cyrillic (E8)
         public async Task Interactive_TypedText_WithTheProfileChosen(string answer, string expected)
         {
             var run = await RunAsync(Array.Empty<string>(), input: $"1\n{Basmala}\n{answer}\n");
@@ -312,7 +326,7 @@ namespace Transliterator.Tests.CliTests
             var run = await RunAsync(Array.Empty<string>(), input: $"3\n\"{path}\"\n\n");
 
             Assert.Equal(CliApp.Success, run.ExitCode);
-            Assert.EndsWith(BasmalaStandard + "\n", run.Out);
+            Assert.EndsWith(BasmalaCyrillic + "\n", run.Out);
         }
 
         [Theory]

@@ -12,7 +12,7 @@ namespace Transliterator.Tests
                                            ReadingOptions? reading = null)
         {
             var segments = Parse(arabicText, reading);
-            return new CyrillicRenderer().Render(segments, profile ?? TestProfiles.Standard);
+            return new CyrillicRenderer().Render(segments, profile ?? TestProfiles.Cyrillic);
         }
 
         /// <summary>Разбор с применением правил, но без рендеринга — для проверок самого слоя фонем.</summary>

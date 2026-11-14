@@ -25,6 +25,26 @@ namespace Transliterator.Tests.ProfileTests
                 NullLogger<EmbeddedProfileRepository>.Instance);
 
         [Fact]
+        public async Task FormerNames_LeadToBuiltinProfiles_AndAreNotTakenByThem()
+        {
+            // Прежнее имя (E8: Standard → Cyrillic) — запасной путь к встроенному
+            // профилю. Он должен существовать, а прежнее имя — остаться свободным.
+            var builtin = Builtin();
+
+            foreach (var (former, current) in ProfileNames.Former)
+            {
+                Assert.True(await builtin.ProfileExistsAsync(current), $"{former} → {current}: no such profile");
+                Assert.False(await builtin.ProfileExistsAsync(former), $"{former} is still a profile name");
+            }
+
+            Assert.Equal("Cyrillic", ProfileNames.Current("Standard"));
+            Assert.Equal("Cyrillic", ProfileNames.Current("standard"));
+            Assert.Equal("Мой", ProfileNames.Current("Мой"));
+            Assert.Equal(new[] { ProfileNames.Cyrillic, ProfileNames.Latin },
+                         (await builtin.GetAllProfilesAsync()).Select(p => p.Name).OrderBy(n => n, StringComparer.Ordinal));
+        }
+
+        [Fact]
         public async Task ListsEveryBuiltinProfile()
         {
             var names = (await Builtin().GetAllProfilesAsync()).Select(p => p.Name).OrderBy(n => n);
@@ -33,7 +53,7 @@ namespace Transliterator.Tests.ProfileTests
         }
 
         [Theory]
-        [InlineData("Standard")]
+        [InlineData("Cyrillic")]
         [InlineData("Latin")]
         public async Task EmbeddedProfile_MatchesTheFileNextToTheAssembly(string name)
         {
@@ -52,9 +72,9 @@ namespace Transliterator.Tests.ProfileTests
         {
             // Ресурс читается потоком, а не строкой: если кодировку потеряли,
             // видно именно здесь, а не через десять стадий конвейера.
-            var profile = await Builtin().GetProfileAsync("Standard");
+            var profile = await Builtin().GetProfileAsync("Cyrillic");
 
-            Assert.Equal(TestProfiles.Standard.Rules["ب"], profile!.Rules["ب"]);
+            Assert.Equal(TestProfiles.Cyrillic.Rules["ب"], profile!.Rules["ب"]);
         }
 
         [Fact]
@@ -67,7 +87,7 @@ namespace Transliterator.Tests.ProfileTests
         [Fact]
         public async Task KnownProfile_Exists()
         {
-            Assert.True(await Builtin().ProfileExistsAsync("Standard"));
+            Assert.True(await Builtin().ProfileExistsAsync("Cyrillic"));
         }
 
         [Fact]
@@ -76,8 +96,8 @@ namespace Transliterator.Tests.ProfileTests
             // Ресурсы читаются один раз, и словарь правил отдаётся как есть.
             // Копию делает TransliterationService.GetRulesAsync — там, где
             // словарь уходит наружу; здесь фиксируем, что делает её именно он.
-            var first = await Builtin().GetProfileAsync("Standard");
-            var second = await Builtin().GetProfileAsync("Standard");
+            var first = await Builtin().GetProfileAsync("Cyrillic");
+            var second = await Builtin().GetProfileAsync("Cyrillic");
 
             Assert.NotSame(first, second);
         }
@@ -90,9 +110,9 @@ namespace Transliterator.Tests.ProfileTests
             var repository = Builtin();
 
             var error = await Assert.ThrowsAsync<TransliterationException>(
-                () => repository.SaveProfileAsync(new TransliterationProfile("Standard", "правка")));
+                () => repository.SaveProfileAsync(new TransliterationProfile("Cyrillic", "правка")));
 
-            Assert.Contains("Standard", error.Message);
+            Assert.Contains("Cyrillic", error.Message);
             Assert.Contains("read-only", error.Message);
         }
 
@@ -102,20 +122,20 @@ namespace Transliterator.Tests.ProfileTests
             var repository = Builtin();
 
             await Assert.ThrowsAsync<TransliterationException>(
-                () => repository.SaveProfileAsync(new TransliterationProfile("Standard", "правка")));
+                () => repository.SaveProfileAsync(new TransliterationProfile("Cyrillic", "правка")));
 
-            var profile = await repository.GetProfileAsync("Standard");
+            var profile = await repository.GetProfileAsync("Cyrillic");
 
-            Assert.Equal(TestProfiles.Standard.Description, profile!.Description);
+            Assert.Equal(TestProfiles.Cyrillic.Description, profile!.Description);
         }
 
         [Fact]
         public async Task Delete_IsRefused()
         {
             var error = await Assert.ThrowsAsync<TransliterationException>(
-                () => Builtin().DeleteProfileAsync("Standard"));
+                () => Builtin().DeleteProfileAsync("Cyrillic"));
 
-            Assert.Contains("Standard", error.Message);
+            Assert.Contains("Cyrillic", error.Message);
         }
 
         [Fact]

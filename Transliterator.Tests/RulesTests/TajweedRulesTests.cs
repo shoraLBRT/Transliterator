@@ -415,7 +415,7 @@ namespace Transliterator.Tests.RulesTests
         public void TanwinBeforeIhfaLetter_IsMarkedButNotWritten()
         {
             // ذ — буква ихфа, и танвин перед ней получает ту же помету, что نْ
-            // в أُنزِلَ. Standard пишет её обычным «н», и на письме ихфа неотличима
+            // в أُنزِلَ. Cyrillic пишет её обычным «н», и на письме ихфа неотличима
             // от чистого нуна: разница осталась в сегменте и доедет до профиля,
             // который её пишет. Владельцем это не подтверждено и багом не заведено —
             // тест закрепляет вывод раньше решения, чтобы он не менялся молча.
@@ -429,12 +429,12 @@ namespace Transliterator.Tests.RulesTests
         [Fact]
         public void Ghunna_TakesItsGraphemeFromTheProfile()
         {
-            // Standard пишет гунну обычными н и м — это выбор системы записи,
+            // Cyrillic пишет гунну обычными н и м — это выбор системы записи,
             // а не решение конвейера: правило только помечает звук.
             var profile = new TransliterationProfile
             {
                 Name = "ghunna",
-                Rules = new Dictionary<string, string>(TestProfiles.Standard.Rules) { ["ن|ghunna"] = "н̃" }
+                Rules = new Dictionary<string, string>(TestProfiles.Cyrillic.Rules) { ["ن|ghunna"] = "н̃" }
             };
 
             Assert.Equal("ун̃зиль", TransliterationPipeline.Transliterate("أُنزِلَ", profile));
@@ -710,7 +710,7 @@ namespace Transliterator.Tests.RulesTests
 
     /// <summary>
     /// Стадия 9: кальканя. Отзвук — не буква и не огласовка, поэтому проверяется
-    /// по пометке на сегменте; в Standard она до письма не доходит осознанно,
+    /// по пометке на сегменте; в Cyrillic она до письма не доходит осознанно,
     /// и как выглядит написанный отзвук, показывает отдельный профиль.
     /// </summary>
     public class QalqalahRuleTests
@@ -802,7 +802,7 @@ namespace Transliterator.Tests.RulesTests
         [Fact]
         public void Grapheme_ComesFromTheProfile()
         {
-            // Standard отзвук не пишет; профиль, который пишет, получает его
+            // Cyrillic отзвук не пишет; профиль, который пишет, получает его
             // без единой правки в правилах.
             var profile = WithQalqalah("э", strong: "э̄");
 
@@ -824,12 +824,12 @@ namespace Transliterator.Tests.RulesTests
             Assert.Equal("уатаббэ",
                 TransliterationPipeline.Transliterate("وَتَبَّ", WithQalqalah("э", strong: null)));
 
-        /// <summary>Standard с дописанным отзвуком: правила те же, различается только письмо.</summary>
+        /// <summary>Cyrillic с дописанным отзвуком: правила те же, различается только письмо.</summary>
         private static TransliterationProfile WithQalqalah(string echo, string? strong)
         {
-            var profile = new TransliterationProfile("Qalqalah", "Standard, пишущий отзвук кальканя")
+            var profile = new TransliterationProfile("Qalqalah", "Cyrillic, пишущий отзвук кальканя")
             {
-                Rules = new Dictionary<string, string>(TestProfiles.Standard.Rules)
+                Rules = new Dictionary<string, string>(TestProfiles.Cyrillic.Rules)
             };
 
             foreach (var letter in new[] { "ق", "ط", "ب", "ج", "د" })
@@ -1162,7 +1162,7 @@ namespace Transliterator.Tests.RulesTests
         [InlineData("كُلِّ شَىْءٍ قَدِيرٌ", "кулли щай-ин qодиир")] // в соединении танвин держит хамзу внутри слова
         public void InsideAWord_IsWrittenAsAHyphen(string arabic, string expected)
         {
-            // Внутри слова хамза — разрыв, и Standard пишет его тем же дефисом,
+            // Внутри слова хамза — разрыв, и Cyrillic пишет его тем же дефисом,
             // что между гласными, базовым ключом "ء" — решено владельцем (G2).
             // «ъ» спорил с диграфами: «джузъ» читалось так, будто в слове ذ.
             var actual = TransliterationPipeline.Transliterate(arabic);
@@ -1203,14 +1203,14 @@ namespace Transliterator.Tests.RulesTests
         // По слову на каждую позицию: начало, между гласными, внутри слова, конец.
         private const string EveryPosition = "أَعْبُدُ جَآءَ مَا يُؤْمِنُونَ جُزْءٌ";
 
-        private static TransliterationProfile StandardWith(string key, string value) => new()
+        private static TransliterationProfile CyrillicWith(string key, string value) => new()
         {
             Name = "edited",
-            Rules = new Dictionary<string, string>(TestProfiles.Standard.Rules) { [key] = value }
+            Rules = new Dictionary<string, string>(TestProfiles.Cyrillic.Rules) { [key] = value }
         };
 
         [Fact]
-        public void Standard_WritesEveryPosition()
+        public void Cyrillic_WritesEveryPosition()
         {
             Assert.Equal("а'буду джааа-а маа йу-минууна джуз",
                          TransliterationPipeline.Transliterate(EveryPosition));
@@ -1222,14 +1222,14 @@ namespace Transliterator.Tests.RulesTests
         [InlineData("ء", "а'буду джааа-а маа йуʔминууна джуз")]
         [InlineData("ء|final", "а'буду джааа-а маа йу-минууна джузʔ")]
         public void EditingOneKey_ChangesOnlyItsPosition(string key, string expected) =>
-            Assert.Equal(expected, TransliterationPipeline.Transliterate(EveryPosition, StandardWith(key, "ʔ")));
+            Assert.Equal(expected, TransliterationPipeline.Transliterate(EveryPosition, CyrillicWith(key, "ʔ")));
 
         [Fact]
         public void ProfileWithoutFinal_FallsBackToTheBaseKey()
         {
             // Свой профиль, скопированный до G2: хамза в нём — «ъ», варианта "ء|final"
             // ещё нет. Кто писал хамзу по-своему, так и пишет — и на конце слова тоже.
-            var rules = new Dictionary<string, string>(TestProfiles.Standard.Rules) { ["ء"] = "ъ" };
+            var rules = new Dictionary<string, string>(TestProfiles.Cyrillic.Rules) { ["ء"] = "ъ" };
             rules.Remove("ء|final");
             var copiedBeforeG2 = new TransliterationProfile { Name = "copied-before-G2", Rules = rules };
 
@@ -1274,7 +1274,7 @@ namespace Transliterator.Tests.RulesTests
             var profile = new TransliterationProfile
             {
                 Name = "initial-hamza",
-                Rules = new Dictionary<string, string>(TestProfiles.Standard.Rules) { ["ء|initial"] = "ъ" }
+                Rules = new Dictionary<string, string>(TestProfiles.Cyrillic.Rules) { ["ء|initial"] = "ъ" }
             };
 
             Assert.Equal("ъаль-ъардI", TransliterationPipeline.Transliterate("ٱلْأَرْضِ", profile));

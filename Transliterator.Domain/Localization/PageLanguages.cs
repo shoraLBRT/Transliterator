@@ -1,4 +1,5 @@
 using System.Globalization;
+using Transliterator.Domain.Entities;
 
 namespace Transliterator.Domain.Localization
 {
@@ -18,7 +19,7 @@ namespace Transliterator.Domain.Localization
     /// </summary>
     public static class PageLanguages
     {
-        public static PageLanguage Russian { get; } = new("ru", "Русский", "Standard");
+        public static PageLanguage Russian { get; } = new("ru", "Русский", ProfileNames.Cyrillic);
 
         /// <summary>
         /// Английскому читателю кириллица не поможет: по умолчанию — латиница

@@ -28,7 +28,7 @@ namespace Transliterator.Cli
         public const int Failure = 1;
         public const int UsageError = 2;
 
-        public const string DefaultProfile = "Standard";
+        public const string DefaultProfile = ProfileNames.Cyrillic;
 
         /// <summary>
         /// Строгий UTF-8. Файл в другой кодировке (чаще всего Windows-1256) иначе
@@ -198,7 +198,9 @@ namespace Transliterator.Cli
 
             // Регистр в имени профиля в командной строке не важен, если имя от этого
             // не становится двусмысленным: «latin» — это Latin.
-            var match = profiles.FirstOrDefault(p => p.Name == name);
+            // Прежнее имя встроенного профиля тоже подходит (E8): «Standard» — это Cyrillic.
+            var match = profiles.FirstOrDefault(p => p.Name == name)
+                     ?? profiles.FirstOrDefault(p => p.Name == ProfileNames.Current(name));
             if (match is null)
             {
                 var similar = profiles.Where(p => string.Equals(p.Name, name, StringComparison.OrdinalIgnoreCase)).ToList();
@@ -274,7 +276,7 @@ namespace Transliterator.Cli
         }
 
         /// <summary>
-        /// Описание профиля бывает в полстраницы (у Standard оно перечисляет все
+        /// Описание профиля бывает в полстраницы (у Cyrillic оно перечисляет все
         /// варианты ключей), а в списке нужна одна строка, чтобы выбрать.
         /// </summary>
         private static string FirstSentence(string? description)
@@ -315,7 +317,7 @@ namespace Transliterator.Cli
                   -s, --surah <number>   Take a surah from the corpus (see --surahs).
                       --stdin, -         Read the text from standard input.
                                          Redirected input is read without this option too.
-                  -p, --profile <name>   Profile to write with (see --profiles). Default: Standard.
+                  -p, --profile <name>   Profile to write with (see --profiles). Default: Cyrillic.
                       --profiles         List the profiles.
                       --surahs           List the surahs in the corpus.
                       --version          Show the version.
