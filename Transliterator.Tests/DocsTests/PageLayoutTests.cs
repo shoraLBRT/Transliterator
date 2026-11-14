@@ -107,6 +107,51 @@ namespace Transliterator.Tests.DocsTests
         }
 
         [Fact]
+        public void RuleRow_IsATable_NameAndExampleLeft_ControlsRight_DescriptionBehindAnArrow()
+        {
+            // I9: строка правила — стрелка описания, слева название с примером под ним,
+            // справа переключатель. Шаблон строки один на оба блока.
+            var reading = Regex.Replace(Web("Components", "ReadingPicker.razor"), @"\s+", " ");
+            Assert.Single(Regex.Matches(reading, "<li class=\"reading-rule "));
+
+            var row = Regex.Match(reading, @"<li class=""reading-rule (.*?)</li>");
+            Assert.True(row.Success, "the rule row is not found");
+            var markup = row.Groups[1].Value;
+
+            var toggle = Regex.Match(markup, @"^[^>]*> <button type=""button"" class=""reading-rule-toggle""([^>]*)>");
+            Assert.True(toggle.Success, "the row does not start with the description arrow");
+            Assert.Contains("aria-expanded=\"@(described ? \"true\" : \"false\")\"", toggle.Groups[1].Value);
+            Assert.Contains("aria-controls=\"@descriptionId\"", toggle.Groups[1].Value);
+            Assert.Contains("aria-label=\"@(L[\"Reading.DescriptionLabel\", rule.Name.Current])\"", toggle.Groups[1].Value);
+
+            // Название, под ним пример, под ним свёрнутое описание — в левой колонке;
+            // переключатели — после неё, в правой.
+            int At(string part)
+            {
+                var index = markup.IndexOf(part, StringComparison.Ordinal);
+                Assert.True(index >= 0, $"'{part}' is not in the rule row");
+                return index;
+            }
+
+            var main = At("<span class=\"reading-rule-main\">");
+            var name = At("class=\"reading-rule-name\"");
+            var example = At("<span class=\"reading-example\">");
+            var description = At("<span id=\"@descriptionId\" class=\"reading-rule-text\" hidden=\"@(!described)\">");
+            var controls = At("<span class=\"reading-rule-controls\">");
+            Assert.True(main < name && name < example && example < description && description < controls,
+                        "the row is not: name, example, description, then the controls");
+            Assert.Matches(@"_openDescriptions\.Clear\(\);", reading);
+
+            var css = Regex.Replace(Web("wwwroot", "css", "app.css"), @"\s+", " ");
+            Assert.Matches(@"\.reading-rule \{[^}]*grid-template-columns: auto minmax\(0, 1fr\) auto;", css);
+            Assert.Matches(@"\.reading-rule-controls \{[^}]*grid-column: 3;[^}]*justify-self: end;[^}]*white-space: nowrap;", css);
+            Assert.Matches(@"\.reading-rule-main \{[^}]*min-width: 0;", css);
+
+            Assert.Contains("{0}", PageStrings.Web("ru")["Reading.DescriptionLabel"]);
+            Assert.Contains("{0}", PageStrings.Web("en")["Reading.DescriptionLabel"]);
+        }
+
+        [Fact]
         public void OnAWideScreen_ThePanelIsAColumnBesideTheFieldAndTheOutput()
         {
             var css = Regex.Replace(Web("wwwroot", "css", "app.css"), @"\s+", " ");

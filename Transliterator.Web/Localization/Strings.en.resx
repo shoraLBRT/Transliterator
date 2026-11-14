@@ -132,6 +132,9 @@
   <data name="Reading.Off" xml:space="preserve">
     <value>not read</value>
   </data>
+  <data name="Reading.DescriptionLabel" xml:space="preserve">
+    <value>Description of {0}</value>
+  </data>
   <data name="Reading.GroupOff" xml:space="preserve">
     <value> · not read now</value>
   </data>
