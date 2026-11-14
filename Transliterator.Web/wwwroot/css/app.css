@@ -500,20 +500,23 @@ svg {
     color: var(--ink-muted);
 }
 
-/* Счёт, переключатель и пример стоят в строке своего правила (I8). */
+/* Счёт и переключатель стоят в строке своего правила (I8), в её правой колонке
+   (I9): прижаты к правому краю и не переносятся — переносится название слева. */
 .reading-rule-controls {
+    grid-column: 3;
+    justify-self: end;
     display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.35rem 0.75rem;
-    margin: 0.15rem 0;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.35rem;
+    white-space: nowrap;
 }
 
 .reading-example {
     display: flex;
     flex-wrap: wrap;
     align-items: baseline;
-    gap: 0.4rem;
+    gap: 0 0.4rem;
     font-size: 0.85rem;
 }
 
@@ -572,7 +575,22 @@ svg {
     background: var(--foam-50);
 }
 
+/* Обе надписи в одной клетке, видна одна: ширина переключателя одна и та же
+   в обоих состояниях и во всех строках (I9). */
+.reading-switch-text {
+    display: inline-grid;
+}
+
+.reading-switch-text > span {
+    grid-area: 1 / 1;
+}
+
+.reading-switch-text > .is-hidden {
+    visibility: hidden;
+}
+
 .reading-switch-track {
+    flex: none;
     position: relative;
     width: 1.9rem;
     height: 1.1rem;
@@ -698,13 +716,64 @@ svg {
     list-style: none;
 }
 
+/* Строка правила — таблица (I9): стрелка описания, слева название и под ним
+   пример, справа переключатель. Колонка переключателя есть и у строки без него —
+   тогда она пуста. */
 .reading-rule {
     display: grid;
-    gap: 0.15rem;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: start;
+    column-gap: 0.4rem;
 }
 
-/* Погашена строка, но не её переключатель: им правило включают обратно. */
-.reading-rule.is-off > :not(.reading-rule-controls) {
+.reading-rule-main {
+    grid-column: 2;
+    display: grid;
+    gap: 0.15rem;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+/* Стрелка у названия раскрывает описание правила (I9). */
+.reading-rule-toggle {
+    grid-column: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    margin-top: -0.1rem;
+    padding: 0;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--ink-muted);
+    cursor: pointer;
+}
+
+.reading-rule-toggle:hover {
+    background: var(--foam-50);
+    color: var(--foam-700);
+}
+
+.reading-rule-chevron {
+    width: 1rem;
+    height: 1rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transition: transform 0.15s;
+}
+
+.reading-rule-toggle[aria-expanded="true"] .reading-rule-chevron {
+    transform: rotate(90deg);
+}
+
+/* Погашено правило, но не его переключатель и не стрелка: переключателем
+   правило включают обратно, а описание читают и у выключенного. */
+.reading-rule.is-off > .reading-rule-main {
     opacity: 0.5;
 }
 
@@ -712,8 +781,7 @@ svg {
     display: flex;
     flex-wrap: wrap;
     align-items: baseline;
-    justify-content: space-between;
-    gap: 0.5rem;
+    gap: 0 0.5rem;
 }
 
 /* Название правила и его перевод в скобках (I7). Флекс, а не пробел в разметке:
@@ -742,6 +810,7 @@ svg {
 }
 
 .reading-rule-text {
+    margin-top: 0.15rem;
     font-size: 0.8rem;
     line-height: 1.45;
     color: var(--ink-muted);

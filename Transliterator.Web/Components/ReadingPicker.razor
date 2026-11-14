@@ -81,14 +81,35 @@
                                 var counts = Variants && rule.HasVariants;
                                 var switchable = Variants && rule.Switchable;
                                 var on = Choice.Reads(rule);
+                                var described = _openDescriptions.Contains(rule.Id);
+                                var descriptionId = $"reading-rule-text-{rule.Id}";
 
                                 <li class="reading-rule @(IsOff(rule) ? "is-off" : null)">
-                                    <span class="reading-rule-head">
-                                        <span class="reading-rule-title">
-                                            <span class="reading-rule-name">@rule.Name.Current</span>
-                                            <span class="reading-rule-translation">(@rule.Translation.Current)</span>
+                                    <button type="button" class="reading-rule-toggle"
+                                            aria-expanded="@(described ? "true" : "false")" aria-controls="@descriptionId"
+                                            aria-label="@(L["Reading.DescriptionLabel", rule.Name.Current])"
+                                            @onclick="() => ToggleDescription(rule)">
+                                        <svg class="reading-rule-chevron" viewBox="0 0 24 24" aria-hidden="true">
+                                            <path d="M9 6l6 6-6 6" />
+                                        </svg>
+                                    </button>
+                                    <span class="reading-rule-main">
+                                        <span class="reading-rule-head">
+                                            <span class="reading-rule-title">
+                                                <span class="reading-rule-name">@rule.Name.Current</span>
+                                                <span class="reading-rule-translation">(@rule.Translation.Current)</span>
+                                            </span>
+                                            <span class="reading-rule-arabic" dir="rtl" lang="ar">@rule.ArabicName</span>
                                         </span>
-                                        <span class="reading-rule-arabic" dir="rtl" lang="ar">@rule.ArabicName</span>
+                                        @if (example is not null)
+                                        {
+                                            <span class="reading-example">
+                                                <span class="reading-rule-arabic" dir="rtl" lang="ar">@example.Arabic</span>
+                                                <span class="reading-example-arrow" aria-hidden="true">→</span>
+                                                <span class="reading-example-text" aria-live="@(counts || switchable ? "polite" : null)">@ExampleOf(example)</span>
+                                            </span>
+                                        }
+                                        <span id="@descriptionId" class="reading-rule-text" hidden="@(!described)">@rule.Description.Current</span>
                                     </span>
                                     @if (counts || switchable)
                                     {
@@ -111,20 +132,15 @@
                                                         aria-label="@(L["Reading.SwitchLabel", rule.Name.Current])"
                                                         @onclick="() => SwitchRuleAsync(rule, !on)">
                                                     <span class="reading-switch-track" aria-hidden="true"></span>
-                                                    <span class="reading-switch-text">@(on ? L["Reading.On"] : L["Reading.Off"])</span>
+                                                    @* Обе надписи занимают одно место: ширина переключателя не зависит от состояния (I9). *@
+                                                    <span class="reading-switch-text">
+                                                        <span class="@(on ? null : "is-hidden")">@L["Reading.On"]</span>
+                                                        <span class="@(on ? "is-hidden" : null)">@L["Reading.Off"]</span>
+                                                    </span>
                                                 </button>
-                                            }
-                                            @if (example is not null)
-                                            {
-                                                <span class="reading-example">
-                                                    <span class="reading-rule-arabic" dir="rtl" lang="ar">@example.Arabic</span>
-                                                    <span class="reading-example-arrow" aria-hidden="true">→</span>
-                                                    <span class="reading-example-text" aria-live="polite">@ExampleOf(example)</span>
-                                                </span>
                                             }
                                         </span>
                                     }
-                                    <span class="reading-rule-text">@rule.Description.Current</span>
                                 </li>
                             }
                         </ul>
@@ -161,12 +177,25 @@
     /// <summary>Раскрытые блоки правил (I8). При открытии панели оба свёрнуты.</summary>
     private readonly HashSet<TajweedTier> _openBlocks = new();
 
+    /// <summary>
+    /// Правила с раскрытым описанием (I9). Описание свёрнуто, пока его не раскроют
+    /// стрелкой у названия: длинные описания не растягивают список.
+    /// </summary>
+    private readonly HashSet<string> _openDescriptions = new();
+
     private bool Variants => Choice.Mode == ReadingMode.Variants;
 
     protected override Task BeforeOpenAsync()
     {
         _openBlocks.Clear();
+        _openDescriptions.Clear();
         return Task.CompletedTask;
+    }
+
+    private void ToggleDescription(TajweedRule rule)
+    {
+        if (!_openDescriptions.Remove(rule.Id))
+            _openDescriptions.Add(rule.Id);
     }
 
     private void ToggleBlock(TajweedTier tier)

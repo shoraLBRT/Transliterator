@@ -139,6 +139,10 @@
   <data name="Reading.Off" xml:space="preserve">
     <value>не читается</value>
   </data>
+  <data name="Reading.DescriptionLabel" xml:space="preserve">
+    <value>Описание правила «{0}»</value>
+    <comment>{0} — rule name; the arrow button that shows the rule description</comment>
+  </data>
   <data name="Reading.GroupOff" xml:space="preserve">
     <value> · сейчас не читаются</value>
   </data>
