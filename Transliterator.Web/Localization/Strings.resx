@@ -199,8 +199,8 @@
   <data name="Profile.Delete" xml:space="preserve">
     <value>Удалить</value>
   </data>
-  <data name="Profile.Copy" xml:space="preserve">
-    <value>Создать копию</value>
+  <data name="Profile.Create" xml:space="preserve">
+    <value>Создать профиль</value>
   </data>
   <data name="Profile.Rename" xml:space="preserve">
     <value>Переименовать</value>
@@ -215,8 +215,17 @@
   <data name="Profile.PreviewEmpty" xml:space="preserve">
     <value>Введите текст в поле — здесь будет видно, как он пишется</value>
   </data>
-  <data name="Profile.BuiltInNote" xml:space="preserve">
-    <value>Встроенный профиль не меняется — создайте копию, чтобы переписать графемы.</value>
+  <data name="Profile.Settings" xml:space="preserve">
+    <value>Настройки профиля</value>
+  </data>
+  <data name="Profile.LetterColumn" xml:space="preserve">
+    <value>Буква</value>
+  </data>
+  <data name="Profile.VariantColumn" xml:space="preserve">
+    <value>Вариант</value>
+  </data>
+  <data name="Profile.ValueColumn" xml:space="preserve">
+    <value>Графема</value>
   </data>
   <data name="Profile.SearchLabel" xml:space="preserve">
     <value>Поиск по букве, записи или варианту</value>
