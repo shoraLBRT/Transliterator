@@ -126,11 +126,8 @@
     <value>{0}: счёт</value>
     <comment>{0} — rule name</comment>
   </data>
-  <data name="Reading.SwitchableTitle" xml:space="preserve">
-    <value>Можно не читать</value>
-  </data>
   <data name="Reading.SwitchableNote" xml:space="preserve">
-    <value>Эти правила не меняют того, от чего зависят другие. Выключенное читается, как в обычном чтении, остальное — как в полном таджвиде. Гунну ихфы и отзвук кальканя профиль Standard не пишет: их выключение видно в «Правилах этого чтения» и в своём профиле, где у них есть буква.</value>
+    <value>Правила с переключателем можно не читать: они не меняют того, от чего зависят другие. Выключенное читается, как в обычном чтении, остальное — как в полном таджвиде. Гунну ихфы и отзвук кальканя профиль Standard не пишет: их выключение видно по строке правила и в своём профиле, где у них есть буква.</value>
   </data>
   <data name="Reading.SwitchLabel" xml:space="preserve">
     <value>{0}: читать</value>
@@ -142,17 +139,14 @@
   <data name="Reading.Off" xml:space="preserve">
     <value>не читается</value>
   </data>
-  <data name="Reading.RulesSummary" xml:space="preserve">
-    <value>Правила этого чтения</value>
-  </data>
   <data name="Reading.GroupOff" xml:space="preserve">
     <value> · сейчас не читаются</value>
   </data>
   <data name="Group.Tajweed" xml:space="preserve">
-    <value>Только в таджвиде</value>
+    <value>Правила таджвида</value>
   </data>
   <data name="Group.Base" xml:space="preserve">
-    <value>В любом чтении</value>
+    <value>Правила чтения на арабском</value>
   </data>
   <data name="RuleCount.One" xml:space="preserve">
     <value>{0} правило</value>

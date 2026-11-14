@@ -71,6 +71,42 @@ namespace Transliterator.Tests.DocsTests
         }
 
         [Fact]
+        public void ReadingRules_AreTwoCollapsedBlocks_WithTheControlsInTheirRows()
+        {
+            // I8: под ступенями — два блока правил, без общей кнопки «Правила этого
+            // чтения» и без отдельного списка «Можно не читать». Заголовок блока — кнопка
+            // с aria-expanded; при открытии панели оба свёрнуты, «Неполный таджвид»
+            // раскрывает «Правила таджвида».
+            var reading = Regex.Replace(Web("Components", "ReadingPicker.razor"), @"\s+", " ");
+
+            Assert.DoesNotContain("<details", reading);
+            Assert.DoesNotContain("Reading.RulesSummary", reading);
+            Assert.DoesNotContain("Reading.SwitchableTitle", reading);
+            Assert.Single(Regex.Matches(reading, "class=\"reading-list\""));
+            Assert.Single(Regex.Matches(reading, @"role=""radiogroup"" aria-label=""@\(L\[""Reading\.CountLabel"""));
+            Assert.Single(Regex.Matches(reading, "role=\"switch\""));
+
+            var toggle = Regex.Match(reading, @"<button type=""button"" class=""reading-group-toggle""(.*?)@onclick=""\(\) => ToggleBlock\(tier\)"">(.*?)</button>");
+            Assert.True(toggle.Success, "the block header is not a button");
+            Assert.Contains("aria-expanded=\"@(open ? \"true\" : \"false\")\"", toggle.Groups[1].Value);
+            Assert.Contains("aria-controls=\"@blockId\"", toggle.Groups[1].Value);
+            Assert.Contains("reading-group-count", toggle.Groups[2].Value);
+            Assert.Contains("Reading.GroupOff", toggle.Groups[2].Value);
+            Assert.Contains("<div id=\"@blockId\" class=\"reading-block-body\" hidden=\"@(!open)\">", reading);
+
+            Assert.Matches(@"protected override Task BeforeOpenAsync\(\) \{ _openBlocks\.Clear\(\);", reading);
+            Assert.Matches(@"if \(mode == ReadingMode\.Variants\) _openBlocks\.Add\(TajweedTier\.Tajweed\);", reading);
+
+            var russian = PageStrings.Web("ru");
+            Assert.Equal("Правила чтения на арабском", russian["Group.Base"]);
+            Assert.Equal("Правила таджвида", russian["Group.Tajweed"]);
+
+            var english = PageStrings.Web("en");
+            Assert.Equal("Rules of reading Arabic", english["Group.Base"]);
+            Assert.Equal("Tajweed rules", english["Group.Tajweed"]);
+        }
+
+        [Fact]
         public void OnAWideScreen_ThePanelIsAColumnBesideTheFieldAndTheOutput()
         {
             var css = Regex.Replace(Web("wwwroot", "css", "app.css"), @"\s+", " ");

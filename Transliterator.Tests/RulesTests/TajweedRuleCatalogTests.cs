@@ -129,16 +129,16 @@ namespace Transliterator.Tests.RulesTests
         [Fact]
         public void Translation_IsShownNextToTheName_WhereverThePageShowsARule()
         {
-            // Правило на странице видно в трёх местах — у счёта и у переключателя
-            // в «Неполном таджвиде» (I3, I4) и в «Правилах этого чтения»; перевод должен
-            // стоять рядом с названием во всех.
+            // Правило на странице видно в строке своего блока правил (I8): счёт и
+            // переключатель «Неполного таджвида» (I3, I4) стоят в той же строке. Перевод
+            // должен стоять рядом с названием везде, где название показано.
             var picker = File.ReadAllText(Path.Combine(DocsTests.ReadmeTests.RepositoryRoot(),
                                                        "Transliterator.Web", "Components", "ReadingPicker.razor"));
 
             var names = Regex.Matches(picker, @"class=""reading-rule-name"">@rule\.Name\.Current</span>").Count;
             var translations = Regex.Matches(picker, @"@rule\.Name\.Current</span>\s*<span class=""reading-rule-translation"">\(@rule\.Translation\.Current\)</span>").Count;
 
-            Assert.Equal(3, names);
+            Assert.True(names > 0, "the panel does not show rule names");
             Assert.Equal(names, translations);
         }
 

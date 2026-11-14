@@ -493,12 +493,6 @@ svg {
     color: var(--ink-muted);
 }
 
-.reading-variants {
-    margin: 0.5rem 0 0;
-    padding: 0.6rem 0.75rem;
-    border-top: 1px solid var(--line);
-}
-
 .reading-variants-note {
     margin: 0 0 0.6rem;
     font-size: 0.8rem;
@@ -506,25 +500,13 @@ svg {
     color: var(--ink-muted);
 }
 
-.reading-variant-list {
-    display: grid;
-    gap: 0.85rem;
-    margin: 0;
-    padding: 0;
-    list-style: none;
-}
-
-.reading-variant {
-    display: grid;
-    gap: 0.2rem;
-}
-
-.reading-variant-head {
+/* Счёт, переключатель и пример стоят в строке своего правила (I8). */
+.reading-rule-controls {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    justify-content: space-between;
-    gap: 0.5rem;
+    gap: 0.35rem 0.75rem;
+    margin: 0.15rem 0;
 }
 
 .reading-example {
@@ -572,17 +554,6 @@ svg {
 }
 
 /* Переключатель правила, которое можно не читать (I4). */
-.reading-variants-title {
-    margin: 1rem 0 0.35rem;
-    font-size: 0.85rem;
-    font-weight: 600;
-}
-
-.reading-variant.is-off .reading-rule-title,
-.reading-variant.is-off .reading-rule-text {
-    color: var(--ink-muted);
-}
-
 .reading-switch {
     display: inline-flex;
     align-items: center;
@@ -635,33 +606,25 @@ svg {
     transform: translateX(0.8rem);
 }
 
-.reading-rules {
+/* Два блока правил (I8): свёрнуты, пока их не откроют. */
+.reading-block {
     margin-top: 0.5rem;
-    padding: 0.6rem 0.75rem 0.25rem;
-    border-top: 1px solid var(--line);
+    padding: 0 0.75rem;
 }
 
-.reading-rules summary {
-    font-size: 0.85rem;
-    color: var(--foam-700);
-    cursor: pointer;
+.reading-block-body {
+    padding: 0.6rem 0 0.5rem;
 }
 
-/* Заголовок группы — заголовок, а не ещё одна строка (I6): отбит линией,
-   набран темнее строк и прилипает к верху панели при прокрутке. Панель
-   с отступом 0.5rem, поэтому top отрицательный — иначе над заголовком
-   просвечивали бы уезжающие строки. */
+/* Заголовок блока — заголовок, а не ещё одна строка (I6): отбит линией,
+   набран темнее строк и прилипает к верху панели, пока его блок прокручивается.
+   Панель с отступом 0.5rem, поэтому top отрицательный — иначе над заголовком
+   просвечивали бы уезжающие строки. Сам заголовок — кнопка блока (I8). */
 .reading-group {
     position: sticky;
     top: -0.5rem;
     z-index: 1;
-    display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 0.25rem 0.5rem;
-    margin: 0.9rem -0.75rem 0.5rem;
-    padding: 0.5rem 0.75rem 0.4rem;
+    margin: 0 -0.75rem;
     background: var(--paper);
     border-bottom: 2px solid var(--foam-300);
     font-size: 0.8rem;
@@ -671,7 +634,51 @@ svg {
     color: var(--foam-700);
 }
 
+/* Не переносится: длинное имя блока переносится внутри себя, а счёт и стрелка
+   остаются справа на одной строке. */
+.reading-group-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 0.6rem 0.75rem 0.45rem;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    letter-spacing: inherit;
+    text-transform: inherit;
+    text-align: start;
+    cursor: pointer;
+}
+
+.reading-group-toggle:hover {
+    background: var(--foam-50);
+}
+
+.reading-group-name {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.reading-group-chevron {
+    flex: none;
+    width: 1rem;
+    height: 1rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transition: transform 0.15s;
+}
+
+.reading-group-toggle[aria-expanded="true"] .reading-group-chevron {
+    transform: rotate(180deg);
+}
+
 .reading-group-count {
+    white-space: nowrap;
     font-weight: 500;
     letter-spacing: 0;
     text-transform: none;
@@ -696,7 +703,8 @@ svg {
     gap: 0.15rem;
 }
 
-.reading-rule.is-off {
+/* Погашена строка, но не её переключатель: им правило включают обратно. */
+.reading-rule.is-off > :not(.reading-rule-controls) {
     opacity: 0.5;
 }
 
