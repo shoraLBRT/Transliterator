@@ -120,11 +120,8 @@
   <data name="Reading.CountLabel" xml:space="preserve">
     <value>{0}: count</value>
   </data>
-  <data name="Reading.SwitchableTitle" xml:space="preserve">
-    <value>Can be left out</value>
-  </data>
   <data name="Reading.SwitchableNote" xml:space="preserve">
-    <value>These rules do not change what other rules depend on. A rule switched off is read as in ordinary reading, everything else as in full tajweed. The Standard and Latin profiles do not write the ghunnah of ikhfa or the qalqalah echo: switching them off shows in “Rules of this reading” and in your own profile, where they have a letter.</value>
+    <value>Rules with a switch can be left out: they do not change what other rules depend on. A rule switched off is read as in ordinary reading, everything else as in full tajweed. The Standard and Latin profiles do not write the ghunnah of ikhfa or the qalqalah echo: switching them off shows in the rule’s row and in your own profile, where they have a letter.</value>
   </data>
   <data name="Reading.SwitchLabel" xml:space="preserve">
     <value>{0}: read</value>
@@ -135,17 +132,14 @@
   <data name="Reading.Off" xml:space="preserve">
     <value>not read</value>
   </data>
-  <data name="Reading.RulesSummary" xml:space="preserve">
-    <value>Rules of this reading</value>
-  </data>
   <data name="Reading.GroupOff" xml:space="preserve">
     <value> · not read now</value>
   </data>
   <data name="Group.Tajweed" xml:space="preserve">
-    <value>Only in tajweed</value>
+    <value>Tajweed rules</value>
   </data>
   <data name="Group.Base" xml:space="preserve">
-    <value>In any reading</value>
+    <value>Rules of reading Arabic</value>
   </data>
   <data name="RuleCount.One" xml:space="preserve">
     <value>{0} rule</value>

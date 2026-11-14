@@ -120,7 +120,7 @@ GitHub Pages — **dev-стенд** владельца: любое измене�
 | 17 | [E6](https://github.com/shoraLBRT/Transliterator/issues/124) — «Профиль: Standard» на кнопке | — (решено владельцем 2026-11-12; сделано 2026-11-12) |
 | 18 | [D6](https://github.com/shoraLBRT/Transliterator/issues/126) — настройки в боковой панели | E6, I5 (раскладка меняет те же кнопки; решено владельцем 2026-11-12; сделано 2026-11-12) |
 | 19 | [D7](https://github.com/shoraLBRT/Transliterator/issues/128) — английский интерфейс и локализация | D6 (переводятся итоговые тексты страницы; сделано 2026-11-12, английские описания правил ждут вычитки владельцем) |
-| 20 | [I8](https://github.com/shoraLBRT/Transliterator/issues/144) — два свёрнутых блока правил вместо «Правил этого чтения» | — |
+| 20 | [I8](https://github.com/shoraLBRT/Transliterator/issues/144) — два свёрнутых блока правил вместо «Правил этого чтения» | — (сделано 2026-11-14; счёт и переключатели «Неполного таджвида» — в строках своих правил) |
 | 21 | [I9](https://github.com/shoraLBRT/Transliterator/issues/145) — строка правила таблицей: переключатель справа, описание под стрелкой | I8 (те же строки правил) |
 | 22 | [E9](https://github.com/shoraLBRT/Transliterator/issues/147) — «Создать профиль» и таблица графем под «Настройками профиля» | — |
 | 23 | [D8](https://github.com/shoraLBRT/Transliterator/issues/148) — кнопка «?»: что за приложение и зачем | — |

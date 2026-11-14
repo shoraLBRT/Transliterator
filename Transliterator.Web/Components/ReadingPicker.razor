@@ -8,8 +8,9 @@
    экранного диктора. Правила и их описания берутся из каталога (I1) — правило,
    добавленное в каталог, появляется здесь само. Рядом с названием правила
    в скобках — его перевод (I7): «Мадд лязим» без него — арабское слово
-   русскими буквами. В «Неполном таджвиде» рядом со счётами — переключатели у правил,
-   которые можно не читать (I4): какие именно, решает каталог (Switchable). *@
+   русскими буквами. В «Неполном таджвиде» у правил со счётом — выбор счёта, а у правил,
+   которые можно не читать (I4), — переключатель: какие именно, решает каталог
+   (Counts, Switchable). *@
 
 <div class="picker">
     @* Значок — звуковая волна: кнопка выбирает, как текст звучит. *@
@@ -41,110 +42,95 @@
                 }
             </div>
 
-            @if (Choice.Mode == ReadingMode.Variants)
+            @* Под ступенями — два блока правил (I8): сначала правила чтения на арабском,
+               потом правила таджвида, как в группах I6. Оба свёрнуты, пока их не откроют;
+               в заголовке видно, сколько в блоке правил и читаются ли они сейчас — и у
+               свёрнутого. Счёт и переключатель «Неполного таджвида» стоят в строке
+               своего правила (I3, I4), отдельного списка нет. *@
+            @foreach (var group in Groups)
             {
-                <div class="reading-variants">
-                    <p class="reading-variants-note">@L["Reading.CountsNote"]</p>
+                var tier = group.Key;
+                var off = IsOff(tier);
+                var open = _openBlocks.Contains(tier);
+                var blockId = BlockId(tier);
 
-                    <ul class="reading-variant-list">
-                        @foreach (var rule in Catalog.Rules.Where(r => r.HasVariants))
-                        {
-                            var example = rule.Examples.FirstOrDefault();
-
-                            <li class="reading-variant">
-                                <span class="reading-variant-head">
-                                    <span class="reading-rule-title">
-                                        <span class="reading-rule-name">@rule.Name.Current</span>
-                                        <span class="reading-rule-translation">(@rule.Translation.Current)</span>
-                                    </span>
-                                    <span class="reading-counts" role="radiogroup" aria-label="@(L["Reading.CountLabel", rule.Name.Current])">
-                                        @foreach (var count in rule.Counts)
-                                        {
-                                            <button type="button" class="reading-count" role="radio"
-                                                    aria-checked="@(Choice.CountOf(rule) == count ? "true" : "false")"
-                                                    @onclick="() => ChooseCountAsync(rule, count)">@count</button>
-                                        }
-                                    </span>
-                                </span>
-                                <span class="reading-rule-text">@rule.Description.Current</span>
-                                @if (example is not null)
-                                {
-                                    <span class="reading-example">
-                                        <span class="reading-rule-arabic" dir="rtl" lang="ar">@example.Arabic</span>
-                                        <span class="reading-example-arrow" aria-hidden="true">→</span>
-                                        <span class="reading-example-text" aria-live="polite">@ExampleOf(example)</span>
-                                    </span>
-                                }
-                            </li>
-                        }
-                    </ul>
-
-                    <h3 class="reading-variants-title">@L["Reading.SwitchableTitle"]</h3>
-                    <p class="reading-variants-note">@L["Reading.SwitchableNote"]</p>
-
-                    <ul class="reading-variant-list">
-                        @foreach (var rule in Catalog.Rules.Where(r => r.Switchable))
-                        {
-                            var example = rule.Examples.FirstOrDefault();
-                            var on = Choice.Reads(rule);
-
-                            <li class="reading-variant @(on ? null : "is-off")">
-                                <span class="reading-variant-head">
-                                    <span class="reading-rule-title">
-                                        <span class="reading-rule-name">@rule.Name.Current</span>
-                                        <span class="reading-rule-translation">(@rule.Translation.Current)</span>
-                                    </span>
-                                    <button type="button" class="reading-switch" role="switch"
-                                            aria-checked="@(on ? "true" : "false")"
-                                            aria-label="@(L["Reading.SwitchLabel", rule.Name.Current])"
-                                            @onclick="() => SwitchRuleAsync(rule, !on)">
-                                        <span class="reading-switch-track" aria-hidden="true"></span>
-                                        <span class="reading-switch-text">@(on ? L["Reading.On"] : L["Reading.Off"])</span>
-                                    </button>
-                                </span>
-                                <span class="reading-rule-text">@rule.Description.Current</span>
-                                @if (example is not null)
-                                {
-                                    <span class="reading-example">
-                                        <span class="reading-rule-arabic" dir="rtl" lang="ar">@example.Arabic</span>
-                                        <span class="reading-example-arrow" aria-hidden="true">→</span>
-                                        <span class="reading-example-text" aria-live="polite">@ExampleOf(example)</span>
-                                    </span>
-                                }
-                            </li>
-                        }
-                    </ul>
-                </div>
-            }
-
-            <details class="reading-rules">
-                <summary>@L["Reading.RulesSummary"]</summary>
-
-                @foreach (var group in Groups)
-                {
-                    var off = IsOff(group.Key);
-
+                <section class="reading-block">
                     <h3 class="reading-group @(off ? "is-off" : null)">
-                        <span>@GroupName(group.Key)</span>
-                        <span class="reading-group-count">@L.Count("RuleCount", group.Count())@(off ? L["Reading.GroupOff"].Value : null)</span>
+                        <button type="button" class="reading-group-toggle"
+                                aria-expanded="@(open ? "true" : "false")" aria-controls="@blockId"
+                                @onclick="() => ToggleBlock(tier)">
+                            <span class="reading-group-name">@GroupName(tier)</span>
+                            <span class="reading-group-count">@L.Count("RuleCount", group.Count())@(off ? L["Reading.GroupOff"].Value : null)</span>
+                            <svg class="reading-group-chevron" viewBox="0 0 24 24" aria-hidden="true">
+                                <path d="M6 9l6 6 6-6" />
+                            </svg>
+                        </button>
                     </h3>
-                    <ul class="reading-list">
-                        @foreach (var rule in group)
+
+                    <div id="@blockId" class="reading-block-body" hidden="@(!open)">
+                        @if (Variants && tier == TajweedTier.Tajweed)
                         {
-                            <li class="reading-rule @(IsOff(rule) ? "is-off" : null)">
-                                <span class="reading-rule-head">
-                                    <span class="reading-rule-title">
-                                        <span class="reading-rule-name">@rule.Name.Current</span>
-                                        <span class="reading-rule-translation">(@rule.Translation.Current)</span>
-                                    </span>
-                                    <span class="reading-rule-arabic" dir="rtl" lang="ar">@rule.ArabicName</span>
-                                </span>
-                                <span class="reading-rule-text">@rule.Description.Current</span>
-                            </li>
+                            <p class="reading-variants-note">@L["Reading.CountsNote"]</p>
+                            <p class="reading-variants-note">@L["Reading.SwitchableNote"]</p>
                         }
-                    </ul>
-                }
-            </details>
+
+                        <ul class="reading-list">
+                            @foreach (var rule in group)
+                            {
+                                var example = rule.Examples.FirstOrDefault();
+                                var counts = Variants && rule.HasVariants;
+                                var switchable = Variants && rule.Switchable;
+                                var on = Choice.Reads(rule);
+
+                                <li class="reading-rule @(IsOff(rule) ? "is-off" : null)">
+                                    <span class="reading-rule-head">
+                                        <span class="reading-rule-title">
+                                            <span class="reading-rule-name">@rule.Name.Current</span>
+                                            <span class="reading-rule-translation">(@rule.Translation.Current)</span>
+                                        </span>
+                                        <span class="reading-rule-arabic" dir="rtl" lang="ar">@rule.ArabicName</span>
+                                    </span>
+                                    @if (counts || switchable)
+                                    {
+                                        <span class="reading-rule-controls">
+                                            @if (counts)
+                                            {
+                                                <span class="reading-counts" role="radiogroup" aria-label="@(L["Reading.CountLabel", rule.Name.Current])">
+                                                    @foreach (var count in rule.Counts)
+                                                    {
+                                                        <button type="button" class="reading-count" role="radio"
+                                                                aria-checked="@(Choice.CountOf(rule) == count ? "true" : "false")"
+                                                                @onclick="() => ChooseCountAsync(rule, count)">@count</button>
+                                                    }
+                                                </span>
+                                            }
+                                            @if (switchable)
+                                            {
+                                                <button type="button" class="reading-switch" role="switch"
+                                                        aria-checked="@(on ? "true" : "false")"
+                                                        aria-label="@(L["Reading.SwitchLabel", rule.Name.Current])"
+                                                        @onclick="() => SwitchRuleAsync(rule, !on)">
+                                                    <span class="reading-switch-track" aria-hidden="true"></span>
+                                                    <span class="reading-switch-text">@(on ? L["Reading.On"] : L["Reading.Off"])</span>
+                                                </button>
+                                            }
+                                            @if (example is not null)
+                                            {
+                                                <span class="reading-example">
+                                                    <span class="reading-rule-arabic" dir="rtl" lang="ar">@example.Arabic</span>
+                                                    <span class="reading-example-arrow" aria-hidden="true">→</span>
+                                                    <span class="reading-example-text" aria-live="polite">@ExampleOf(example)</span>
+                                                </span>
+                                            }
+                                        </span>
+                                    }
+                                    <span class="reading-rule-text">@rule.Description.Current</span>
+                                </li>
+                            }
+                        </ul>
+                    </div>
+                </section>
+            }
         </div>
     }
 </div>
@@ -172,10 +158,29 @@
 
     protected override string Panel => "reading";
 
+    /// <summary>Раскрытые блоки правил (I8). При открытии панели оба свёрнуты.</summary>
+    private readonly HashSet<TajweedTier> _openBlocks = new();
+
+    private bool Variants => Choice.Mode == ReadingMode.Variants;
+
+    protected override Task BeforeOpenAsync()
+    {
+        _openBlocks.Clear();
+        return Task.CompletedTask;
+    }
+
+    private void ToggleBlock(TajweedTier tier)
+    {
+        if (!_openBlocks.Remove(tier))
+            _openBlocks.Add(tier);
+    }
+
+    private static string BlockId(TajweedTier tier) => $"reading-rules-{tier.ToString().ToLowerInvariant()}";
+
     /// <summary>
-    /// Сначала то, что есть в любом чтении, потом — только таджвид. Заголовок группы
-    /// прилипает к верху панели при прокрутке: видно, к какой группе относится
-    /// правило перед глазами (I6).
+    /// Сначала правила чтения на арабском, потом правила таджвида (I6, I8). Заголовок
+    /// блока прилипает к верху панели, пока блок прокручивается: видно, к какому блоку
+    /// относится правило перед глазами.
     /// </summary>
     private IEnumerable<IGrouping<TajweedTier, TajweedRule>> Groups =>
         Catalog.Rules.GroupBy(r => r.Tier).OrderBy(g => g.Key);
@@ -216,11 +221,14 @@
     /// <summary>
     /// Выбранная ступень сразу видна в выводе, и панель закрывается: на телефоне —
     /// чтобы его открыть, на широком экране — потому что выбор сделан, как и у сур.
-    /// «Неполный таджвид» оставляет её открытой: счёты выбираются здесь же.
+    /// «Неполный таджвид» оставляет её открытой и раскрывает «Правила таджвида» (I8):
+    /// счёты и переключатели выбираются здесь же, в строках правил.
     /// </summary>
     private async Task ChooseModeAsync(ReadingMode mode)
     {
-        if (mode != ReadingMode.Variants)
+        if (mode == ReadingMode.Variants)
+            _openBlocks.Add(TajweedTier.Tajweed);
+        else
             Close();
 
         await ChoiceChanged.InvokeAsync(Choice.WithMode(mode));
