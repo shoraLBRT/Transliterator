@@ -64,6 +64,9 @@
                     <ProfilePicker Profile="_profile" DefaultProfile="@DefaultProfile" Preview="@_result"
                                    ProfileChanged="ChangeProfileAsync" ProfileDeleted="ResetProfileAsync" />
                 }
+
+                @* «?» — что это за страница (D8). Последней: она ничего не выбирает. *@
+                <AboutPicker Transliterate="TransliterateExample" OpenFeedback="OpenFeedbackAsync" />
             </aside>
         }
 
@@ -103,7 +106,7 @@
         <a href="@FeedbackLink.RepositoryUrl" target="_blank" rel="noopener">GitHub</a>
         <span aria-hidden="true">·</span>
         <span class="footer-version" title="@BuildVersion">v@(ShortVersion)</span>
-        <FeedbackButton Arabic="@_arabic" Transliteration="@_result" />
+        <FeedbackButton Arabic="@_arabic" Transliteration="@_result" @ref="_feedback" />
     </footer>
 </div>
 
@@ -438,8 +441,13 @@
             _copyState = CopyState.Idle;
     }
 
+    private FeedbackButton? _feedback;
+
+    /// <summary>Кнопка отзыва из «О приложении» (D8) открывает ту же форму, что и в подвале.</summary>
+    private Task OpenFeedbackAsync() => _feedback?.OpenAsync() ?? Task.CompletedTask;
+
     /// <summary>
-    /// Пример правила в «Неполном таджвиде» (I3) — тем же профилем и выбором, что
+    /// Пример правила в «Неполном таджвиде» (I3) и пример «О приложении» (D8) — тем же профилем и выбором, что
     /// и вывод страницы. Сбой примера страницу не роняет: показывается пример каталога.
     /// </summary>
     private string? TransliterateExample(string arabic)

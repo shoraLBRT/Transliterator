@@ -309,4 +309,61 @@
   <data name="Feedback.Failed" xml:space="preserve">
     <value>The message was not sent: the server responded with an error.</value>
   </data>
+  <data name="About.Toggle" xml:space="preserve">
+    <value>About</value>
+  </data>
+  <data name="About.Title" xml:space="preserve">
+    <value>About</value>
+  </data>
+  <data name="About.WhyTitle" xml:space="preserve">
+    <value>Why this page</value>
+  </data>
+  <data name="About.Why" xml:space="preserve">
+    <value>The page writes the Arabic text of the Quran in letters that people who don't read Arabic can follow. On many sites this writing — transliteration — has mistakes: different Arabic sounds merge into one letter, and the rules of recitation get lost.</value>
+  </data>
+  <data name="About.ExampleTitle" xml:space="preserve">
+    <value>An example</value>
+  </data>
+  <data name="About.ExampleUsual" xml:space="preserve">
+    <value>As it is often written</value>
+  </data>
+  <data name="About.ExampleTypical" xml:space="preserve">
+    <value>Alhamdulillah</value>
+  </data>
+  <data name="About.ExampleOurs" xml:space="preserve">
+    <value>As this page writes it</value>
+  </data>
+  <data name="About.ExampleNote" xml:space="preserve">
+    <value>The usual spelling uses one “h” for both ح and ه, though they sound different, and does not show which vowel is long. Here different sounds get different letters, and long vowels are visible.</value>
+  </data>
+  <data name="About.HowTitle" xml:space="preserve">
+    <value>How it works</value>
+  </data>
+  <data name="About.How" xml:space="preserve">
+    <value>The text goes through a pipeline of {0}. It applies the tajweed rules in order — pauses, merging sounds, nasal sounds, heavy and light letters, vowel length, the echo — and only then turns into letters.</value>
+  </data>
+  <data name="About.ProfilesTitle" xml:space="preserve">
+    <value>Your own spelling</value>
+  </data>
+  <data name="About.Profiles" xml:space="preserve">
+    <value>If you are used to other letters, you can change them: in the profile panel, press “{0}” and edit the letters under “{1}”.</value>
+  </data>
+  <data name="About.ThanksTitle" xml:space="preserve">
+    <value>Thank you</value>
+  </data>
+  <data name="About.Thanks" xml:space="preserve">
+    <value>Thank you to everyone who sends feedback: it makes the page more accurate. And thank you for sharing the page with those who may need it.</value>
+  </data>
+  <data name="About.FeedbackAction" xml:space="preserve">
+    <value>Send feedback</value>
+  </data>
+  <data name="StageCount.One" xml:space="preserve">
+    <value>{0} stage</value>
+  </data>
+  <data name="StageCount.Few" xml:space="preserve">
+    <value>{0} stages</value>
+  </data>
+  <data name="StageCount.Many" xml:space="preserve">
+    <value>{0} stages</value>
+  </data>
 </root>

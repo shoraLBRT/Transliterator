@@ -331,7 +331,7 @@ svg {
     font-weight: 600;
 }
 
-/* ---- Кнопки сбоку: ступень чтения и профиль (D6) ---- */
+/* ---- Кнопки сбоку: ступень чтения, профиль и «?» (D6, D8) ---- */
 
 /* Круглый значок и подпись рядом — что выбрано сейчас («Полный таджвид»,
    «Профиль: Standard», E6). Подпись — текст самой кнопки: по ней же кнопку
@@ -1173,6 +1173,91 @@ svg {
 
 .profile-warning-row .profile-warning {
     margin: 0;
+}
+
+/* ---- О приложении (D8) ---- */
+
+/* Короткие абзацы с подзаголовками. Пример — арабские слова и под ними две
+   записи: привычная тише, страницы — в цвет вывода. */
+.about-panel {
+    width: min(100%, 26rem);
+    max-height: min(75vh, 36rem);
+}
+
+.about-body {
+    display: grid;
+    gap: 0.9rem;
+    padding: 0.5rem 0.75rem 0.75rem;
+    font-size: 0.88rem;
+    line-height: 1.5;
+}
+
+.about-section p {
+    margin: 0.25rem 0 0;
+}
+
+.about-heading {
+    margin: 0;
+    font-size: 0.88rem;
+    font-weight: 600;
+}
+
+.about-arabic {
+    font-family: var(--font-arabic);
+    font-size: 1.35rem;
+    line-height: 1.6;
+    text-align: start;
+}
+
+.about-example {
+    display: grid;
+    gap: 0.3rem;
+    margin: 0.35rem 0 0;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--line);
+    border-radius: 0.85rem;
+}
+
+.about-example-row {
+    display: grid;
+    gap: 0.05rem;
+}
+
+.about-example dt {
+    font-size: 0.75rem;
+    color: var(--ink-muted);
+}
+
+.about-example dd {
+    margin: 0;
+    font-size: 1rem;
+    overflow-wrap: anywhere;
+}
+
+.about-example-row.is-usual dd {
+    color: var(--ink-muted);
+}
+
+.about-example-row.is-ours dd {
+    color: var(--foam-700);
+    font-weight: 500;
+}
+
+.about-feedback {
+    margin-top: 0.5rem;
+    padding: 0.45rem 1rem;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: var(--paper);
+    color: var(--foam-700);
+    font: inherit;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.about-feedback:hover {
+    background: var(--foam-50);
+    border-color: var(--foam-100);
 }
 
 /* ---- Результат ---- */
