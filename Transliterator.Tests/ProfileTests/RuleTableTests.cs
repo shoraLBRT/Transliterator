@@ -39,7 +39,7 @@ namespace Transliterator.Tests.ProfileTests
         [Fact]
         public void Variants_StandUnderTheirLetter_InProfileOrder()
         {
-            var hamza = RuleTable.Group(TestProfiles.Standard.Rules).Single(g => g.BaseKey == "ء");
+            var hamza = RuleTable.Group(TestProfiles.Cyrillic.Rules).Single(g => g.BaseKey == "ء");
 
             Assert.Equal("-", hamza.BaseValue);
             Assert.Equal(new[] { "initial", "hiatus", "final" }, hamza.Variants.Select(v => v.Name));
@@ -49,7 +49,7 @@ namespace Transliterator.Tests.ProfileTests
         [Fact]
         public void Groups_KeepTheOrderOfTheProfile()
         {
-            var groups = RuleTable.Group(TestProfiles.Standard.Rules).Select(g => g.BaseKey).ToList();
+            var groups = RuleTable.Group(TestProfiles.Cyrillic.Rules).Select(g => g.BaseKey).ToList();
 
             Assert.Equal("ء", groups[0]);
             Assert.True(groups.IndexOf("ب") < groups.IndexOf("ي"));
@@ -59,7 +59,7 @@ namespace Transliterator.Tests.ProfileTests
         [Fact]
         public void EmptyValue_IsEmpty_NotMissing()
         {
-            // Начальная хамза и отзвук кальканя в Standard заданы пустыми нарочно.
+            // Начальная хамза и отзвук кальканя в Cyrillic заданы пустыми нарочно.
             // Пустая строка — решение профиля, null — ключа нет вовсе.
             var rules = new Dictionary<string, string>
             {
@@ -80,7 +80,7 @@ namespace Transliterator.Tests.ProfileTests
         [Fact]
         public void Search_ByLetter_FindsTheLetterWithItsVariants()
         {
-            var found = RuleTable.Filter(RuleTable.Group(TestProfiles.Standard.Rules), "ة");
+            var found = RuleTable.Filter(RuleTable.Group(TestProfiles.Cyrillic.Rules), "ة");
 
             var group = Assert.Single(found);
             Assert.Equal("ة", group.BaseKey);
@@ -93,7 +93,7 @@ namespace Transliterator.Tests.ProfileTests
         [InlineData(" |heavy ")]
         public void Search_ByVariant_FindsWholeGroups(string query)
         {
-            var found = RuleTable.Filter(RuleTable.Group(TestProfiles.Standard.Rules), query);
+            var found = RuleTable.Filter(RuleTable.Group(TestProfiles.Cyrillic.Rules), query);
 
             var fatha = Assert.Single(found);
             Assert.Equal("َ", fatha.BaseKey);
@@ -106,7 +106,7 @@ namespace Transliterator.Tests.ProfileTests
         {
             // Хамза на конце слова (G2) — вариант той же буквы: поиск показывает
             // её целиком, со всеми позициями, и правка одной видна рядом с прочими.
-            var hamza = Assert.Single(RuleTable.Filter(RuleTable.Group(TestProfiles.Standard.Rules), "final"));
+            var hamza = Assert.Single(RuleTable.Filter(RuleTable.Group(TestProfiles.Cyrillic.Rules), "final"));
 
             Assert.Equal("ء", hamza.BaseKey);
             Assert.Equal(new[] { "initial", "hiatus", "final" }, hamza.Variants.Select(v => v.Name));
@@ -118,7 +118,7 @@ namespace Transliterator.Tests.ProfileTests
         [InlineData("   ")]
         public void EmptySearch_ShowsEverything(string? query)
         {
-            var groups = RuleTable.Group(TestProfiles.Standard.Rules);
+            var groups = RuleTable.Group(TestProfiles.Cyrillic.Rules);
 
             Assert.Same(groups, RuleTable.Filter(groups, query));
         }
@@ -129,7 +129,7 @@ namespace Transliterator.Tests.ProfileTests
         public void Search_ByGrapheme_FindsLettersWrittenThatWay(string query)
         {
             // Тот, кто не знает арабского, ищет букву по тому, как она пишется (E7).
-            var found = RuleTable.Filter(RuleTable.Group(TestProfiles.Standard.Rules), query);
+            var found = RuleTable.Filter(RuleTable.Group(TestProfiles.Cyrillic.Rules), query);
 
             Assert.Equal(new[] { "ح", "خ" }, found.Select(g => g.BaseKey).Order());
         }
@@ -138,7 +138,7 @@ namespace Transliterator.Tests.ProfileTests
         public void ShortQuery_DoesNotSearchTheNotes()
         {
             // «х» — это графема, а не начало слова «хамза» в пояснении к hiatus.
-            var found = RuleTable.Filter(RuleTable.Group(TestProfiles.Standard.Rules), "х");
+            var found = RuleTable.Filter(RuleTable.Group(TestProfiles.Cyrillic.Rules), "х");
 
             Assert.DoesNotContain(found, g => g.BaseKey == "ء");
         }
@@ -148,7 +148,7 @@ namespace Transliterator.Tests.ProfileTests
         {
             // Графема, которой нет ни у одной базы, а есть только у варианта:
             // поиск находит букву и по ней.
-            var groups = RuleTable.Group(TestProfiles.Standard.Rules);
+            var groups = RuleTable.Group(TestProfiles.Cyrillic.Rules);
             var variant = groups.SelectMany(g => g.Variants)
                                 .First(v => v.Value.Length > 0
                                          && !groups.Any(g => g.BaseValue?.Contains(v.Value, StringComparison.OrdinalIgnoreCase) == true));
@@ -165,7 +165,7 @@ namespace Transliterator.Tests.ProfileTests
         [InlineData("на конце слова", "final")]        // G2
         public void Search_ByRussianNote_FindsTheVariant(string query, string variant)
         {
-            var found = RuleTable.Filter(RuleTable.Group(TestProfiles.Standard.Rules), query);
+            var found = RuleTable.Filter(RuleTable.Group(TestProfiles.Cyrillic.Rules), query);
 
             Assert.NotEmpty(found);
             Assert.All(found, group => Assert.Contains(group.Variants, v => v.Name == variant));
@@ -214,7 +214,7 @@ namespace Transliterator.Tests.ProfileTests
             // Графема своего профиля — буква, а не перевод: «х» ищется в любом интерфейсе.
             using var _ = TestCulture.Use("en");
 
-            var found = RuleTable.Filter(RuleTable.Group(TestProfiles.Standard.Rules), "х");
+            var found = RuleTable.Filter(RuleTable.Group(TestProfiles.Cyrillic.Rules), "х");
 
             Assert.Equal(new[] { "ح", "خ" }, found.Select(g => g.BaseKey).Order());
         }
@@ -231,7 +231,7 @@ namespace Transliterator.Tests.ProfileTests
         [Fact]
         public void SearchWithoutMatches_IsEmpty()
         {
-            Assert.Empty(RuleTable.Filter(RuleTable.Group(TestProfiles.Standard.Rules), "nosuchkey"));
+            Assert.Empty(RuleTable.Filter(RuleTable.Group(TestProfiles.Cyrillic.Rules), "nosuchkey"));
         }
     }
 }

@@ -29,7 +29,7 @@ tajweed needs.
   single Cyrillic grapheme in the rule code — every one of them comes from
   a profile.
 * **Transliteration profiles** are JSON files. Two ship with the core —
-  `Standard` and `Latin`; on the page you can copy one and rewrite its graphemes.
+  `Cyrillic` and `Latin`; on the page you can copy one and rewrite its graphemes.
 * **Web version**: one input field, the result under it and ready-made surahs —
   a static page with no server.
 * **CLI**: text as an argument, from a file, from stdin or a ready-made surah
@@ -48,7 +48,7 @@ tajweed needs.
 بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ ١ ٱلْحَمْدُ لِلَّهِ رَبِّ ٱلْعَٰلَمِينَ ٢ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ ٣ مَٰلِكِ يَوْمِ ٱلدِّينِ ٤
 ```
 
-**Result (profile `Standard`):**
+**Result (profile `Cyrillic`):**
 
 <!-- readme-example:fatiha-output -->
 ```
@@ -139,9 +139,9 @@ all the work in the browser. There is no server, and the page is published from
   account. The text from the field and its transliteration are attached only
   when the person ticks the box.
 * **Profile** — the round button with a pen. Its caption says what it picks and
-  what is picked now: "Profile: Latin" by default in English ("Профиль: Standard"
+  what is picked now: "Profile: Latin" by default in English ("Профиль: Cyrillic"
   in Russian), your own profile under its own name ("Profile: Mine"); a long name is cut with an ellipsis, the caption
-  stays. It picks a built-in profile (`Standard`,
+  stays. It picks a built-in profile (`Cyrillic`,
   `Latin`) or your own; "Make a copy" makes your own copy at once, and its
   graphemes can be rewritten in a searchable table, for example `ع` as `ʿ`
   instead of `'`. The output stays in view while typing: beside the panel on a
@@ -164,7 +164,7 @@ dotnet run --project Transliterator.Web
 ## Usage (CLI)
 
 The first argument is the Arabic text, the second — optional — is the profile
-name, defaulting to `Standard`.
+name, defaulting to `Cyrillic` (the former name `Standard` is accepted too).
 
 <!-- readme-example:cli -->
 ```bash
@@ -252,7 +252,10 @@ files are embedded in the core assembly, which is how the browser reads them.
 
 Two profiles ship today:
 
-* `Standard` — extended Cyrillic;
+* `Cyrillic` — extended Cyrillic. Until E8 it was called `Standard`; the old
+  name still works: `--profile Standard` in the CLI, and a choice saved on the page.
+  An own profile in the browser that was already called `Cyrillic` keeps its
+  graphemes under a copy name, `Cyrillic (copy)`;
 * `Latin` — Latin with academic diacritics (`ṯ ǧ ḥ ḫ ḏ š ṣ ḍ ṭ ẓ ġ`, `ʾ` and `ʿ`).
 
 No rule knows which script it writes for: the pipeline is the same, only the
@@ -265,7 +268,7 @@ the base grapheme in one particular position. Lookup order is
 **variant → base key**; a base key the text needs but the profile lacks is an
 error that names the key.
 
-| Variant | When it applies | Example from `Standard` |
+| Variant | When it applies | Example from `Cyrillic` |
 |---|---|---|
 | `heavy` | under emphasis (tafkhim) | `"َ\|heavy": "о"` — `робби` |
 | `soft` | after a soft lam | `"َ\|soft": "я"` — `лляя` |
@@ -276,11 +279,11 @@ error that names the key.
 | `final` | unvowelled hamza at the end of a word | `"ء\|final": ""` — `джуз`; inside a word the base `"ء": "-"` applies, `йу-минуун` |
 | `ghunna` | under nasalisation | `"ن\|ghunna": "н"` |
 | `qalqalah` | the echo when an unvowelled stop is released | `"ب\|qalqalah": ""` |
-| `qalqalah-strong` | the same at a pause; falls back to `qalqalah` | not set in `Standard` |
+| `qalqalah-strong` | the same at a pause; falls back to `qalqalah` | not set in `Cyrillic` |
 
 An empty value is a legitimate entry rather than an omission: this is how the
 qalqalah echo, the initial hamza and the word-final hamza are deliberately set
-in `Standard`. The reasoning is under "Открытые решения" in the roadmap.
+in `Cyrillic`. The reasoning is under "Открытые решения" in the roadmap.
 
 ### What a profile does not contain
 
@@ -299,12 +302,12 @@ original text never reaches the profile at all:
 
 ### Example profile
 
-An excerpt from `Transliterator.Core/Resources/Profiles/Standard.json`:
+An excerpt from `Transliterator.Core/Resources/Profiles/Cyrillic.json`:
 
 <!-- readme-example:profile -->
 ```json
 {
-  "Name": "Standard",
+  "Name": "Cyrillic",
   "Description": "Расширенная кириллица. Ключ вида \"буква|вариант\" переопределяет базовую графему...",
   "Rules": {
     "ء": "-",
@@ -338,8 +341,8 @@ An excerpt from `Transliterator.Core/Resources/Profiles/Standard.json`:
 
 ```csharp
 await service.GetAvailableProfilesAsync();          // profile names, alphabetically
-await service.GetRulesAsync("Standard");            // the rules, as a copy
-await service.UpdateRuleAsync("ر|heavy", "р", "Standard");  // edit a single entry
+await service.GetRulesAsync("Cyrillic");            // the rules, as a copy
+await service.UpdateRuleAsync("ر|heavy", "р", "Cyrillic");  // edit a single entry
 service.Transliterate(text, profile);               // a profile that is not in storage
 ```
 

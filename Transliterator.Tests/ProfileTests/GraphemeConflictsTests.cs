@@ -10,9 +10,9 @@ namespace Transliterator.Tests.ProfileTests
     /// </summary>
     public class GraphemeConflictsTests
     {
-        private static Dictionary<string, string> Standard(params (string Key, string Value)[] changes)
+        private static Dictionary<string, string> Cyrillic(params (string Key, string Value)[] changes)
         {
-            var rules = new Dictionary<string, string>(TestProfiles.Standard.Rules);
+            var rules = new Dictionary<string, string>(TestProfiles.Cyrillic.Rules);
             foreach (var (key, value) in changes)
                 rules[key] = value;
 
@@ -23,8 +23,8 @@ namespace Transliterator.Tests.ProfileTests
         public void QafAsKaHamza_IsComposedOfKafAndHamza()
         {
             // Пример владельца (G5): «къ» для ق при хамзе «ъ» — это «к + хамза».
-            // Standard пишет хамзу дефисом (G2), и «ъ» ей задаёт свой профиль.
-            var conflict = Assert.Single(GraphemeConflicts.Find(Standard(("ق", "къ"), ("ء", "ъ"))),
+            // Cyrillic пишет хамзу дефисом (G2), и «ъ» ей задаёт свой профиль.
+            var conflict = Assert.Single(GraphemeConflicts.Find(Cyrillic(("ق", "къ"), ("ء", "ъ"))),
                                          c => c.Letter == "ق");
 
             Assert.True(conflict.IsComposed);
@@ -35,24 +35,24 @@ namespace Transliterator.Tests.ProfileTests
         [Fact]
         public void SameGraphemeAsAnotherLetter_IsAConflict_ReportedOnce()
         {
-            var conflict = Assert.Single(GraphemeConflicts.Find(Standard(("ق", "к"))), c => c.Involves("ق"));
+            var conflict = Assert.Single(GraphemeConflicts.Find(Cyrillic(("ق", "к"))), c => c.Involves("ق"));
 
             Assert.False(conflict.IsComposed);
             Assert.Equal(new[] { "ق", "ك" }.Order(), conflict.Letters.Order());
         }
 
         [Fact]
-        public void Standard_HasNoConflicts() =>
-            // Хамза дефисом (G2) сняла единственный спор Standard — ذ «зъ».
+        public void Cyrillic_HasNoConflicts() =>
+            // Хамза дефисом (G2) сняла единственный спор Cyrillic — ذ «зъ».
             // ت и ة пишутся одинаково по праву, это один звук.
-            Assert.Empty(GraphemeConflicts.Find(TestProfiles.Standard.Rules));
+            Assert.Empty(GraphemeConflicts.Find(TestProfiles.Cyrillic.Rules));
 
         [Fact]
         public void HamzaAsHardSign_ConflictsWithDhal()
         {
             // ذ «зъ» при хамзе «ъ» — тот самый спор, с которого начался G2: так
-            // писал Standard до него и так пишет свой профиль, скопированный раньше.
-            var conflict = Assert.Single(GraphemeConflicts.Find(Standard(("ء", "ъ"))));
+            // писал Cyrillic до него и так пишет свой профиль, скопированный раньше.
+            var conflict = Assert.Single(GraphemeConflicts.Find(Cyrillic(("ء", "ъ"))));
 
             Assert.Equal("ذ", conflict.Letter);
             Assert.Equal(new[] { "ز", "ء" }, conflict.Parts);
@@ -61,7 +61,7 @@ namespace Transliterator.Tests.ProfileTests
         [Fact]
         public void SilentGraphemes_DoNotConflict() =>
             // Пустая графема — буква осознанно не пишется, и спорить ей не с чем.
-            Assert.DoesNotContain(GraphemeConflicts.Find(Standard(("ع", ""), ("ق", ""))),
+            Assert.DoesNotContain(GraphemeConflicts.Find(Cyrillic(("ع", ""), ("ق", ""))),
                                   c => c.Involves("ع") || c.Involves("ق"));
 
         [Fact]

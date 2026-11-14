@@ -50,7 +50,7 @@ namespace Transliterator.Tests.RulesTests
         [InlineData(TajweedRuleIds.IdghamBiGhunna, "مَن يَقُولُ", "ман йаqууль")]
         [InlineData(TajweedRuleIds.IdghamBiGhunna, "مِن نِّعْمَةٍ وَمَا", "мин-ни'матин уамаа")] // нун с нуном сливается и без таджвида
         [InlineData(TajweedRuleIds.Iqlab, "مِنۢ بَعْدِ", "мин ба'д")]
-        [InlineData(TajweedRuleIds.Ikhfa, "مِن شَرِّ", "мин щарр")]                   // Standard гунну не пишет
+        [InlineData(TajweedRuleIds.Ikhfa, "مِن شَرِّ", "мин щарр")]                   // Cyrillic гунну не пишет
         [InlineData(TajweedRuleIds.MaddSila, "إِنَّهُۥ كَانَ", "иннаhу каан")]
         [InlineData(TajweedRuleIds.MaddSila, "مَالَهُۥٓ أَخْلَدَ", "мааляhу ахъляд")]   // силя кубра: мунфасиль не тянет краткую
         [InlineData(TajweedRuleIds.MaddSila, "لَهُ مَا", "ляhу маа")]                 // силя без разметки мусхафа
@@ -81,7 +81,7 @@ namespace Transliterator.Tests.RulesTests
 
         // Одна фраза, где работают все шесть правил, и рядом — идгам без гунны
         // и мунфасиль, которые не выключаются. Каждое выключенное правило меняет
-        // только своё место; гунну ихфы и отзвук кальканя Standard не пишет.
+        // только своё место; гунну ихфы и отзвук кальканя Cyrillic не пишет.
         private const string Phrase = "مِن شَرِّ مَا خَلَقَ مِنۢ بَعْدِ مَن يَقُولُ إِنَّهُۥٓ أَحَدٌ مِّن رَّبِّهِ يَقْطَعُ ٱلْفَلَقَ";
 
         private const string PhraseInFull =
@@ -117,7 +117,7 @@ namespace Transliterator.Tests.RulesTests
         {
             // Пример стоит рядом с переключателем и пересчитывается под выбор (как у
             // счётов, I3). Выключенное правило оставляет в нём след — хотя бы в
-            // сегментах: гунну ихфы и отзвук Standard не пишет. А выключение соседних
+            // сегментах: гунну ихфы и отзвук Cyrillic не пишет. А выключение соседних
             // правил пример не меняет: он показывает своё правило, а не чужое.
             Assert.NotEqual(Sounds(arabic, ReadingOptions.FullTajweed), Sounds(arabic, Without(ruleId)));
 
@@ -180,9 +180,9 @@ namespace Transliterator.Tests.RulesTests
         [InlineData(TajweedRuleIds.Ikhfa)]
         [InlineData(TajweedRuleIds.QalqalahSughra)]
         [InlineData(TajweedRuleIds.QalqalahKubra)]
-        public void OnTheCorpus_StandardDoesNotWriteWhatTheseRulesMark(string ruleId)
+        public void OnTheCorpus_CyrillicDoesNotWriteWhatTheseRulesMark(string ruleId)
         {
-            // Гунну ихфы и отзвук кальканя Standard не пишет (G1, G6), и их выключение
+            // Гунну ихфы и отзвук кальканя Cyrillic не пишет (G1, G6), и их выключение
             // в тексте не видно — только в своём профиле, где у них есть графема.
             // Так и сказано на странице рядом с переключателями.
             foreach (var ayah in CorpusCases.Ayahs.Select(a => CorpusCases.Ayah((string)a[0]).Arabic))

@@ -20,13 +20,13 @@ namespace Transliterator.Core.Services
         string? RenamedFrom = null);
 
     /// <summary>
-    /// Профиль в JSON и обратно (E3). Формат — тот же, что у <c>Standard.json</c>:
+    /// Профиль в JSON и обратно (E3). Формат — тот же, что у <c>Cyrillic.json</c>:
     /// выгруженный из браузера профиль кладётся в <c>Resources/Profiles</c>
     /// и читается <c>JsonProfileRepository</c> без правок.
     /// </summary>
     public static class ProfileJson
     {
-        /// <summary>Больше профиль быть не может: в <c>Standard</c> пара килобайт.</summary>
+        /// <summary>Больше профиль быть не может: в <c>Cyrillic</c> пара килобайт.</summary>
         public const int MaxLength = 1024 * 1024;
 
         private const string NameField = nameof(TransliterationProfile.Name);

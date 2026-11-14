@@ -78,7 +78,7 @@ namespace Transliterator.Domain.Entities
         public LocalizedText Description { get; set; } = new();
 
         /// <summary>
-        /// Примеры с выводом по профилю <c>Standard</c>. Каждый сверяется тестом
+        /// Примеры с выводом по профилю <c>Cyrillic</c>. Каждый сверяется тестом
         /// с конвейером: описание не разойдётся с кодом молча.
         /// </summary>
         public List<TajweedRuleExample> Examples { get; set; } = new();

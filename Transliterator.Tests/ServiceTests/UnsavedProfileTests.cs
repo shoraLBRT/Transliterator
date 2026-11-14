@@ -11,7 +11,7 @@ namespace Transliterator.Tests.ServiceTests
     /// <summary>
     /// Транслитерация профилем, переданным целиком (C2). Хранилище здесь падает
     /// на любом обращении: весь смысл пути в том, что профиль в хранилище
-    /// не лежит, и молча сходить туда за «Standard» было бы ошибкой, а не удобством.
+    /// не лежит, и молча сходить туда за «Cyrillic» было бы ошибкой, а не удобством.
     /// </summary>
     public class UnsavedProfileTests
     {
@@ -33,11 +33,11 @@ namespace Transliterator.Tests.ServiceTests
             public Task<bool> ProfileExistsAsync(string profileName) => throw Touched();
         }
 
-        /// <summary>Копия Standard: общий профиль из ресурсов тесты не правят.</summary>
+        /// <summary>Копия Cyrillic: общий профиль из ресурсов тесты не правят.</summary>
         private static TransliterationProfile Copy(string name, Func<KeyValuePair<string, string>, bool>? keep = null) =>
             new(name, "профиль пользователя")
             {
-                Rules = TestProfiles.Standard.Rules
+                Rules = TestProfiles.Cyrillic.Rules
                     .Where(rule => keep?.Invoke(rule) ?? true)
                     .ToDictionary(rule => rule.Key, rule => rule.Value)
             };
@@ -157,7 +157,7 @@ namespace Transliterator.Tests.ServiceTests
             // в выводе не меняется.
             var withoutVariants = Copy("Draft", rule => !rule.Key.Contains('|'));
 
-            var full = _service.Transliterate("جُزْءٌ", TestProfiles.Standard).TransliteratedText;
+            var full = _service.Transliterate("جُزْءٌ", TestProfiles.Cyrillic).TransliteratedText;
             var reduced = _service.Transliterate("جُزْءٌ", withoutVariants).TransliteratedText;
 
             Assert.Equal("джуз", full);

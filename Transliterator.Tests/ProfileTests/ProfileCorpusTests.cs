@@ -8,7 +8,7 @@ namespace Transliterator.Tests.ProfileTests
 {
     /// <summary>
     /// Весь корпус через каждый встроенный профиль (F4). Ожидание корпуса записано
-    /// только для Standard, и сверять Latin с ним буква в букву нечем. Зато можно
+    /// только для Cyrillic, и сверять Latin с ним буква в букву нечем. Зато можно
     /// проверить то, ради чего второй профиль заведён: правила не знают письма.
     /// Если конвейер где-то пишет графему сам, а не берёт её из профиля, в выводе
     /// другого профиля она окажется чужой буквой; если профиль где-то двигает
@@ -60,24 +60,24 @@ namespace Transliterator.Tests.ProfileTests
 
         [Theory]
         [MemberData(nameof(Cases))]
-        public void Output_KeepsTheStructureOfStandard(string name, string id)
+        public void Output_KeepsTheStructureOfCyrillic(string name, string id)
         {
             // Тот самый инвариант проекта в виде проверки: где кончается слово,
             // где стоит дефис слияния и где идёт номер аята — решает конвейер.
             // Профиль вправе поменять каждую графему и не вправе сдвинуть ни одну
             // границу. Всё, что не пробел и не дефис, здесь схлопнуто в «·».
             //
-            // Дефис хамзы — не граница, а графема: Standard пишет им хамзу между
+            // Дефис хамзы — не граница, а графема: Cyrillic пишет им хамзу между
             // гласными (B7) и внутри слова (G2), Latin — той же ʾ, а на конце слова
-            // Standard хамзу не пишет вовсе. Чтобы графема хамзы не сошла здесь
+            // Cyrillic хамзу не пишет вовсе. Чтобы графема хамзы не сошла здесь
             // за структуру, оба профиля пишут хамзу одной буквой везде, кроме
             // начала слова: её варианты сняты, базовый ключ общий.
             var arabic = Arabic(id);
-            var standard = Skeleton(TransliterationPipeline.Transliterate(arabic, WithNeutralHamza(TestProfiles.Standard)));
+            var cyrillic = Skeleton(TransliterationPipeline.Transliterate(arabic, WithNeutralHamza(TestProfiles.Cyrillic)));
             var actual = Skeleton(TransliterationPipeline.Transliterate(arabic, WithNeutralHamza(Get(name))));
 
-            Assert.True(standard == actual,
-                        $"{name}, {id}: границы разошлись со Standard\n  Standard: {standard}\n  {name}: {actual}");
+            Assert.True(cyrillic == actual,
+                        $"{name}, {id}: границы разошлись с Cyrillic\n  Cyrillic: {cyrillic}\n  {name}: {actual}");
         }
 
         private static TransliterationProfile WithNeutralHamza(TransliterationProfile profile)

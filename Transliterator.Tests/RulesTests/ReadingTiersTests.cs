@@ -69,7 +69,7 @@ namespace Transliterator.Tests.RulesTests
         {
             // Пример правила ступени «таджвид» показывает, что правило сделало. Без
             // таджвида от этого не должно остаться следа — хотя бы в сегментах: гунну
-            // и отзвук Standard не пишет, и по тексту их отсутствия не видно.
+            // и отзвук Cyrillic не пишет, и по тексту их отсутствия не видно.
             Assert.NotEqual(Sounds(arabic, ReadingOptions.FullTajweed), Sounds(arabic, ReadingOptions.Plain));
             Assert.NotNull(ruleId);
         }

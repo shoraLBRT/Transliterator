@@ -7,7 +7,7 @@ namespace Transliterator.Tests.ProfileTests
     /// Второй профиль в ресурсах. Его задача — не «ещё одна раскладка», а проверка
     /// главного инварианта проекта: правила решают, что за звук, профиль решает,
     /// как его записать. Ни одно правило про латиницу не знает, и весь конвейер
-    /// отрабатывает здесь ровно тот же, что для Standard.
+    /// отрабатывает здесь ровно тот же, что для Cyrillic.
     /// </summary>
     public class LatinProfileTests
     {
@@ -20,8 +20,8 @@ namespace Transliterator.Tests.ProfileTests
             Assert.Equal(expected, TransliterationPipeline.Transliterate(arabic, TestProfiles.Latin));
 
         [Theory]
-        [InlineData("أُنزِلَ", "унзиль", "unzil")]        // Standard: "ل|sukun" = "ль"
-        [InlineData("ٱلَّذِينَ", "аллязъиин", "allaḏiin")] // Standard: "َ|soft" = "я"
+        [InlineData("أُنزِلَ", "унзиль", "unzil")]        // Cyrillic: "ل|sukun" = "ль"
+        [InlineData("ٱلَّذِينَ", "аллязъиин", "allaḏiin")] // Cyrillic: "َ|soft" = "я"
         public void OmittedVariant_FallsBackToTheBaseKey(string arabic, string cyrillic, string latin)
         {
             // Мягкость ляма кириллице приходится дописывать, латинице — нет.
@@ -33,7 +33,7 @@ namespace Transliterator.Tests.ProfileTests
         [Fact]
         public void Hamza_IsNotConfusableWithAnyOtherLetter()
         {
-            // В Standard хамза — "ъ", и "з + хамза" неотличимо от диграфа "зъ" (ذ):
+            // В Cyrillic хамза — "ъ", и "з + хамза" неотличимо от диграфа "зъ" (ذ):
             // это открытое решение проекта. Латиница ту же задачу решает диакритикой
             // вместо диграфов, поэтому ʾ рядом с любой буквой читается однозначно.
             Assert.Equal("qurʾaan", TransliterationPipeline.Transliterate("قُرْءَانِ", TestProfiles.Latin));

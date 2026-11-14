@@ -32,7 +32,7 @@ namespace Transliterator.Tests.ProfileTests
         [MemberData(nameof(Profiles))]
         public void Profile_HasEveryRequiredKey(string name) =>
             // Встроенный профиль проверяется по обязательному набору (F6), а не по
-            // другим профилям: «необходимое» — решение, а не то, что оказалось в Standard.
+            // другим профилям: «необходимое» — решение, а не то, что оказалось в Cyrillic.
             Assert.Empty(RequiredProfileKeys.Missing(Get(name).Rules));
 
         [Theory]

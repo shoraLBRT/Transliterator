@@ -71,7 +71,7 @@
 | D. Веб-интерфейс | `epic:web` | [D1](https://github.com/shoraLBRT/Transliterator/issues/31) · [D2](https://github.com/shoraLBRT/Transliterator/issues/33) · [D3](https://github.com/shoraLBRT/Transliterator/issues/35) · [D4](https://github.com/shoraLBRT/Transliterator/issues/36) · [D5](https://github.com/shoraLBRT/Transliterator/issues/60) · [D6](https://github.com/shoraLBRT/Transliterator/issues/126) · [D7](https://github.com/shoraLBRT/Transliterator/issues/128) · [D8](https://github.com/shoraLBRT/Transliterator/issues/148) |
 | E. Свои профили в браузере | `epic:custom-profiles` | [E1](https://github.com/shoraLBRT/Transliterator/issues/39) · [E2](https://github.com/shoraLBRT/Transliterator/issues/41) · [E3](https://github.com/shoraLBRT/Transliterator/issues/43) · [E4](https://github.com/shoraLBRT/Transliterator/issues/108) · [E5](https://github.com/shoraLBRT/Transliterator/issues/109) · [E6](https://github.com/shoraLBRT/Transliterator/issues/124) · [E7](https://github.com/shoraLBRT/Transliterator/issues/127) · [E8](https://github.com/shoraLBRT/Transliterator/issues/146) · [E9](https://github.com/shoraLBRT/Transliterator/issues/147) |
 | F. Инфраструктура | `epic:infra` | [F1](https://github.com/shoraLBRT/Transliterator/issues/45) · [F2](https://github.com/shoraLBRT/Transliterator/issues/49) · [F3](https://github.com/shoraLBRT/Transliterator/issues/53) · [F4](https://github.com/shoraLBRT/Transliterator/issues/55) · [F5](https://github.com/shoraLBRT/Transliterator/issues/57) · [F6](https://github.com/shoraLBRT/Transliterator/issues/87) · [F7](https://github.com/shoraLBRT/Transliterator/issues/110) |
-| G. Система записи: графемы `Standard` | `epic:writing-system` | [G1](https://github.com/shoraLBRT/Transliterator/issues/88) · [G2](https://github.com/shoraLBRT/Transliterator/issues/92) · [G3](https://github.com/shoraLBRT/Transliterator/issues/93) · [G4](https://github.com/shoraLBRT/Transliterator/issues/94) · [G5](https://github.com/shoraLBRT/Transliterator/issues/95) · [G6](https://github.com/shoraLBRT/Transliterator/issues/96) · [G7](https://github.com/shoraLBRT/Transliterator/issues/116) |
+| G. Система записи: графемы `Cyrillic` | `epic:writing-system` | [G1](https://github.com/shoraLBRT/Transliterator/issues/88) · [G2](https://github.com/shoraLBRT/Transliterator/issues/92) · [G3](https://github.com/shoraLBRT/Transliterator/issues/93) · [G4](https://github.com/shoraLBRT/Transliterator/issues/94) · [G5](https://github.com/shoraLBRT/Transliterator/issues/95) · [G6](https://github.com/shoraLBRT/Transliterator/issues/96) · [G7](https://github.com/shoraLBRT/Transliterator/issues/116) |
 | H. Связь с пользователями | `epic:feedback` | [H1](https://github.com/shoraLBRT/Transliterator/issues/89) · [H2](https://github.com/shoraLBRT/Transliterator/issues/90) · [H3](https://github.com/shoraLBRT/Transliterator/issues/99) · [H4](https://github.com/shoraLBRT/Transliterator/issues/103) |
 | I. Правила таджвида для пользователя | `epic:tajweed-rules` | [I1](https://github.com/shoraLBRT/Transliterator/issues/91) · [I2](https://github.com/shoraLBRT/Transliterator/issues/107) · [I3](https://github.com/shoraLBRT/Transliterator/issues/121) · [I4](https://github.com/shoraLBRT/Transliterator/issues/122) · [I5](https://github.com/shoraLBRT/Transliterator/issues/123) · [I6](https://github.com/shoraLBRT/Transliterator/issues/125) · [I7](https://github.com/shoraLBRT/Transliterator/issues/129) · [I8](https://github.com/shoraLBRT/Transliterator/issues/144) · [I9](https://github.com/shoraLBRT/Transliterator/issues/145) |
 
@@ -124,7 +124,7 @@ GitHub Pages — **dev-стенд** владельца: любое измене�
 | 21 | [I9](https://github.com/shoraLBRT/Transliterator/issues/145) — строка правила таблицей: переключатель справа, описание под стрелкой | — (сделано 2026-11-14; стрелка описания, слева название и пример, справа счёт или переключатель; описание свёрнуто) |
 | 22 | [E9](https://github.com/shoraLBRT/Transliterator/issues/147) — «Создать профиль» и таблица графем под «Настройками профиля» | — (сделано 2026-11-14; пояснения про копию нет, графемы — таблицей под свёрнутой стрелкой) |
 | 23 | [D8](https://github.com/shoraLBRT/Transliterator/issues/148) — кнопка «?»: что за приложение и зачем | — (сделано 2026-11-14; пример «как пишет страница» считает конвейер, число стадий — `TransliterationService.StageCount`; тексты ждут вычитки владельцем) |
-| 24 | [E8](https://github.com/shoraLBRT/Transliterator/issues/146) — встроенный профиль `Standard` — «Cyrillic» | — (решено владельцем 2026-11-14: профиль переименовывается целиком, старое имя `Standard` продолжает работать) |
+| 24 | [E8](https://github.com/shoraLBRT/Transliterator/issues/146) — встроенный профиль `Standard` — «Cyrillic» | — (решено владельцем 2026-11-14: профиль переименовывается целиком, старое имя `Standard` продолжает работать; сделано 2026-11-14) |
 
 Решения владельца 2026-11-12 по задачам `BA`: G2, G7, I4, I5, E6, D6 и D7 взяты
 в итерацию 2, что именно решено, записано в каждом issue. Английский интерфейс (D7)
@@ -133,7 +133,14 @@ GitHub Pages — **dev-стенд** владельца: любое измене�
 Отзывы со страницы от 2026-11-12 (#144–#148) разобраны 2026-11-14: I8, I9, E9 и D8
 взяты в итерацию 2. [E8](https://github.com/shoraLBRT/Transliterator/issues/146) (встроенный профиль `Standard` — «Cyrillic»)
 решён владельцем 2026-11-14: профиль переименовывается целиком (вариант Б в issue),
-старое имя `Standard` продолжает работать; взят в итерацию 2.
+старое имя `Standard` продолжает работать; взят в итерацию 2 и сделан 2026-11-14.
+Как устроено: `Standard.json` стал `Cyrillic.json`, имена встроенных и их прежние имена —
+`ProfileNames` в домене. Прежнее имя — запасной путь, а не второе имя: профиль ищется
+сначала по имени как есть, и только если такого нет — по прежнему (`--profile Standard`
+в CLI, `TransliterationService`). Сохранённый в браузере выбор `Standard` страница
+переписывает на `Cyrillic`. Свой профиль под именем встроенного `UserProfileRepository`
+больше не пропускает, а переносит под свободное имя копии («Cyrillic (копия)»), и выбор
+такого профиля переезжает вместе с ним.
 
 Вне итераций: [H2](https://github.com/shoraLBRT/Transliterator/issues/90) (другие каналы связи не нужны — формы обратной связи
 хватает, подтверждено 2026-11-12) и [F7](https://github.com/shoraLBRT/Transliterator/issues/110) (боевой хостинг — последним, пока
@@ -144,9 +151,9 @@ GitHub Pages — **dev-стенд** владельца: любое измене�
 
 Интерфейс своих профилей (D2, D4, E1–E3) снят со страницы в D5 и возвращён
 в [E4](https://github.com/shoraLBRT/Transliterator/issues/108) по образцу выбора суры и ступени чтения — кнопкой с панелью.
-У кнопки подпись перед именем — «Профиль: Standard», свой профиль своим именем
+У кнопки подпись перед именем — «Профиль: Cyrillic», свой профиль своим именем
 («Профиль: Мой»), решено владельцем 2026-11-12 ([E6](https://github.com/shoraLBRT/Transliterator/issues/124), сделано); имена профилей
-не менялись. Подпись — часть текста кнопки: она же имя кнопки для диктора; длинное
+в E6 не менялись, встроенный кириллический назван `Cyrillic` в E8. Подпись — часть текста кнопки: она же имя кнопки для диктора; длинное
 имя обрезается многоточием с конца, подпись остаётся видна. В панели — выбор профиля, «Создать профиль» одним нажатием из выбранного
 ([E9](https://github.com/shoraLBRT/Transliterator/issues/147)), переименование и удаление своего; поиск и таблица графем — под стрелкой
 «Настройки профиля» (при открытии панели свёрнута, у только что созданного профиля раскрыта;
@@ -160,7 +167,7 @@ GitHub Pages — **dev-стенд** владельца: любое измене�
 осталась только кнопка «Выбрать суру» — сура меняет сам текст. Ступень чтения
 и профиль — круглые кнопки со значками (звуковая волна — как читать, перо — как
 писать), рядом с каждой подписано, что выбрано сейчас: «Полный таджвид»,
-«Профиль: Standard» (условие E6). С 64rem кнопки стоят столбиком у левого края,
+«Профиль: Cyrillic» (условие E6). С 64rem кнопки стоят столбиком у левого края,
 а панель любой кнопки, и сур тоже, открывается колонкой справа от них; поле,
 вывод и подвал отодвигаются на ширину колонки, подложки нет — щелчок по полю
 панель не закрывает. Пока колонка открыта, подписи у кнопок спрятаны с экрана
@@ -177,7 +184,7 @@ GitHub Pages — **dev-стенд** владельца: любое измене�
 по-русски. Переключатель «RU / EN» — в правом верхнем углу; выбор хранится
 в браузере (`transliterator.language`), автоматический не записывается. С английским
 интерфейсом профиль по умолчанию — `Latin`. Сохранённый выбор профиля важнее
-языка: кто выбрал Standard и переключился на английский, остаётся на Standard;
+языка: кто выбрал Cyrillic и переключился на английский, остаётся на Cyrillic;
 удаление своего профиля возвращает к профилю языка и стирает выбор — это не выбор
 человека. Как устроено (решения сессии):
 - Список языков один — `PageLanguages` в домене: код, имя на самом языке и профиль
@@ -274,7 +281,7 @@ GitHub Pages — **dev-стенд** владельца: любое измене�
   каталога — сугра и кубра, — гунна тремя, как в решении. Тест на корпусе
   сравнивает сегменты с правилом и без него место в место: отличаются только
   места правила и только тем, что оно делает. Икляба в корпусе нет, его держат
-  точечные тесты. Гунну ихфы и отзвук кальканя `Standard` не пишет — их
+  точечные тесты. Гунну ихфы и отзвук кальканя `Cyrillic` не пишет — их
   выключение видно в «Правилах этого чтения» и в своём профиле; так и сказано
   рядом с переключателями. Ихфа шафави (та же гунна у мима) в решение
   не вошла и не выключается.

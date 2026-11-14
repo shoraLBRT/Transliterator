@@ -20,9 +20,16 @@ namespace Transliterator.Core.Repositories
     /// </para>
     /// <para>
     /// Встроенный профиль не перезаписывается никогда: запись под его именем
-    /// сохраняет копию «Standard (копия)», и сам встроенный профиль остаётся
+    /// сохраняет копию «Cyrillic (копия)», и сам встроенный профиль остаётся
     /// эталоном. Отдаются профили копиями — правка возвращённого словаря
     /// не должна молча менять встроенный профиль всей странице.
+    /// </para>
+    /// <para>
+    /// Свой профиль всё же может оказаться под именем встроенного: так бывает,
+    /// когда встроенный переименован (E8: <c>Standard</c> стал <c>Cyrillic</c>),
+    /// а у человека уже был свой «Cyrillic». Такая запись не пропадает и не
+    /// путается со встроенным: она переезжает под свободное имя копии,
+    /// «Cyrillic (копия)».
     /// </para>
     /// <para>
     /// Битая запись — не сломанная сборка, как у ресурсов, а данные, которые мог
@@ -46,6 +53,7 @@ namespace Transliterator.Core.Repositories
         private readonly IKeyValueStore _store;
         private readonly ILogger<UserProfileRepository> _logger;
         private readonly List<string> _problems = new();
+        private readonly Dictionary<string, string> _moved = new(StringComparer.Ordinal);
 
         public UserProfileRepository(IProfileRepository builtIns, IKeyValueStore store, ILogger<UserProfileRepository> logger)
         {
@@ -79,24 +87,78 @@ namespace Transliterator.Core.Repositories
 
             var profiles = (await _builtIns.GetAllProfilesAsync()).Select(Copy).ToList();
             var builtInNames = profiles.Select(p => p.Name).ToHashSet(StringComparer.Ordinal);
+            var own = new List<TransliterationProfile>();
 
             foreach (var key in await UserKeysAsync())
             {
                 if (await ReadAsync(key) is not { } profile)
                     continue;
 
-                // Записать такой профиль через это хранилище нельзя, только руками.
-                // Встроенный остаётся встроенным, а подложная запись не показывается.
+                // Встроенный остаётся встроенным, а свой профиль с его именем
+                // переезжает под свободное имя копии.
                 if (builtInNames.Contains(profile.Name))
                 {
-                    Report(key, "имя занято встроенным профилем");
-                    continue;
+                    if (await MoveAsync(key, profile) is not { } moved)
+                        continue;
+
+                    profile = moved;
                 }
 
-                profiles.Add(profile);
+                own.Add(profile);
             }
 
-            return profiles;
+            return profiles.Concat(own.OrderBy(p => p.Name, StringComparer.Ordinal));
+        }
+
+        /// <summary>
+        /// Переносит свои профили, чьё имя занято встроенным, под свободное имя
+        /// копии (E8) и возвращает все переезды, сделанные этим хранилищем: прежнее
+        /// имя → новое. По ним страница поправляет сохранённый выбор профиля:
+        /// кто выбрал свой «Cyrillic», тот остаётся на нём, а не на встроенном.
+        /// </summary>
+        public async Task<IReadOnlyDictionary<string, string>> MoveShadowedAsync()
+        {
+            foreach (var key in await UserKeysAsync())
+            {
+                if (!await _builtIns.ProfileExistsAsync(key[KeyPrefix.Length..]))
+                    continue;
+
+                if (await ReadAsync(key) is { } profile)
+                    await MoveAsync(key, profile);
+            }
+
+            return _moved;
+        }
+
+        /// <summary>
+        /// Свой профиль под именем встроенного — под свободное имя копии. Старая
+        /// запись удаляется только после того, как записана новая; не вышло —
+        /// запись остаётся как есть, а профиль пропускается.
+        /// </summary>
+        private async Task<TransliterationProfile?> MoveAsync(string key, TransliterationProfile profile)
+        {
+            var name = await FreeCopyNameAsync(profile.Name);
+            var moved = new TransliterationProfile(name, profile.Description)
+            {
+                Rules = new Dictionary<string, string>(profile.Rules)
+            };
+
+            try
+            {
+                await _store.SetAsync(KeyFor(name), JsonSerializer.Serialize(moved, _json));
+                await _store.RemoveAsync(key);
+            }
+            catch (Exception ex) when (ex is not TransliterationException)
+            {
+                _logger.LogWarning(ex, "Stored profile could not be moved: {Key}", key);
+                Report(key, "имя занято встроенным профилем, а перенести его под другое не удалось");
+                return null;
+            }
+
+            _moved[profile.Name] = name;
+            _logger.LogInformation("Stored profile {Old} moved to {New}: the name is taken by a built-in profile",
+                                   profile.Name, name);
+            return moved;
         }
 
         public async Task<bool> ProfileExistsAsync(string profileName)
@@ -174,7 +236,7 @@ namespace Transliterator.Core.Repositories
             }
         }
 
-        /// <summary>«Standard (копия)», затем «Standard (копия 2)» — первое свободное имя.</summary>
+        /// <summary>«Cyrillic (копия)», затем «Cyrillic (копия 2)» — первое свободное имя.</summary>
         public async Task<string> FreeCopyNameAsync(string name)
         {
             var copySuffix = CoreText.Get("Profile.CopySuffix");

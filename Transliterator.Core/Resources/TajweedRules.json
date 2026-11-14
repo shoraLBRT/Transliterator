@@ -262,8 +262,8 @@
       },
       "ArabicName": "الإخفاء",
       "Description": {
-        "ru": "Нун без гласной или танвин перед остальными пятнадцатью буквами произносится неясно, в нос, на полпути к следующей букве. В профиле Standard такой нун пишется так же, как обычный.",
-        "en": "Noon without a vowel or tanween before the remaining fifteen letters is pronounced indistinctly, through the nose, halfway to the next letter. The Standard and Latin profiles write such a noon like an ordinary one."
+        "ru": "Нун без гласной или танвин перед остальными пятнадцатью буквами произносится неясно, в нос, на полпути к следующей букве. В профиле Cyrillic такой нун пишется так же, как обычный.",
+        "en": "Noon without a vowel or tanween before the remaining fifteen letters is pronounced indistinctly, through the nose, halfway to the next letter. The Cyrillic and Latin profiles write such a noon like an ordinary one."
       },
       "Examples": [
         { "Arabic": "مِن شَرِّ", "Transliteration": "мин щарр" }
@@ -305,8 +305,8 @@
       },
       "ArabicName": "الإخفاء الشفوي",
       "Description": {
-        "ru": "Мим без гласной перед ب произносится губами неплотно, в нос. В профиле Standard он пишется так же, как обычный.",
-        "en": "Meem without a vowel before ب is pronounced with loosely closed lips, through the nose. The Standard and Latin profiles write it like an ordinary one."
+        "ru": "Мим без гласной перед ب произносится губами неплотно, в нос. В профиле Cyrillic он пишется так же, как обычный.",
+        "en": "Meem without a vowel before ب is pronounced with loosely closed lips, through the nose. The Cyrillic and Latin profiles write it like an ordinary one."
       },
       "Examples": [
         { "Arabic": "تَرْمِيهِم بِحِجَارَةٍ", "Transliteration": "тармииhим бихIиджаароh" }
@@ -591,8 +591,8 @@
       },
       "ArabicName": "القلقلة الصغرى",
       "Description": {
-        "ru": "Буквы ق ط ب ج د без гласной внутри чтения дают короткий отзвук. В профиле Standard отзвук пока не пишется.",
-        "en": "The letters ق ط ب ج د without a vowel inside the recitation give a short echo. The Standard and Latin profiles do not write the echo yet."
+        "ru": "Буквы ق ط ب ج د без гласной внутри чтения дают короткий отзвук. В профиле Cyrillic отзвук пока не пишется.",
+        "en": "The letters ق ط ب ج د without a vowel inside the recitation give a short echo. The Cyrillic and Latin profiles do not write the echo yet."
       },
       "Examples": [
         { "Arabic": "يَلِدْ وَلَمْ", "Transliteration": "йалид уалям" }
@@ -613,8 +613,8 @@
       },
       "ArabicName": "القلقلة الكبرى",
       "Description": {
-        "ru": "Те же буквы на паузе дают отзвук сильнее. В профиле Standard отзвук пока не пишется.",
-        "en": "The same letters at a pause give a stronger echo. The Standard and Latin profiles do not write the echo yet."
+        "ru": "Те же буквы на паузе дают отзвук сильнее. В профиле Cyrillic отзвук пока не пишется.",
+        "en": "The same letters at a pause give a stronger echo. The Cyrillic and Latin profiles do not write the echo yet."
       },
       "Examples": [
         { "Arabic": "ٱلْفَلَقِ", "Transliteration": "аль-фаляq" }

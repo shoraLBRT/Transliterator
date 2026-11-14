@@ -25,7 +25,7 @@ namespace Transliterator.Tests.ProfileTests
         private static TransliterationProfile Mine(string name = "Мой", string ba = "b") =>
             new(name, "свой профиль")
             {
-                Rules = new Dictionary<string, string>(TestProfiles.Standard.Rules) { ["ب"] = ba }
+                Rules = new Dictionary<string, string>(TestProfiles.Cyrillic.Rules) { ["ب"] = ba }
             };
 
         private static async Task<List<string>> Names(UserProfileRepository repository) =>
@@ -65,9 +65,9 @@ namespace Transliterator.Tests.ProfileTests
 
             var names = await Names(repository);
 
-            Assert.Equal(new[] { "Latin", "Standard" }, names.Take(2).OrderBy(n => n, StringComparer.Ordinal));
+            Assert.Equal(new[] { "Cyrillic", "Latin" }, names.Take(2).OrderBy(n => n, StringComparer.Ordinal));
             Assert.Equal("Мой", names[2]);
-            Assert.True(await repository.IsBuiltInAsync("Standard"));
+            Assert.True(await repository.IsBuiltInAsync("Cyrillic"));
             Assert.False(await repository.IsBuiltInAsync("Мой"));
         }
 
@@ -75,15 +75,15 @@ namespace Transliterator.Tests.ProfileTests
         public async Task SavingABuiltInProfile_CreatesACopy_AndLeavesTheBuiltInAlone()
         {
             var repository = Repository();
-            var edited = await repository.GetProfileAsync("Standard");
+            var edited = await repository.GetProfileAsync("Cyrillic");
             edited!.Rules["ب"] = "b";
 
             var first = await repository.SaveAsync(edited);
             var second = await repository.SaveAsync(edited);
 
-            Assert.Equal("Standard (копия)", first);
-            Assert.Equal("Standard (копия 2)", second);
-            Assert.Equal("б", (await repository.GetProfileAsync("Standard"))!.Rules["ب"]);
+            Assert.Equal("Cyrillic (копия)", first);
+            Assert.Equal("Cyrillic (копия 2)", second);
+            Assert.Equal("б", (await repository.GetProfileAsync("Cyrillic"))!.Rules["ب"]);
             Assert.Equal("b", (await repository.GetProfileAsync(first))!.Rules["ب"]);
             Assert.False(await repository.IsBuiltInAsync(first));
         }
@@ -93,9 +93,9 @@ namespace Transliterator.Tests.ProfileTests
         {
             var repository = Repository();
 
-            (await repository.GetProfileAsync("Standard"))!.Rules["ب"] = "b";
+            (await repository.GetProfileAsync("Cyrillic"))!.Rules["ب"] = "b";
 
-            Assert.Equal("б", (await repository.GetProfileAsync("Standard"))!.Rules["ب"]);
+            Assert.Equal("б", (await repository.GetProfileAsync("Cyrillic"))!.Rules["ب"]);
         }
 
         [Fact]
@@ -109,19 +109,19 @@ namespace Transliterator.Tests.ProfileTests
                                  new EmphasisRule(), new MaddRule(), new QalqalahRule()),
                 new CyrillicRenderer());
 
-            await service.UpdateRuleAsync("ب", "b", "Standard");
+            await service.UpdateRuleAsync("ب", "b", "Cyrillic");
 
-            Assert.Equal("б", (await repository.GetProfileAsync("Standard"))!.Rules["ب"]);
-            Assert.Equal("b", (await repository.GetProfileAsync("Standard (копия)"))!.Rules["ب"]);
+            Assert.Equal("б", (await repository.GetProfileAsync("Cyrillic"))!.Rules["ب"]);
+            Assert.Equal("b", (await repository.GetProfileAsync("Cyrillic (копия)"))!.Rules["ب"]);
         }
 
         [Fact]
         public async Task DeletingABuiltInProfile_IsRefused()
         {
             var error = await Assert.ThrowsAsync<TransliterationException>(
-                () => Repository().DeleteProfileAsync("Standard"));
+                () => Repository().DeleteProfileAsync("Cyrillic"));
 
-            Assert.Contains("Standard", error.Message);
+            Assert.Contains("Cyrillic", error.Message);
         }
 
         [Fact]
@@ -156,19 +156,85 @@ namespace Transliterator.Tests.ProfileTests
             Assert.Null(await repository.GetProfileAsync("Битый"));
         }
 
+        private void StoreByHand(TransliterationProfile profile) =>
+            _store.Items[UserProfileRepository.KeyFor(profile.Name)] =
+                System.Text.Json.JsonSerializer.Serialize(profile);
+
         [Fact]
-        public async Task StoredEntryNamedLikeABuiltIn_IsSkipped()
+        public async Task StoredEntryNamedLikeABuiltIn_MovesToACopyName_AndTheBuiltInStays()
         {
-            var fake = Mine("Standard");
-            _store.Items[UserProfileRepository.KeyFor("Standard")] =
-                System.Text.Json.JsonSerializer.Serialize(fake);
+            // E8: до переименования Standard → Cyrillic свой профиль мог называться «Cyrillic».
+            StoreByHand(Mine("Cyrillic"));
 
             var repository = Repository();
             var names = await Names(repository);
 
-            Assert.Single(names, "Standard");
-            Assert.Contains("Standard", Assert.Single(repository.Problems));
-            Assert.Equal("б", (await repository.GetProfileAsync("Standard"))!.Rules["ب"]);
+            Assert.Single(names, "Cyrillic");
+            Assert.Contains("Cyrillic (копия)", names);
+            Assert.Empty(repository.Problems);
+            Assert.True(await repository.IsBuiltInAsync("Cyrillic"));
+            Assert.Equal("б", (await repository.GetProfileAsync("Cyrillic"))!.Rules["ب"]);
+            Assert.Equal("b", (await repository.GetProfileAsync("Cyrillic (копия)"))!.Rules["ب"]);
+            Assert.Equal("свой профиль", (await repository.GetProfileAsync("Cyrillic (копия)"))!.Description);
+
+            // Переезд записан в хранилище: после перезагрузки старой записи нет, новая на месте.
+            Assert.False(_store.Items.ContainsKey(UserProfileRepository.KeyFor("Cyrillic")));
+            Assert.Equal(names, await Names(Repository()));
+        }
+
+        [Fact]
+        public async Task StoredEntryNamedLikeABuiltIn_TakesTheFirstFreeCopyName()
+        {
+            StoreByHand(Mine("Cyrillic (копия)", ba: "bb"));
+            StoreByHand(Mine("Cyrillic"));
+
+            var repository = Repository();
+            var moved = await repository.MoveShadowedAsync();
+
+            Assert.Equal("Cyrillic (копия 2)", Assert.Single(moved).Value);
+            Assert.Equal("Cyrillic", Assert.Single(moved).Key);
+            Assert.Equal("bb", (await repository.GetProfileAsync("Cyrillic (копия)"))!.Rules["ب"]);
+            Assert.Equal("b", (await repository.GetProfileAsync("Cyrillic (копия 2)"))!.Rules["ب"]);
+        }
+
+        [Fact]
+        public async Task MoveShadowed_RemembersMovesMadeWhileListing()
+        {
+            // Список профилей мог прочитаться раньше, чем страница поправила выбор:
+            // переезд, сделанный при чтении списка, всё равно виден.
+            StoreByHand(Mine("Cyrillic"));
+            var repository = Repository();
+            await Names(repository);
+
+            var moved = await repository.MoveShadowedAsync();
+
+            Assert.Equal("Cyrillic (копия)", moved["Cyrillic"]);
+        }
+
+        [Fact]
+        public async Task StoredEntryNamedLikeABuiltIn_StaysInStorage_WhenItCannotMove()
+        {
+            StoreByHand(Mine("Cyrillic"));
+            _store.Full = true;
+
+            var repository = Repository();
+            var names = await Names(repository);
+
+            Assert.Single(names, "Cyrillic");
+            Assert.Contains("Cyrillic", Assert.Single(repository.Problems));
+            Assert.True(_store.Items.ContainsKey(UserProfileRepository.KeyFor("Cyrillic")));
+            Assert.Empty(await repository.MoveShadowedAsync());
+        }
+
+        [Fact]
+        public async Task MoveShadowed_LeavesOrdinaryProfilesAlone()
+        {
+            await Repository().SaveProfileAsync(Mine());
+
+            var repository = Repository();
+
+            Assert.Empty(await repository.MoveShadowedAsync());
+            Assert.Contains("Мой", await Names(repository));
         }
 
         [Fact]
@@ -207,9 +273,9 @@ namespace Transliterator.Tests.ProfileTests
 
             var names = await Names(repository);
 
-            Assert.Equal(new[] { "Latin", "Standard" }, names.OrderBy(n => n, StringComparer.Ordinal));
+            Assert.Equal(new[] { "Cyrillic", "Latin" }, names.OrderBy(n => n, StringComparer.Ordinal));
             Assert.NotEmpty(repository.Problems);
-            Assert.NotNull(await repository.GetProfileAsync("Standard"));
+            Assert.NotNull(await repository.GetProfileAsync("Cyrillic"));
             await Assert.ThrowsAsync<TransliterationException>(() => repository.SaveProfileAsync(Mine()));
         }
 

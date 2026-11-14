@@ -27,7 +27,7 @@ namespace Transliterator.Tests.ServiceTests
             _storagePath = Path.Combine(Path.GetTempPath(), "translit-tests-" + Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(_storagePath);
 
-            WriteProfile(TestProfiles.Standard);
+            WriteProfile(TestProfiles.Cyrillic);
 
             _repository = new JsonProfileRepository(
                 Options.Create(new StorageSettings { ProfilesPath = _storagePath }),
@@ -65,15 +65,43 @@ namespace Transliterator.Tests.ServiceTests
 
             var names = await _service.GetAvailableProfilesAsync();
 
-            Assert.Equal(new[] { "Draft", "Standard" }, names);
+            Assert.Equal(new[] { "Cyrillic", "Draft" }, names);
         }
 
         [Fact]
-        public async Task GetRules_DefaultsToStandard()
+        public async Task GetRules_DefaultsToCyrillic()
         {
             var rules = await _service.GetRulesAsync();
 
-            Assert.Equal(TestProfiles.Standard.Rules["ب"], rules["ب"]);
+            Assert.Equal(TestProfiles.Cyrillic.Rules["ب"], rules["ب"]);
+        }
+
+        [Theory]
+        [InlineData(null)]
+        [InlineData("Cyrillic")]
+        [InlineData("Standard")]   // прежнее имя Cyrillic (E8)
+        public async Task Transliterate_FindsCyrillic_ByItsNameOrFormerName(string? profile)
+        {
+            var result = await _service.TransliterateAsync("بِسْمِ", profile);
+
+            Assert.Equal("Cyrillic", result.ProfileName);
+            Assert.Equal((await _service.TransliterateAsync("بِسْمِ", "Cyrillic")).TransliteratedText,
+                         result.TransliteratedText);
+        }
+
+        [Fact]
+        public async Task Transliterate_PrefersAProfileThatReallyHasTheFormerName()
+        {
+            // Прежнее имя — запасной путь, а не второе имя: профиль с таким именем важнее.
+            WriteProfile(new TransliterationProfile("Standard", "свой")
+            {
+                Rules = new Dictionary<string, string>(TestProfiles.Cyrillic.Rules) { ["ب"] = "b" }
+            });
+
+            var result = await _service.TransliterateAsync("بِسْمِ", "Standard");
+
+            Assert.Equal("Standard", result.ProfileName);
+            Assert.StartsWith("b", result.TransliteratedText);
         }
 
         [Fact]
@@ -133,7 +161,7 @@ namespace Transliterator.Tests.ServiceTests
         [Fact]
         public async Task UpdateRule_AcceptsEmptyMapping()
         {
-            // Пустая графема — законная запись: так в Standard заданы отзвук
+            // Пустая графема — законная запись: так в Cyrillic заданы отзвук
             // кальканя и начальная хамза.
             await _service.UpdateRuleAsync("ء|initial", string.Empty);
 
@@ -159,7 +187,7 @@ namespace Transliterator.Tests.ServiceTests
             // всю арабицу и кириллицу в "\u0631" при первой же записи.
             await _service.UpdateRuleAsync("ب", "б");
 
-            var saved = File.ReadAllText(Path.Combine(_storagePath, "Standard.json"));
+            var saved = File.ReadAllText(Path.Combine(_storagePath, "Cyrillic.json"));
 
             Assert.Contains("\"ب\": \"б\"", saved);
             Assert.DoesNotContain("\\u", saved);
@@ -174,7 +202,7 @@ namespace Transliterator.Tests.ServiceTests
                 Options.Create(new StorageSettings { ProfilesPath = _storagePath }),
                 NullLogger<JsonProfileRepository>.Instance);
 
-            var profile = await reopened.GetProfileAsync("Standard");
+            var profile = await reopened.GetProfileAsync("Cyrillic");
 
             Assert.Equal("b", profile!.Rules["ب"]);
         }
