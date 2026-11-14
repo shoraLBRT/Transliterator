@@ -88,7 +88,7 @@
     <value>Sample surahs</value>
   </data>
   <data name="Surah.Caption" xml:space="preserve">
-    <value>Their Cyrillic transliteration (Cyrillic) is checked by hand</value>
+    <value>Their transliteration with the Cyrillic profile is checked by hand</value>
   </data>
   <data name="Reading.Title" xml:space="preserve">
     <value>How to read</value>
