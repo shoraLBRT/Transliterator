@@ -186,8 +186,8 @@
   <data name="Profile.Delete" xml:space="preserve">
     <value>Delete</value>
   </data>
-  <data name="Profile.Copy" xml:space="preserve">
-    <value>Make a copy</value>
+  <data name="Profile.Create" xml:space="preserve">
+    <value>Create profile</value>
   </data>
   <data name="Profile.Rename" xml:space="preserve">
     <value>Rename</value>
@@ -201,8 +201,17 @@
   <data name="Profile.PreviewEmpty" xml:space="preserve">
     <value>Type text in the field — you will see here how it is written</value>
   </data>
-  <data name="Profile.BuiltInNote" xml:space="preserve">
-    <value>A built-in profile does not change — make a copy to rewrite the graphemes.</value>
+  <data name="Profile.Settings" xml:space="preserve">
+    <value>Profile settings</value>
+  </data>
+  <data name="Profile.LetterColumn" xml:space="preserve">
+    <value>Letter</value>
+  </data>
+  <data name="Profile.VariantColumn" xml:space="preserve">
+    <value>Variant</value>
+  </data>
+  <data name="Profile.ValueColumn" xml:space="preserve">
+    <value>Grapheme</value>
   </data>
   <data name="Profile.SearchLabel" xml:space="preserve">
     <value>Search by letter, spelling or variant</value>

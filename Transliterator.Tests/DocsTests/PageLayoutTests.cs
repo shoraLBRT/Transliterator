@@ -151,6 +151,57 @@ namespace Transliterator.Tests.DocsTests
             Assert.Contains("{0}", PageStrings.Web("en")["Reading.DescriptionLabel"]);
         }
 
+        /// <summary>
+        /// Свой профиль создаётся без инструкции (E9): кнопка «Создать профиль» берёт
+        /// за основу выбранный, пояснения про копию нет, а поиск и графемы — под
+        /// стрелкой «Настройки профиля», раскрытой у только что созданного. Графемы —
+        /// таблица: столбцы одной ширины, границы ячеек, варианты тише буквы.
+        /// </summary>
+        [Fact]
+        public void ProfileSettings_FoldTheGraphemeTable_AndCreateOpensThem()
+        {
+            var picker = Regex.Replace(Web("Components", "ProfilePicker.razor"), @"\s+", " ");
+
+            Assert.Contains("@onclick=\"CreateAsync\">@L[\"Profile.Create\"]</button>", picker);
+            Assert.DoesNotContain("Profile.BuiltInNote", picker);
+            Assert.DoesNotContain("Profile.Copy\"", picker);
+
+            var toggle = Regex.Match(picker, @"<button type=""button"" class=""profile-settings-toggle""(.*?)>(.*?)</button>");
+            Assert.True(toggle.Success, "the profile settings toggle is not found");
+            Assert.Contains("aria-expanded=\"@(_settingsOpen ? \"true\" : \"false\")\"", toggle.Groups[1].Value);
+            Assert.Contains("aria-controls=\"profile-settings\"", toggle.Groups[1].Value);
+            Assert.Contains("L[\"Profile.Settings\"]", toggle.Groups[2].Value);
+
+            var settings = picker.IndexOf("<div id=\"profile-settings\"", StringComparison.Ordinal);
+            Assert.True(settings > toggle.Index, "the settings block is not under its toggle");
+            Assert.True(picker.IndexOf("profile-search", StringComparison.Ordinal) > settings, "the search is not inside the settings");
+            Assert.True(picker.IndexOf("<table class=\"profile-table\">", StringComparison.Ordinal) > settings, "the table is not inside the settings");
+
+            // Свёрнуто при каждом закрытии панели, раскрыто у только что созданного профиля.
+            Assert.Matches(@"OnClosed\(\) \{ Cancel\(\); _settingsOpen = false; \}", picker);
+            Assert.Matches(@"CreateAsync\(\) \{.*?_settingsOpen = true; await ProfileChanged\.InvokeAsync\(copy\);", picker);
+
+            var css = Regex.Replace(Web("wwwroot", "css", "app.css"), @"\s+", " ");
+            Assert.Matches(@"\.profile-table \{[^}]*table-layout: fixed;[^}]*border-collapse: collapse;", css);
+            Assert.Matches(@"\.profile-table th, \.profile-table td \{[^}]*border: 1px solid", css);
+            Assert.Matches(@"\.profile-col-letter \{ width: [0-9.]+rem; \}", css);
+            Assert.Matches(@"\.profile-col-value \{ width: [0-9.]+rem; \}", css);
+            Assert.Matches(@"\.profile-row\.is-variant > td \{[^}]*color: var\(--ink-muted\);", css);
+            Assert.Matches(@"\.profile-rules\[hidden\] \{ display: none; \}", css);
+
+            foreach (var language in new[] { "ru", "en" })
+            {
+                var strings = PageStrings.Web(language);
+                Assert.False(strings.ContainsKey("Profile.BuiltInNote"), $"{language}: the built-in note is still there");
+                Assert.False(strings.ContainsKey("Profile.Copy"), $"{language}: the copy button text is still there");
+            }
+
+            Assert.Equal("Создать профиль", PageStrings.Web("ru")["Profile.Create"]);
+            Assert.Equal("Create profile", PageStrings.Web("en")["Profile.Create"]);
+            Assert.Equal("Настройки профиля", PageStrings.Web("ru")["Profile.Settings"]);
+            Assert.Equal("Profile settings", PageStrings.Web("en")["Profile.Settings"]);
+        }
+
         [Fact]
         public void OnAWideScreen_ThePanelIsAColumnBesideTheFieldAndTheOutput()
         {
