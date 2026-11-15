@@ -20,11 +20,14 @@
         <span class="picker-toggle-text">@L["About.Toggle"]</span>
     </button>
 
-    @if (IsOpen)
+    @if (IsShown)
     {
-        <div class="picker-backdrop" @onclick="Close"></div>
+        if (IsOpen)
+        {
+            <div class="picker-backdrop" @onclick="Close"></div>
+        }
 
-        <div id="about-menu" class="picker-panel about-panel" role="dialog" aria-labelledby="about-menu-title"
+        <div id="about-menu" class="picker-panel about-panel @Closing.CssClass" inert="@Closing.IsClosing" aria-hidden="@Closing.AriaHidden" role="dialog" aria-labelledby="about-menu-title"
              tabindex="-1" @ref="PanelElement" @onkeydown="OnPanelKeyDownAsync">
             <PanelHead Id="about-menu-title" Title="@L["About.Title"]" Close="CloseToToggleAsync" />
 

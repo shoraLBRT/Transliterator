@@ -34,11 +34,14 @@
         <span class="picker-toggle-text">@ToggleText</span>
     </button>
 
-    @if (IsOpen)
+    @if (IsShown)
     {
-        <div class="picker-backdrop" @onclick="Close"></div>
+        if (IsOpen)
+        {
+            <div class="picker-backdrop" @onclick="Close"></div>
+        }
 
-        <div id="profile-menu" class="picker-panel profile-panel" role="dialog" aria-labelledby="profile-menu-title"
+        <div id="profile-menu" class="picker-panel profile-panel @Closing.CssClass" inert="@Closing.IsClosing" aria-hidden="@Closing.AriaHidden" role="dialog" aria-labelledby="profile-menu-title"
              tabindex="-1" @ref="PanelElement" @onkeydown="OnPanelKeyDownAsync">
             <PanelHead Id="profile-menu-title" Title="@L["Profile.Title"]" Close="CloseToToggleAsync" />
             <p class="picker-caption">@L["Profile.Caption"]</p>

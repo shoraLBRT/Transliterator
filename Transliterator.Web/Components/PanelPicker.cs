@@ -22,6 +22,15 @@ namespace Transliterator.Web.Components
 
         protected bool IsOpen => Panels.IsOpen(Panel);
 
+        /// <summary>
+        /// Закрытие с анимацией (D10): закрытая панель ещё миг в разметке, уже
+        /// <c>inert</c> и скрытая от диктора.
+        /// </summary>
+        protected PanelClosing Closing { get; } = new();
+
+        /// <summary>Панель в разметке: открыта или ещё уходит.</summary>
+        protected bool IsShown => IsOpen || Closing.IsClosing;
+
         protected ElementReference ToggleButton;
         protected ElementReference PanelElement;
 
@@ -36,11 +45,18 @@ namespace Transliterator.Web.Components
         /// </summary>
         private void OnPanelsChanged()
         {
-            if (_wasOpen && !IsOpen)
+            var closed = _wasOpen && !IsOpen;
+            if (closed)
                 OnClosed();
+            else if (IsOpen)
+                Closing.Cancel();
 
             _wasOpen = IsOpen;
-            _ = InvokeAsync(StateHasChanged);
+
+            if (closed)
+                _ = Closing.RunAsync(() => InvokeAsync(StateHasChanged));
+            else
+                _ = InvokeAsync(StateHasChanged);
         }
 
         /// <summary>Панель закрылась — любым путём.</summary>
