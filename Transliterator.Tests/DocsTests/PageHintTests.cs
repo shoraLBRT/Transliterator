@@ -43,11 +43,13 @@ namespace Transliterator.Tests.DocsTests
         }
 
         [Fact]
-        public void SecondTier_IsCalledPartialTajweed_AndItsNoteNamesBothChoices()
+        public void SecondTier_IsCalledPartialTajweed_AndItsNoteNamesBothChoicesAndWhereToMakeThem()
         {
             // Решение владельца к I5: вторая ступень — «Неполный таджвид» и под полем,
             // и в панели (оба места берут имя из ModeName), а пояснение говорит и про
-            // счёт мадда, и про правила, которые можно не читать (I4).
+            // счёт мадда, и про правила, которые можно не читать (I4). I11: оно же
+            // говорит, где это выбрать — ниже, в блоке «Правила таджвида», — и слово
+            // «правила» в нём одно, без тавтологии.
             var picker = Regex.Replace(File.ReadAllText(Path.Combine(ReadmeTests.RepositoryRoot(),
                                                                      "Transliterator.Web", "Components", "ReadingPicker.razor")), @"\s+", " ");
 
@@ -59,11 +61,21 @@ namespace Transliterator.Tests.DocsTests
             Assert.DoesNotContain(russian.Values, value => value.Contains("Свои варианты"));
             Assert.Contains("мадд", russian["ModeNote.Variants"]);
             Assert.Contains("можно не читать", russian["ModeNote.Variants"]);
+            Assert.Contains("ниже", russian["ModeNote.Variants"]);
+            Assert.Contains("«Правилах таджвида»", russian["ModeNote.Variants"]);
+            Assert.Single(Regex.Matches(russian["ModeNote.Variants"], "правил", RegexOptions.IgnoreCase));
+            Assert.Equal("Как требует таджвид", russian["ModeNote.Full"]);
+            Assert.Equal("Обычное арабское чтение", russian["ModeNote.Plain"]);
 
             var english = PageStrings.Web("en");
             Assert.Equal("Partial tajweed", english["Mode.Variants"]);
             Assert.Contains("madd", english["ModeNote.Variants"]);
-            Assert.Contains("left out", english["ModeNote.Variants"]);
+            Assert.Contains("skip", english["ModeNote.Variants"]);
+            Assert.Contains("below", english["ModeNote.Variants"]);
+            Assert.Contains(english["Group.Tajweed"], english["ModeNote.Variants"]);
+            Assert.Single(Regex.Matches(english["ModeNote.Variants"], "rule", RegexOptions.IgnoreCase));
+            Assert.Equal("As tajweed requires", english["ModeNote.Full"]);
+            Assert.Equal("Ordinary Arabic reading", english["ModeNote.Plain"]);
         }
 
         [Fact]
