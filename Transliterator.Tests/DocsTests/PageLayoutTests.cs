@@ -244,7 +244,8 @@ namespace Transliterator.Tests.DocsTests
         }
 
         /// <summary>
-        /// «О приложении» (D8): круглая кнопка «?» сбоку с именем для диктора, в панели —
+        /// «О приложении» (D8): круглая кнопка «?» сбоку с видимой подписью «О чём проект?»
+        /// (D9) — она же имя для диктора и title, в панели —
         /// подзаголовки, пример «как пишут обычно» и «как пишет страница» (её считает
         /// конвейер, а не текст), имена кнопок профиля из тех же строк, что на кнопках,
         /// и кнопка, открывающая форму отзыва.
@@ -256,7 +257,9 @@ namespace Transliterator.Tests.DocsTests
 
             var toggle = Regex.Match(about, "<button [^>]*aria-controls=\"about-menu\"[^>]*>(.*?)</button>");
             Assert.True(toggle.Success, "the about button is not found");
-            Assert.Contains("<span class=\"visually-hidden\">@L[\"About.Toggle\"]</span>", toggle.Groups[1].Value);
+            Assert.Contains("title=\"@L[\"About.Toggle\"]\"", toggle.Value);
+            Assert.Contains("<span class=\"picker-toggle-text\">@L[\"About.Toggle\"]</span>", toggle.Groups[1].Value);
+            Assert.DoesNotContain("visually-hidden", toggle.Groups[1].Value);
             Assert.Contains("class=\"picker-panel about-panel\"", about);
 
             foreach (var heading in new[] { "WhyTitle", "ExampleTitle", "HowTitle", "ProfilesTitle", "ThanksTitle" })
@@ -271,8 +274,9 @@ namespace Transliterator.Tests.DocsTests
             Assert.Contains("<AboutPicker Transliterate=\"TransliterateExample\" OpenFeedback=\"OpenFeedbackAsync\" />", app);
             Assert.Contains("<FeedbackButton Arabic=\"@_arabic\" Transliteration=\"@_result\" @ref=\"_feedback\" />", app);
 
-            Assert.Equal("О приложении", PageStrings.Web("ru")["About.Toggle"]);
-            Assert.Equal("About", PageStrings.Web("en")["About.Toggle"]);
+            Assert.Equal("О чём проект?", PageStrings.Web("ru")["About.Toggle"]);
+            Assert.Equal("What is this about?", PageStrings.Web("en")["About.Toggle"]);
+            Assert.Equal("О приложении", PageStrings.Web("ru")["About.Title"]);
 
             foreach (var language in new[] { "ru", "en" })
             {

@@ -302,7 +302,7 @@
     <value>The message was not sent: the server responded with an error.</value>
   </data>
   <data name="About.Toggle" xml:space="preserve">
-    <value>About</value>
+    <value>What is this about?</value>
   </data>
   <data name="About.Title" xml:space="preserve">
     <value>About</value>

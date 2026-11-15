@@ -317,7 +317,7 @@
     <value>Сообщение не отправилось: сервер ответил ошибкой.</value>
   </data>
   <data name="About.Toggle" xml:space="preserve">
-    <value>О приложении</value>
+    <value>О чём проект?</value>
   </data>
   <data name="About.Title" xml:space="preserve">
     <value>О приложении</value>
