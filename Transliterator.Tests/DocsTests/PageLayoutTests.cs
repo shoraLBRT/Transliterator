@@ -260,7 +260,7 @@ namespace Transliterator.Tests.DocsTests
             Assert.Contains("title=\"@L[\"About.Toggle\"]\"", toggle.Value);
             Assert.Contains("<span class=\"picker-toggle-text\">@L[\"About.Toggle\"]</span>", toggle.Groups[1].Value);
             Assert.DoesNotContain("visually-hidden", toggle.Groups[1].Value);
-            Assert.Contains("class=\"picker-panel about-panel\"", about);
+            Assert.Contains("class=\"picker-panel about-panel @Closing.CssClass\"", about);
 
             foreach (var heading in new[] { "WhyTitle", "ExampleTitle", "HowTitle", "ProfilesTitle", "ThanksTitle" })
                 Assert.Contains($"<h3 class=\"about-heading\">@L[\"About.{heading}\"]</h3>", about);
@@ -284,6 +284,53 @@ namespace Transliterator.Tests.DocsTests
                 Assert.Contains("{0}", profiles);
                 Assert.Contains("{1}", profiles);
             }
+        }
+
+        /// <summary>
+        /// D10: панели и вывод появляются и уходят коротко и плавно. Уходящая панель
+        /// ещё миг в разметке, но inert и скрыта от диктора; подложки у неё уже нет.
+        /// Одна пара анимаций и одна длительность на всё, и та же длительность —
+        /// в коде, что держит уходящую панель. С prefers-reduced-motion движения нет.
+        /// </summary>
+        [Theory]
+        [InlineData("SurahPicker.razor", "Closing", "IsShown")]
+        [InlineData("ReadingPicker.razor", "Closing", "IsShown")]
+        [InlineData("ProfilePicker.razor", "Closing", "IsShown")]
+        [InlineData("AboutPicker.razor", "Closing", "IsShown")]
+        [InlineData("FeedbackButton.razor", "_closing", "_open || _closing.IsClosing")]
+        public void ClosingPanel_StaysAMoment_InertAndHiddenFromTheReader(string file, string closing, string shown)
+        {
+            var picker = Regex.Replace(Web("Components", file), @"\s+", " ");
+
+            Assert.Contains($"@if ({shown}) {{ if (", picker);
+            Assert.Matches(@"if \((IsOpen|_open)\) \{ <div class=""(picker|feedback)-backdrop""", picker);
+            Assert.Matches($@"class=""(picker|feedback)-panel[^""]*@{closing}\.CssClass"" inert=""@{closing}\.IsClosing"" aria-hidden=""@{closing}\.AriaHidden"" role=""dialog""", picker);
+        }
+
+        [Fact]
+        public void PanelsAndTheOutput_ShareOneAnimation_AndReducedMotionTurnsItOff()
+        {
+            var css = Regex.Replace(Web("wwwroot", "css", "app.css"), @"\s+", " ");
+
+            var duration = Regex.Match(css, @"--motion-duration: ([0-9.]+)s;");
+            Assert.True(duration.Success, "the motion duration is not found");
+            var code = File.ReadAllText(Path.Combine(ReadmeTests.RepositoryRoot(), "Transliterator.Web", "Components", "PanelClosing.cs"));
+            var milliseconds = Regex.Match(code, @"Duration = TimeSpan\.FromMilliseconds\((\d+)\)");
+            Assert.True(milliseconds.Success, "PanelClosing.Duration is not found");
+            Assert.Equal(double.Parse(duration.Groups[1].Value, System.Globalization.CultureInfo.InvariantCulture) * 1000,
+                         double.Parse(milliseconds.Groups[1].Value, System.Globalization.CultureInfo.InvariantCulture));
+
+            Assert.Contains("@keyframes panel-in {", css);
+            Assert.Contains("@keyframes panel-out {", css);
+            foreach (var block in new[] { "picker-panel", "feedback-panel", "result" })
+                Assert.Matches($@"\.{block} \{{[^}}]*animation: panel-in var\(--motion-duration\) var\(--motion-ease\);", css);
+            Assert.Matches(@"\.picker-panel\.is-closing, \.feedback-panel\.is-closing \{ animation: panel-out var\(--motion-duration\) var\(--motion-ease\) forwards; pointer-events: none; \}", css);
+            Assert.DoesNotMatch(@"animation: rise", css);
+
+            var reduced = Regex.Match(css, @"@media \(prefers-reduced-motion: reduce\) \{(.*)$");
+            Assert.True(reduced.Success, "the reduced-motion block is not found");
+            Assert.Contains("animation: none !important; transition: none !important;", reduced.Groups[1].Value);
+            Assert.Contains(".picker-panel.is-closing, .feedback-panel.is-closing { display: none; }", reduced.Groups[1].Value);
         }
 
         [Fact]

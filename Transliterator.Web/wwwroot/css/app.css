@@ -21,6 +21,12 @@
     --shadow: 0 1px 2px rgba(31, 45, 42, 0.04), 0 10px 30px rgba(31, 45, 42, 0.07);
     --radius-card: 1.75rem;
 
+    /* Движение (D10): одна длительность и одна кривая на панели и вывод.
+       Длительность повторена в PanelClosing.Duration — столько уходящая панель
+       остаётся в разметке. */
+    --motion-duration: 0.2s;
+    --motion-ease: cubic-bezier(0.2, 0, 0, 1);
+
     --font-ui: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 
     /* Веб-шрифт страница не грузит, берётся первый установленный. Впереди —
@@ -309,7 +315,7 @@ svg {
     border: 1px solid var(--line);
     border-radius: 1.25rem;
     box-shadow: var(--shadow);
-    animation: rise 0.18s ease-out;
+    animation: panel-in var(--motion-duration) var(--motion-ease);
 }
 
 .picker-panel:focus-visible {
@@ -384,8 +390,21 @@ svg {
     outline-offset: 4px;
 }
 
-@keyframes rise {
-    from { opacity: 0; transform: translateY(-4px); }
+/* Появление и уход панели (D10) — прозрачность и небольшой сдвиг, туда и обратно.
+   Уходящая панель (.is-closing) ещё миг на месте, но уже inert: нажатия её
+   не достают, диктор её не читает. На широком экране колонка выезжает сбоку. */
+@keyframes panel-in {
+    from { opacity: 0; transform: translate(var(--panel-shift-x, 0), var(--panel-shift-y, -0.4rem)); }
+}
+
+@keyframes panel-out {
+    to { opacity: 0; transform: translate(var(--panel-shift-x, 0), var(--panel-shift-y, -0.4rem)); }
+}
+
+.picker-panel.is-closing,
+.feedback-panel.is-closing {
+    animation: panel-out var(--motion-duration) var(--motion-ease) forwards;
+    pointer-events: none;
 }
 
 .picker-caption {
@@ -1275,7 +1294,7 @@ svg {
     background: var(--foam-50);
     border: 1px solid var(--foam-100);
     border-radius: 1.5rem;
-    animation: rise 0.2s ease-out;
+    animation: panel-in var(--motion-duration) var(--motion-ease);
 }
 
 .result-text {
@@ -1389,7 +1408,8 @@ svg {
     color: var(--ink);
     font-size: 0.9rem;
     text-align: start;
-    animation: rise 0.18s ease-out;
+    --panel-shift-y: 0.4rem; /* у нижнего края — всплывает снизу */
+    animation: panel-in var(--motion-duration) var(--motion-ease);
 }
 
 .feedback-title {
@@ -1564,7 +1584,7 @@ svg {
         max-width: none;
         margin-right: 0;
         margin-left: max(var(--rail-space), (100% - 46rem) / 2);
-        transition: margin-left 0.3s ease, width 0.3s ease;
+        transition: margin-left var(--motion-duration) var(--motion-ease), width var(--motion-duration) var(--motion-ease);
     }
 
     .side-rail {
@@ -1611,6 +1631,8 @@ svg {
         width: var(--panel-width);
         max-height: calc(100vh - 2.5rem);
         max-height: calc(100dvh - 2.5rem);
+        --panel-shift-x: -0.75rem; /* колонка выезжает из-под кнопок */
+        --panel-shift-y: 0;
     }
 
     .picker-backdrop,
@@ -1715,6 +1737,12 @@ svg {
     *::after {
         animation: none !important;
         transition: none !important;
+    }
+
+    /* Без анимации уходящей панели не на что задерживаться — скрыта сразу. */
+    .picker-panel.is-closing,
+    .feedback-panel.is-closing {
+        display: none;
     }
 
     .hint-text.is-typing::after {

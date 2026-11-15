@@ -22,11 +22,14 @@
         <span class="picker-toggle-text">@ModeName(Choice.Mode)</span>
     </button>
 
-    @if (IsOpen)
+    @if (IsShown)
     {
-        <div class="picker-backdrop" @onclick="Close"></div>
+        if (IsOpen)
+        {
+            <div class="picker-backdrop" @onclick="Close"></div>
+        }
 
-        <div id="reading-menu" class="picker-panel reading-panel" role="dialog" aria-labelledby="reading-menu-title"
+        <div id="reading-menu" class="picker-panel reading-panel @Closing.CssClass" inert="@Closing.IsClosing" aria-hidden="@Closing.AriaHidden" role="dialog" aria-labelledby="reading-menu-title"
              tabindex="-1" @ref="PanelElement" @onkeydown="OnPanelKeyDownAsync">
             <PanelHead Id="reading-menu-title" Title="@L["Reading.Title"]" Close="CloseToToggleAsync" />
 

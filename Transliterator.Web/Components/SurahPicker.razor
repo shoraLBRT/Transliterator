@@ -16,11 +16,14 @@
         <span>@L["Surah.Toggle"]</span>
     </button>
 
-    @if (IsOpen)
+    @if (IsShown)
     {
-        <div class="picker-backdrop" @onclick="Close"></div>
+        if (IsOpen)
+        {
+            <div class="picker-backdrop" @onclick="Close"></div>
+        }
 
-        <div id="surah-menu" class="picker-panel" role="dialog" aria-labelledby="surah-menu-title"
+        <div id="surah-menu" class="picker-panel @Closing.CssClass" inert="@Closing.IsClosing" aria-hidden="@Closing.AriaHidden" role="dialog" aria-labelledby="surah-menu-title"
              tabindex="-1" @ref="PanelElement" @onkeydown="OnPanelKeyDownAsync">
             <PanelHead Id="surah-menu-title" Title="@L["Surah.Title"]" Close="CloseToToggleAsync" />
             <p class="picker-caption">@L["Surah.Caption"]</p>

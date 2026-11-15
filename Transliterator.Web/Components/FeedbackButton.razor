@@ -22,11 +22,14 @@
         <span class="feedback-label">@L["Feedback.Toggle"]</span>
     </button>
 
-    @if (_open)
+    @if (_open || _closing.IsClosing)
     {
-        <div class="feedback-backdrop" @onclick="CloseAsync"></div>
+        if (_open)
+        {
+            <div class="feedback-backdrop" @onclick="CloseAsync"></div>
+        }
 
-        <div id="feedback-panel" class="feedback-panel" role="dialog" aria-labelledby="feedback-title"
+        <div id="feedback-panel" class="feedback-panel @_closing.CssClass" inert="@_closing.IsClosing" aria-hidden="@_closing.AriaHidden" role="dialog" aria-labelledby="feedback-title"
              @onkeydown="OnKeyDownAsync">
             <h2 id="feedback-title" class="feedback-title">@L["Feedback.Title"]</h2>
 
@@ -117,6 +120,7 @@
     public string Transliteration { get; set; } = string.Empty;
 
     private bool _open;
+    private readonly PanelClosing _closing = new();
     private bool _focusMessage;
     private bool _opened;
     private bool _attach;
@@ -218,6 +222,7 @@
             return;
         }
 
+        _closing.Cancel();
         _open = true;
         _opened = false;
         _sent = null;
@@ -244,6 +249,7 @@
     private async Task CloseAsync()
     {
         _open = false;
+        _ = _closing.RunAsync(() => InvokeAsync(StateHasChanged));
         await RemoveGuardAsync();
         await _toggle.FocusAsync();
     }
