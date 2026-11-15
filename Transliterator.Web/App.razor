@@ -56,7 +56,7 @@
                 @if (_catalog is not null)
                 {
                     <ReadingPicker Catalog="_catalog" Choice="_reading" ChoiceChanged="ChangeReadingAsync"
-                                   Transliterate="TransliterateExample" />
+                                   Transliterate="TransliterateExample" Preview="@_result" />
                 }
 
                 @if (_profile is not null)

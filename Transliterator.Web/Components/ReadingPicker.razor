@@ -42,6 +42,14 @@
                 }
             </div>
 
+            @* Вывод повторён под ступенями (I10), как в панели профиля (E4): на телефоне
+               панель закрывает результат, а смену ступени должно быть видно сразу.
+               На широком экране повтор скрыт — вывод и так рядом. *@
+            <div class="panel-preview reading-preview" aria-live="polite">
+                <span class="panel-preview-label">@L["Preview.Label"]</span>
+                <span class="panel-preview-text">@(string.IsNullOrEmpty(Preview) ? L["Preview.Empty"] : Preview)</span>
+            </div>
+
             @* Под ступенями — два блока правил (I8): сначала правила чтения на арабском,
                потом правила таджвида, как в группах I6. Оба свёрнуты, пока их не откроют;
                в заголовке видно, сколько в блоке правил и читаются ли они сейчас — и у
@@ -170,6 +178,10 @@
     [Parameter]
     public Func<string, string?>? Transliterate { get; set; }
 
+    /// <summary>Вывод страницы: на телефоне панель закрывает результат и повторяет его в себе (I10).</summary>
+    [Parameter]
+    public string Preview { get; set; } = string.Empty;
+
     private static readonly ReadingMode[] Modes = { ReadingMode.Full, ReadingMode.Variants, ReadingMode.Plain };
 
     protected override string Panel => "reading";
@@ -248,19 +260,18 @@
     };
 
     /// <summary>
-    /// Выбранная ступень сразу видна в выводе, и панель закрывается: на телефоне —
-    /// чтобы его открыть, на широком экране — потому что выбор сделан, как и у сур.
-    /// «Неполный таджвид» оставляет её открытой и раскрывает «Правила таджвида» (I8):
-    /// счёты и переключатели выбираются здесь же, в строках правил.
+    /// Выбранная ступень сразу видна в выводе, а панель остаётся открытой при любой
+    /// ступени (I10): ступени сравнивают, переключая их подряд. На телефоне вывод
+    /// повторён в панели. Закрывают её, как другие, крестиком, Escape или кнопкой.
+    /// «Неполный таджвид» раскрывает «Правила таджвида» (I8): счёты и переключатели
+    /// выбираются здесь же, в строках правил.
     /// </summary>
-    private async Task ChooseModeAsync(ReadingMode mode)
+    private Task ChooseModeAsync(ReadingMode mode)
     {
         if (mode == ReadingMode.Variants)
             _openBlocks.Add(TajweedTier.Tajweed);
-        else
-            Close();
 
-        await ChoiceChanged.InvokeAsync(Choice.WithMode(mode));
+        return ChoiceChanged.InvokeAsync(Choice.WithMode(mode));
     }
 
     private Task ChooseCountAsync(TajweedRule rule, int count) =>

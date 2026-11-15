@@ -110,6 +110,34 @@ namespace Transliterator.Tests.DocsTests
         }
 
         [Fact]
+        public void ChoosingAReadingTier_KeepsThePanelOpen_AndShowsTheOutputInIt()
+        {
+            // I10: какую ступень ни выбери, панель «Как читать» остаётся открытой —
+            // закрывают её крестиком, Escape или кнопкой, как другие панели. На телефоне
+            // она закрывает вывод, поэтому вывод повторён в ней, как в панели профиля (E4).
+            var reading = Regex.Replace(Web("Components", "ReadingPicker.razor"), @"\s+", " ");
+
+            var choose = Regex.Match(reading, @"private Task ChooseModeAsync\(ReadingMode mode\) \{(.*?)\}(?= private)");
+            Assert.True(choose.Success, "ChooseModeAsync is not found");
+            Assert.DoesNotContain("Close", choose.Groups[1].Value);
+
+            foreach (var picker in new[] { reading, Regex.Replace(Web("Components", "ProfilePicker.razor"), @"\s+", " ") })
+            {
+                Assert.Matches(@"<div class=""panel-preview[^""]*"" aria-live=""polite"">", picker);
+                Assert.Contains("@L[\"Preview.Label\"]", picker);
+                Assert.Contains("L[\"Preview.Empty\"] : Preview", picker);
+            }
+
+            // Повтор стоит под ступенями: выбор ступени и его вывод видны вместе.
+            Assert.True(reading.IndexOf("class=\"reading-modes\"") < reading.IndexOf("class=\"panel-preview"));
+            Assert.True(reading.IndexOf("class=\"panel-preview") < reading.IndexOf("class=\"reading-block\""));
+
+            var app = Regex.Replace(Web("App.razor"), @"\s+", " ");
+            Assert.Matches(@"<ReadingPicker [^>]*Preview=""@_result""", app);
+            Assert.Matches(@"<ProfilePicker [^>]*Preview=""@_result""", app);
+        }
+
+        [Fact]
         public void RuleRow_IsATable_NameAndExampleLeft_ControlsRight_DescriptionBehindAnArrow()
         {
             // I9: строка правила — стрелка описания, слева название с примером под ним,
@@ -258,8 +286,8 @@ namespace Transliterator.Tests.DocsTests
             Assert.Matches(@"\.stage, \.footer \{[^}]*margin-left: max\(var\(--rail-space\)", rules);
 
             // Ни подложки, которая закрыла бы панель щелчком по полю, ни повтора вывода
-            // в панели профиля (E4): вывод и так рядом.
-            Assert.Matches(@"\.picker-backdrop, \.profile-preview \{ display: none; \}", rules);
+            // в панелях профиля (E4) и «Как читать» (I10): вывод и так рядом.
+            Assert.Matches(@"\.picker-backdrop, \.panel-preview \{ display: none; \}", rules);
         }
     }
 }

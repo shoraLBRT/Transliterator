@@ -195,10 +195,10 @@
   <data name="Profile.Conflicts" xml:space="preserve">
     <value>Ambiguous graphemes: {0}. The profile is saved, but some letters cannot be told apart in the output — see the letters below.</value>
   </data>
-  <data name="Profile.PreviewLabel" xml:space="preserve">
+  <data name="Preview.Label" xml:space="preserve">
     <value>Output</value>
   </data>
-  <data name="Profile.PreviewEmpty" xml:space="preserve">
+  <data name="Preview.Empty" xml:space="preserve">
     <value>Type text in the field — you will see here how it is written</value>
   </data>
   <data name="Profile.Settings" xml:space="preserve">

@@ -104,9 +104,9 @@
                 }
             </div>
 
-            <div class="profile-preview" aria-live="polite">
-                <span class="profile-preview-label">@L["Profile.PreviewLabel"]</span>
-                <span class="profile-preview-text">@(string.IsNullOrEmpty(Preview) ? L["Profile.PreviewEmpty"] : Preview)</span>
+            <div class="panel-preview profile-preview" aria-live="polite">
+                <span class="panel-preview-label">@L["Preview.Label"]</span>
+                <span class="panel-preview-text">@(string.IsNullOrEmpty(Preview) ? L["Preview.Empty"] : Preview)</span>
             </div>
 
             @* Графемы — под стрелкой «Настройки профиля» (E9): профиль выбирают чаще,
