@@ -209,10 +209,10 @@
     <value>Спорных графем: {0}. Профиль сохранён, но некоторые буквы по выводу не отличить — подробности у букв ниже.</value>
     <comment>{0} — count</comment>
   </data>
-  <data name="Profile.PreviewLabel" xml:space="preserve">
+  <data name="Preview.Label" xml:space="preserve">
     <value>Вывод</value>
   </data>
-  <data name="Profile.PreviewEmpty" xml:space="preserve">
+  <data name="Preview.Empty" xml:space="preserve">
     <value>Введите текст в поле — здесь будет видно, как он пишется</value>
   </data>
   <data name="Profile.Settings" xml:space="preserve">

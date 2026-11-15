@@ -930,22 +930,28 @@ svg {
     box-shadow: 0 0 0 3px var(--foam-50);
 }
 
-/* Вывод повторён в панели: на телефоне она закрывает результат, а правка графемы
-   должна быть видна сразу. Липнет к верху прокрутки — виден и под таблицей.
+/* Вывод повторён в панели: на телефоне она закрывает результат, а выбор в ней
+   (графема профиля, ступень чтения — I10) должен быть виден сразу.
    На широком экране панель стоит рядом с выводом, и повтор скрыт (D6). */
-.profile-preview {
-    position: sticky;
-    top: -0.5rem;
-    z-index: 1;
+.panel-preview {
     display: grid;
     gap: 0.15rem;
-    margin: 0 -0.5rem;
+    margin: 0.25rem -0.5rem;
     padding: 0.6rem 1.25rem;
     background: var(--foam-50);
     border-block: 1px solid var(--foam-100);
 }
 
-.profile-preview-label {
+/* В панели профиля повтор липнет к верху прокрутки — виден и под таблицей.
+   В «Как читать» он стоит под ступенями: к верху там липнут заголовки блоков правил. */
+.profile-preview {
+    position: sticky;
+    top: -0.5rem;
+    z-index: 1;
+    margin: 0 -0.5rem;
+}
+
+.panel-preview-label {
     font-size: 0.7rem;
     font-weight: 600;
     letter-spacing: 0.02em;
@@ -953,7 +959,7 @@ svg {
     color: var(--foam-700);
 }
 
-.profile-preview-text {
+.panel-preview-text {
     display: -webkit-box;
     -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
@@ -1608,7 +1614,7 @@ svg {
     }
 
     .picker-backdrop,
-    .profile-preview {
+    .panel-preview {
         display: none;
     }
 }
