@@ -94,7 +94,14 @@ namespace Transliterator.Tests.DocsTests
             Assert.Contains("aria-expanded=\"@(open ? \"true\" : \"false\")\"", toggle.Groups[1].Value);
             Assert.Contains("aria-controls=\"@blockId\"", toggle.Groups[1].Value);
             Assert.Contains("reading-group-count", toggle.Groups[2].Value);
-            Assert.Contains("Reading.GroupOff", toggle.Groups[2].Value);
+            // I12: счёт — дробью «читаемых/всего», диктору — словами; приписки
+            // «сейчас не читаются» больше нет, «0/13» говорит то же.
+            Assert.Contains("<span aria-hidden=\"true\">@read/@total</span>", toggle.Groups[2].Value);
+            Assert.Contains("<span class=\"visually-hidden\">@L[\"Reading.GroupCountLabel\", read, total]</span>", toggle.Groups[2].Value);
+            Assert.DoesNotContain("Reading.GroupOff", reading);
+            Assert.DoesNotContain("RuleCount", reading);
+            Assert.Contains("var total = group.Count();", reading);
+            Assert.Contains("var read = group.Count(rule => !IsOff(rule));", reading);
             Assert.Contains("<div id=\"@blockId\" class=\"reading-block-body\" hidden=\"@(!open)\">", reading);
 
             Assert.Matches(@"protected override Task BeforeOpenAsync\(\) \{ _openBlocks\.Clear\(\);", reading);
@@ -107,6 +114,9 @@ namespace Transliterator.Tests.DocsTests
             var english = PageStrings.Web("en");
             Assert.Equal("Rules of reading Arabic", english["Group.Base"]);
             Assert.Equal("Tajweed rules", english["Group.Tajweed"]);
+
+            Assert.Equal("читается 11 из 13", string.Format(russian["Reading.GroupCountLabel"], 11, 13));
+            Assert.Equal("11 of 13 read", string.Format(english["Reading.GroupCountLabel"], 11, 13));
         }
 
         [Fact]

@@ -143,26 +143,15 @@
     <value>Описание правила «{0}»</value>
     <comment>{0} — rule name; the arrow button that shows the rule description</comment>
   </data>
-  <data name="Reading.GroupOff" xml:space="preserve">
-    <value> · сейчас не читаются</value>
+  <data name="Reading.GroupCountLabel" xml:space="preserve">
+    <value>читается {0} из {1}</value>
+    <comment>Screen-reader text of the rule-count fraction in a block header (I12); {0} — rules read now, {1} — rules in the block</comment>
   </data>
   <data name="Group.Tajweed" xml:space="preserve">
     <value>Правила таджвида</value>
   </data>
   <data name="Group.Base" xml:space="preserve">
     <value>Правила чтения на арабском</value>
-  </data>
-  <data name="RuleCount.One" xml:space="preserve">
-    <value>{0} правило</value>
-    <comment>1, 21, 31…</comment>
-  </data>
-  <data name="RuleCount.Few" xml:space="preserve">
-    <value>{0} правила</value>
-    <comment>2–4, 22–24… (Russian plural form; English uses the same text as Many)</comment>
-  </data>
-  <data name="RuleCount.Many" xml:space="preserve">
-    <value>{0} правил</value>
-    <comment>0, 5–20, 25…</comment>
   </data>
   <data name="Profile.Toggle" xml:space="preserve">
     <value>Профиль: {0}</value>

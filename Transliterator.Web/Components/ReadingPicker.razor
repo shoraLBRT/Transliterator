@@ -52,8 +52,9 @@
 
             @* Под ступенями — два блока правил (I8): сначала правила чтения на арабском,
                потом правила таджвида, как в группах I6. Оба свёрнуты, пока их не откроют;
-               в заголовке видно, сколько в блоке правил и читаются ли они сейчас — и у
-               свёрнутого. Счёт и переключатель «Неполного таджвида» стоят в строке
+               в заголовке — дробь «читаемых/всего» (I12), видная и у свёрнутого: читается
+               правило, которое не выключено (счёт мадда не в счёт). Диктор читает её
+               словами, числа берутся из каталога и выбора. Счёт и переключатель «Неполного таджвида» стоят в строке
                своего правила (I3, I4), отдельного списка нет. *@
             @foreach (var group in Groups)
             {
@@ -61,6 +62,8 @@
                 var off = IsOff(tier);
                 var open = _openBlocks.Contains(tier);
                 var blockId = BlockId(tier);
+                var total = group.Count();
+                var read = group.Count(rule => !IsOff(rule));
 
                 <section class="reading-block">
                     <h3 class="reading-group @(off ? "is-off" : null)">
@@ -68,7 +71,7 @@
                                 aria-expanded="@(open ? "true" : "false")" aria-controls="@blockId"
                                 @onclick="() => ToggleBlock(tier)">
                             <span class="reading-group-name">@GroupName(tier)</span>
-                            <span class="reading-group-count">@L.Count("RuleCount", group.Count())@(off ? L["Reading.GroupOff"].Value : null)</span>
+                            <span class="reading-group-count"><span aria-hidden="true">@read/@total</span><span class="visually-hidden">@L["Reading.GroupCountLabel", read, total]</span></span>
                             <svg class="reading-group-chevron" viewBox="0 0 24 24" aria-hidden="true">
                                 <path d="M6 9l6 6 6-6" />
                             </svg>

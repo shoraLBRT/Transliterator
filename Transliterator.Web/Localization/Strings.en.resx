@@ -135,23 +135,15 @@
   <data name="Reading.DescriptionLabel" xml:space="preserve">
     <value>Description of {0}</value>
   </data>
-  <data name="Reading.GroupOff" xml:space="preserve">
-    <value> · not read now</value>
+  <data name="Reading.GroupCountLabel" xml:space="preserve">
+    <value>{0} of {1} read</value>
+    <comment>Screen-reader text of the rule-count fraction in a block header (I12); {0} — rules read now, {1} — rules in the block</comment>
   </data>
   <data name="Group.Tajweed" xml:space="preserve">
     <value>Tajweed rules</value>
   </data>
   <data name="Group.Base" xml:space="preserve">
     <value>Rules of reading Arabic</value>
-  </data>
-  <data name="RuleCount.One" xml:space="preserve">
-    <value>{0} rule</value>
-  </data>
-  <data name="RuleCount.Few" xml:space="preserve">
-    <value>{0} rules</value>
-  </data>
-  <data name="RuleCount.Many" xml:space="preserve">
-    <value>{0} rules</value>
   </data>
   <data name="Profile.Toggle" xml:space="preserve">
     <value>Profile: {0}</value>
