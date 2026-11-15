@@ -109,7 +109,7 @@
     <value>As tajweed requires</value>
   </data>
   <data name="ModeNote.Variants" xml:space="preserve">
-    <value>Tajweed, but you choose how long to hold the madd, and rules that only mark a sound can be left out</value>
+    <value>Tajweed your way: below, under Tajweed rules, choose how long to hold madd and what to skip</value>
   </data>
   <data name="ModeNote.Plain" xml:space="preserve">
     <value>Ordinary Arabic reading</value>
