@@ -5,13 +5,15 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="Транслитерация Корана кириллицей по правилам таджвида — прямо в браузере." />
-    <meta name="theme-color" content="#fbf7ef" />
+    <!-- Цвет полосы браузера — фон страницы своей темы (D12), как --cream в app.css. -->
+    <meta name="theme-color" content="#fbf7ef" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#141a19" media="(prefers-color-scheme: dark)" />
     <title>Транслитерация Корана</title>
     <base href="/" />
     <!-- ?v= — первые 8 знаков SHA-256 файла (переводы строк как LF). Браузер не берёт
          из кеша прежний page.js или app.css к новой сборке: файл изменился — изменился
          и адрес. Сверяет PageAssetVersionTests и подсказывает новое значение. -->
-    <link rel="stylesheet" href="css/app.css?v=8bc2ccf1" />
+    <link rel="stylesheet" href="css/app.css?v=f4cc0357" />
 </head>
 
 <body>

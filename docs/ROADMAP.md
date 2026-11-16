@@ -167,7 +167,7 @@ Milestone «Итерация 3 · Отзывчивый интерфейс». П�
 
 | Порядок | Issue | Зависит от |
 |---|---|---|
-| 1 | [D12](https://github.com/shoraLBRT/Transliterator/issues/176) — токены дизайна и тёмная тема | — |
+| 1 | [D12](https://github.com/shoraLBRT/Transliterator/issues/176) — токены дизайна и тёмная тема | — (сделано 2026-11-17; шкалы отступов, радиусов, теней, кеглей и движения — токены в `:root`, а тёмная тема по `prefers-color-scheme` переопределяет только цвета и тени; вне этих двух блоков в `app.css` нет ни цвета, ни длительности, что проверяет `PageLayoutTests`) |
 | 2 | [D13](https://github.com/shoraLBRT/Transliterator/issues/177) — шапка страницы: имя, знак и язык без наложения | — |
 | 3 | [D21](https://github.com/shoraLBRT/Transliterator/issues/185) — микровзаимодействия: нажатия, наведение, переключатели | D12 |
 | 4 | [D17](https://github.com/shoraLBRT/Transliterator/issues/181) — карточка вывода: шапка, копирование сверху, номера аятов | D12 |
