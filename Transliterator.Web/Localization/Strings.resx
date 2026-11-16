@@ -21,8 +21,8 @@
     <comment>meta description</comment>
   </data>
   <data name="Page.Heading" xml:space="preserve">
-    <value>Транслитерация Корана кириллицей</value>
-    <comment>Heading of the page, read by screen readers</comment>
+    <value>Транслитерация Корана</value>
+    <comment>Page name in the header, next to the mark: short and quiet (D13)</comment>
   </data>
   <data name="Hint.1" xml:space="preserve">
     <value>Транслит арабского текста на кириллицу</value>

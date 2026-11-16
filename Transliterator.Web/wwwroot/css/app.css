@@ -147,30 +147,71 @@ button {
 /* ---- Каркас ---- */
 
 /* Пустая страница держит поле ближе к центру, как стартовый экран чата.
-   Появился текст — поле поднимается, освобождая место результату. */
+   Появился текст — поле поднимается, освобождая место результату. Сверху над
+   полем — шапка (D13); расстояние до поля — её нижний отступ, см. .topbar. */
 .shell {
     position: relative;
     display: flex;
     flex-direction: column;
     min-height: 100vh;
     min-height: 100dvh;
-    padding: 24vh 1.25rem 1.25rem;
-    transition: padding-top var(--motion-slow) var(--ease-soft);
+    padding: var(--space-3) 1.25rem 1.25rem;
 }
 
-.shell.is-active {
-    padding-top: 7vh;
+/* ---- Шапка (D13) ----
+   Тонкая строка в потоке: знак и имя слева, язык справа. Ширина — та же колонка,
+   что у поля, поэтому язык стоит над правым краем поля, а с 64rem шапка
+   отодвигается вместе с полем и колонка панели слева её не накрывает.
+   --topbar-height — высота строки (кнопки языка); нижний отступ дополняет её до
+   прежнего места поля: 24vh от верха пустой страницы и 7vh — активной. */
+
+.topbar {
+    --topbar-height: 2.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    width: 100%;
+    max-width: 46rem;
+    min-height: var(--topbar-height);
+    margin: 0 auto max(var(--space-6), 24vh - var(--space-3) - var(--topbar-height));
+    transition: margin-bottom var(--motion-slow) var(--ease-soft);
+}
+
+.shell.is-active .topbar {
+    margin-bottom: max(var(--space-4), 7vh - var(--space-3) - var(--topbar-height));
+}
+
+.topbar-brand {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-width: 0;
+}
+
+.topbar-mark {
+    flex: none;
+    width: 1.5rem;
+    height: 1.5rem;
+    fill: var(--foam-700);
+    stroke: none; /* знак залит, а не обведён, как значки кнопок */
+}
+
+.topbar-name {
+    margin: 0;
+    color: var(--ink);
+    font-size: var(--text-base);
+    font-weight: 600;
+    line-height: 1.25;
+    letter-spacing: -0.005em;
 }
 
 /* ---- Язык интерфейса (D7) ----
-   В правом верхнем углу: видно сразу, ничего не закрывает — ни поле, ни колонку
+   В шапке справа (D13): видно сразу, ничего не закрывает — ни поле, ни колонку
    панели слева, ни кнопку обратной связи внизу справа. */
 
 .language-switch {
-    position: absolute;
-    top: 0.9rem;
-    right: 1.25rem;
-    z-index: 5;
+    flex: none;
     display: inline-flex;
     padding: 0.15rem;
     border: 1px solid var(--line);
@@ -1651,6 +1692,7 @@ svg {
         --rail-space: calc(var(--panel-left) + var(--panel-width));
     }
 
+    .topbar,
     .stage,
     .footer {
         width: min(46rem, 100% - var(--rail-space));
@@ -1658,6 +1700,12 @@ svg {
         margin-right: 0;
         margin-left: max(var(--rail-space), (100% - 46rem) / 2);
         transition: margin-left var(--motion-duration) var(--motion-ease), width var(--motion-duration) var(--motion-ease);
+    }
+
+    /* Шапка ещё и опускает поле (см. .topbar) — её отступ снизу едет как прежде. */
+    .topbar {
+        transition: margin-left var(--motion-duration) var(--motion-ease), width var(--motion-duration) var(--motion-ease),
+                    margin-bottom var(--motion-slow) var(--ease-soft);
     }
 
     .side-rail {
@@ -1764,11 +1812,19 @@ svg {
 
 @media (max-width: 36rem) {
     .shell {
-        padding: 12vh 1rem 1rem;
+        padding: var(--space-2) 1rem 1rem;
     }
 
-    .shell.is-active {
-        padding-top: var(--space-6);
+    .topbar {
+        margin-bottom: max(var(--space-5), 12vh - var(--space-2) - var(--topbar-height));
+    }
+
+    .shell.is-active .topbar {
+        margin-bottom: var(--space-4);
+    }
+
+    .topbar-name {
+        font-size: var(--text-md);
     }
 
     .hint {

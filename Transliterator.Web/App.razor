@@ -9,11 +9,23 @@
 @implements IDisposable
 
 <div class="shell @(HasText ? "is-active" : null) @(Panels.Current is not null ? "has-panel" : null)">
-    @* Язык интерфейса (D7): в углу страницы, видно сразу, ещё до поля. *@
-    <LanguagePicker Chosen="ChangeLanguageAsync" />
+    @* Шапка (D13): знак и короткое имя страницы слева, язык интерфейса (D7) справа.
+       Она в потоке, над полем, и ничего не перекрывает: прежде переключатель стоял
+       в углу поверх страницы и на телефоне наезжал на подсказку. Знак — буква «нун»
+       (чаша пером и точка в ней): ею открывается сура «Калам», «Перо». Тот же знак —
+       в favicon.svg. *@
+    <header class="topbar">
+        <div class="topbar-brand">
+            <svg class="topbar-mark" viewBox="5 5 22 22" aria-hidden="true">
+                <path d="M6.5 8.5C6.5 18 10.5 23.5 16 23.5C21.5 23.5 25.5 18.5 25.5 11C24.2 17.1 20.8 20.7 16 20.7C11.2 20.7 7.6 16.1 6.5 8.5Z" />
+                <circle cx="16" cy="11" r="2.2" />
+            </svg>
+            <h1 class="topbar-name">@L["Page.Heading"]</h1>
+        </div>
+        <LanguagePicker Chosen="ChangeLanguageAsync" />
+    </header>
 
     <main class="stage">
-        <h1 class="visually-hidden">@L["Page.Heading"]</h1>
 
         @* Подсказка печатается скриптом и сменяет себя. Экранному диктору она не
            читается: для него у поля есть постоянная подпись, а текст, меняющийся
