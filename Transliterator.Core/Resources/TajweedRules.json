@@ -457,14 +457,14 @@
       },
       "ArabicName": "المد المنفصل",
       "Description": {
-        "ru": "Долгая гласная на конце слова перед хамзой следующего слова тянется четыре счёта.",
-        "en": "A long vowel at the end of a word before the hamza of the next word is held for four counts."
+        "ru": "Долгая гласная на конце слова перед хамзой следующего слова тянется четыре счёта. Удлинение это дозволенное: можно читать и два счёта, как обычную долгую гласную.",
+        "en": "A long vowel at the end of a word before the hamza of the next word is held for four counts. The lengthening is permitted, not required: it may also be read as two counts, like a plain long vowel."
       },
       "Examples": [
         { "Arabic": "بِمَآ أُنزِلَ", "Transliteration": "бимааа унзиль" }
       ],
       "Tier": "Tajweed",
-      "Counts": [4, 5],
+      "Counts": [2, 4, 5],
       "DefaultCount": 4
     },
     {

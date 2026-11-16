@@ -167,7 +167,7 @@ namespace Transliterator.Tests.RulesTests
         [InlineData("madd-arid", new[] { 2, 4, 6 }, 2)]
         [InlineData("madd-lin", new[] { 2, 4, 6 }, 2)]
         [InlineData("madd-muttasil", new[] { 4, 5 }, 4)]
-        [InlineData("madd-munfasil", new[] { 4, 5 }, 4)]
+        [InlineData("madd-munfasil", new[] { 2, 4, 5 }, 4)]
         public void Variants_AreTheOwnersLayout(string id, int[] counts, int defaultCount)
         {
             var rule = Catalog.Rules.Single(r => r.Id == id);
