@@ -123,7 +123,8 @@
 
                 @* Аят на строке, номер — круглым знаком, как в мусхафе. Пробел перед
                    номером остаётся в тексте строки, а знак держит саму цифру: выделенное
-                   мышью копируется тем же текстом, что и кнопкой. *@
+                   мышью копируется тем же текстом, что и кнопкой. Знак держится вместе
+                   с последним словом, у слова через дефис — с его последней частью (ayah-tail), и не переносится на строку один. *@
                 <div class="result-text">
                     @foreach (var line in ResultLine.Split(_result))
                     {
@@ -133,7 +134,7 @@
                         }
                         else
                         {
-                            <div class="result-line">@line.Text<span class="ayah-mark">@line.Ayah</span></div>
+                            <div class="result-line">@line.Lead<span class="ayah-tail">@(line.Word)@(line.Gap)<span class="ayah-mark">@line.Ayah</span></span></div>
                         }
                     }
                 </div>

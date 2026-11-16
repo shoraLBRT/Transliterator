@@ -24,6 +24,30 @@ namespace Transliterator.Tests.ServiceTests
             Assert.Equal(new[] { "1", "2", "3", "4", "5", "6", "7" }, lines.Select(l => l.Ayah));
             Assert.All(lines, line => Assert.EndsWith(" ", line.Text));
             Assert.Equal(result, ResultLine.Join(lines));
+
+            // Хвост — последнее слово (после дефиса — его часть) и пробел: знак держится с ним, текст тот же.
+            Assert.All(lines, line =>
+            {
+                Assert.Equal(line.Text, line.Lead + line.Word + line.Gap);
+                Assert.NotEmpty(line.Word);
+                Assert.DoesNotContain(' ', line.Word);
+                Assert.DoesNotContain('-', line.Word);
+                Assert.Equal(" ", line.Gap);
+            });
+        }
+
+        [Theory]
+        [InlineData("слово 1", "", "слово")]
+        [InlineData("первое второе 12", "первое ", "второе")]
+        [InlineData("а  б 3", "а  ", "б")]
+        [InlineData("ар-рохIмаани-ррохIиим 3", "ар-рохIмаани-", "ррохIиим")]
+        public void ANumberedLine_SplitsIntoLeadAndTheLastWord(string text, string lead, string word)
+        {
+            var line = Assert.Single(ResultLine.Split(text));
+
+            Assert.Equal(lead, line.Lead);
+            Assert.Equal(word, line.Word);
+            Assert.Equal(text, line.Lead + line.Word + line.Gap + line.Ayah);
         }
 
         [Theory]

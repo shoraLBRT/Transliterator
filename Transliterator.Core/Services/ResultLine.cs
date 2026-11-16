@@ -19,6 +19,35 @@ namespace Transliterator.Core.Services
         /// </summary>
         private static readonly Regex Numbered = new(@"^(.*\S\s)([0-9]{1,3})$", RegexOptions.CultureInvariant);
 
+        /// <summary>
+        /// Хвост строки с номером — последнее слово и пробел перед знаком: страница
+        /// держит их вместе со знаком, чтобы знак не переносился на строку один.
+        /// <c>Lead + Word + Gap + Ayah</c> — та же строка.
+        /// </summary>
+        public string Lead => Ayah is null ? Text : Text[..WordStart];
+
+        /// <summary>
+        /// Последнее слово перед номером, а у слова через дефис — его последняя
+        /// часть (пусто, если номера нет). Дефис остаётся в <see cref="Lead"/>:
+        /// длинное слово переносится по нему, а хвост со знаком — целиком.
+        /// </summary>
+        public string Word => Ayah is null ? string.Empty : Text[WordStart..^1];
+
+        /// <summary>Пробел между словом и номером — тот, что был в выводе.</summary>
+        public string Gap => Ayah is null ? string.Empty : Text[^1..];
+
+        private int WordStart
+        {
+            get
+            {
+                var end = Text.Length - 1;
+                var start = end;
+                while (start > 0 && !char.IsWhiteSpace(Text[start - 1]) && Text[start - 1] != '-')
+                    start--;
+                return start;
+            }
+        }
+
         /// <summary>Вывод по строкам: перевод строки — граница, номер в конце отделён.</summary>
         public static IReadOnlyList<ResultLine> Split(string result) =>
             result.Split('\n')

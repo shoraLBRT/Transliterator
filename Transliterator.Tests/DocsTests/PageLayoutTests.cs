@@ -360,7 +360,8 @@ namespace Transliterator.Tests.DocsTests
 
             // Номер аята — знак с цифрой текстом, пробел перед ним — в тексте строки.
             Assert.Contains("@foreach (var line in ResultLine.Split(_result))", card.Groups[1].Value);
-            Assert.Contains("<div class=\"result-line\">@line.Text<span class=\"ayah-mark\">@line.Ayah</span></div>", card.Groups[1].Value);
+            Assert.Contains("<div class=\"result-line\">@line.Lead<span class=\"ayah-tail\">@(line.Word)@(line.Gap)<span class=\"ayah-mark\">@line.Ayah</span></span></div>", card.Groups[1].Value);
+            Assert.Matches(@"\.ayah-tail \{ white-space: nowrap; \}", css);
             Assert.Contains("<div class=\"result-line\">@line.Text</div>", card.Groups[1].Value);
             Assert.DoesNotMatch(@"\.ayah-mark[^{]*\{[^}]*(?<![\w-])content:", css);
 
