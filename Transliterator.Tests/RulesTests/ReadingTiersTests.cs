@@ -155,6 +155,32 @@ namespace Transliterator.Tests.RulesTests
         public void FiveCounts_AreWrittenLongerThanFour(string ruleId, int count, string arabic, string expected) =>
             Assert.Equal(expected, TransliterationPipeline.Transliterate(arabic, reading: WithCount(ruleId, count)));
 
+        // Мунфасиль в два счёта (I13, решено владельцем 2026-11-17): каср — дозволенное
+        // чтение, гласная перед хамзой следующего слова читается естественным маддом,
+        // как в «Без таджвида», и знак мадды (ٓ) её не удлиняет.
+        [Theory]
+        [InlineData("لَآ أَعْبُدُ", "ляя а'буд")]
+        [InlineData("بِمَآ أُنزِلَ", "бимаа унзиль")]
+        [InlineData("قُوٓا أَنفُسَكُمْ", "")]
+        public void MunfasilOnTwoCounts_IsReadAsANaturalMadd(string arabic, string expected)
+        {
+            var two = TransliterationPipeline.Transliterate(arabic, reading: WithCount(TajweedRuleIds.MaddMunfasil, 2));
+
+            Assert.Equal(Plain(arabic), two);
+            if (expected.Length > 0)
+                Assert.Equal(expected, two);
+        }
+
+        [Fact]
+        public void MunfasilOnTwoCounts_LeavesMuttasilAlone()
+        {
+            // Выбор мунфасиля муттасиль не трогает: он обязателен и тянется свои четыре.
+            var segments = TransliterationPipeline.Consonants("جَآءَ مَآ أَنزَلَ", WithCount(TajweedRuleIds.MaddMunfasil, 2));
+
+            Assert.Equal(4, segments.First(s => s.Letter == "ج").VowelLength);   // муттасиль
+            Assert.Equal(2, segments.First(s => s.Letter == "م").VowelLength);   // мунфасиль
+        }
+
         [Theory]
         [InlineData(2, 2)]
         [InlineData(4, 3)]

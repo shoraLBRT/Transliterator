@@ -151,10 +151,15 @@ namespace Transliterator.Core.Services.Rules
                 }
 
                 // Мадд муттасиль и мунфасиль: за долгой гласной идёт хамза — своего
-                // слова или следующего. Счёт у каждого свой, выбирается (4 или 5).
+                // слова или следующего. Счёт у каждого свой, выбирается: муттасиль —
+                // 4 или 5, мунфасиль — ещё и 2 (I13). Мунфасиль счёт ставит, а не
+                // только удлиняет: при двух счётах (каср) он снимает и те четыре,
+                // что разбор дал знаку мадды (ٓ), и гласная читается естественным
+                // маддом. Муттасиль обязателен и короче четырёх не бывает.
                 if (next.Letter == ArabicScript.HamzaStr && !next.Silent && segment.VowelLength < Lazim)
-                    segment.VowelLength = Math.Max(segment.VowelLength,
-                                                   SeparatedByBreak(segments, i, nextIndex) ? munfasil : muttasil);
+                    segment.VowelLength = SeparatedByBreak(segments, i, nextIndex)
+                        ? Math.Max(munfasil, Natural)
+                        : Math.Max(segment.VowelLength, muttasil);
 
                 LengthenBeforePause(segments, i, arid);
             }

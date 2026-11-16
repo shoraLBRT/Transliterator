@@ -73,7 +73,7 @@
 | F. Инфраструктура | `epic:infra` | [F1](https://github.com/shoraLBRT/Transliterator/issues/45) · [F2](https://github.com/shoraLBRT/Transliterator/issues/49) · [F3](https://github.com/shoraLBRT/Transliterator/issues/53) · [F4](https://github.com/shoraLBRT/Transliterator/issues/55) · [F5](https://github.com/shoraLBRT/Transliterator/issues/57) · [F6](https://github.com/shoraLBRT/Transliterator/issues/87) · [F7](https://github.com/shoraLBRT/Transliterator/issues/110) |
 | G. Система записи: графемы `Cyrillic` | `epic:writing-system` | [G1](https://github.com/shoraLBRT/Transliterator/issues/88) · [G2](https://github.com/shoraLBRT/Transliterator/issues/92) · [G3](https://github.com/shoraLBRT/Transliterator/issues/93) · [G4](https://github.com/shoraLBRT/Transliterator/issues/94) · [G5](https://github.com/shoraLBRT/Transliterator/issues/95) · [G6](https://github.com/shoraLBRT/Transliterator/issues/96) · [G7](https://github.com/shoraLBRT/Transliterator/issues/116) |
 | H. Связь с пользователями | `epic:feedback` | [H1](https://github.com/shoraLBRT/Transliterator/issues/89) · [H2](https://github.com/shoraLBRT/Transliterator/issues/90) · [H3](https://github.com/shoraLBRT/Transliterator/issues/99) · [H4](https://github.com/shoraLBRT/Transliterator/issues/103) |
-| I. Правила таджвида для пользователя | `epic:tajweed-rules` | [I1](https://github.com/shoraLBRT/Transliterator/issues/91) · [I2](https://github.com/shoraLBRT/Transliterator/issues/107) · [I3](https://github.com/shoraLBRT/Transliterator/issues/121) · [I4](https://github.com/shoraLBRT/Transliterator/issues/122) · [I5](https://github.com/shoraLBRT/Transliterator/issues/123) · [I6](https://github.com/shoraLBRT/Transliterator/issues/125) · [I7](https://github.com/shoraLBRT/Transliterator/issues/129) · [I8](https://github.com/shoraLBRT/Transliterator/issues/144) · [I9](https://github.com/shoraLBRT/Transliterator/issues/145) · [I10](https://github.com/shoraLBRT/Transliterator/issues/164) · [I11](https://github.com/shoraLBRT/Transliterator/issues/165) · [I12](https://github.com/shoraLBRT/Transliterator/issues/166) |
+| I. Правила таджвида для пользователя | `epic:tajweed-rules` | [I1](https://github.com/shoraLBRT/Transliterator/issues/91) · [I2](https://github.com/shoraLBRT/Transliterator/issues/107) · [I3](https://github.com/shoraLBRT/Transliterator/issues/121) · [I4](https://github.com/shoraLBRT/Transliterator/issues/122) · [I5](https://github.com/shoraLBRT/Transliterator/issues/123) · [I6](https://github.com/shoraLBRT/Transliterator/issues/125) · [I7](https://github.com/shoraLBRT/Transliterator/issues/129) · [I8](https://github.com/shoraLBRT/Transliterator/issues/144) · [I9](https://github.com/shoraLBRT/Transliterator/issues/145) · [I10](https://github.com/shoraLBRT/Transliterator/issues/164) · [I11](https://github.com/shoraLBRT/Transliterator/issues/165) · [I12](https://github.com/shoraLBRT/Transliterator/issues/166) · [I13](https://github.com/shoraLBRT/Transliterator/issues/174) |
 
 Корпус (A) шёл первым, и не из вежливости. Веб-версии нужны готовые суры
 для панели примеров, багфиксам нужен эталон, чтобы «починил» не значило «поменял
@@ -130,6 +130,7 @@ GitHub Pages — **dev-стенд** владельца: любое измене�
 | 27 | [I11](https://github.com/shoraLBRT/Transliterator/issues/165) — пояснение у «Неполного таджвида»: где выбрать правила | — (сделано 2026-11-15; `ModeNote.Variants` заменено одной фразой: выбор — ниже, в «Правилах таджвида», слово «правила» одно; текст ждёт вычитки владельцем) |
 | 28 | [D9](https://github.com/shoraLBRT/Transliterator/issues/162) — подпись «О чём проект?» у кнопки «?» | — (сделано 2026-11-15; подпись — строка `About.Toggle` (EN «What is this about?»), она же имя для диктора и `title`; заголовок панели `About.Title` остался «О приложении»; на телефоне кнопка с подписью переносится строкой под ступень и профиль) |
 | 29 | [D10](https://github.com/shoraLBRT/Transliterator/issues/163) — плавные анимации панелей и вывода | — (сделано 2026-11-15; одна пара `panel-in`/`panel-out` и `--motion-duration` (0.2s) в `app.css` на все панели, форму отзыва и вывод; колонка с 64rem выезжает сбоку; уходящая панель держится `PanelClosing` столько же, уже `inert` и `aria-hidden`; с `prefers-reduced-motion` движения нет и уходящая скрыта сразу) |
+| 30 | [I13](https://github.com/shoraLBRT/Transliterator/issues/174) — мадд мунфасиль в два счёта (как в арабском) в «Неполном таджвиде» | — (решено владельцем 2026-11-17: только мунфасиль, муттасиль обязателен и остаётся 4 / 5; сделано 2026-11-17; у мунфасиля счёты 2 / 4 / 5, по умолчанию 4; при двух `MaddRule` ставит счёт, а не удлиняет, и снимает четыре от знака мадды — гласная читается, как в «Без таджвида»; описание правила говорит о коротком чтении) |
 
 Решения владельца 2026-11-12 по задачам `BA`: G2, G7, I4, I5, E6, D6 и D7 взяты
 в итерацию 2, что именно решено, записано в каждом issue. Английский интерфейс (D7)
@@ -152,6 +153,10 @@ GitHub Pages — **dev-стенд** владельца: любое измене�
 у буквы транслита: как её читать) ждёт решения владельца (`BA`): делать ли и в каком виде —
 таблица звуков в панели или подсказка у каждого знака вывода; варианты и рекомендация
 (таблица в итерации 2, подсказки у знаков — после боевого хостинга) — в issue.
+
+Отзыв со страницы #174 разобран 2026-11-17 как I13 и взят в итерацию 2:
+владелец решил дать короткое чтение (два счёта) только мунфасилю — муттасиль
+обязателен (ваджиб), его все чтецы тянут не меньше четырёх.
 
 Вне итераций: [H2](https://github.com/shoraLBRT/Transliterator/issues/90) (другие каналы связи не нужны — формы обратной связи
 хватает, подтверждено 2026-11-12) и [F7](https://github.com/shoraLBRT/Transliterator/issues/110) (боевой хостинг — последним, пока
@@ -262,7 +267,8 @@ GitHub Pages — **dev-стенд** владельца: любое измене�
   Раскладка утверждена владельцем в I1 и записана в каталоге: у правила ступень
   `Tier` — `Base` (есть в любом чтении) или `Tajweed` (убирается в обычном
   чтении), а у правил с выбором — допустимые счёты `Counts` и `DefaultCount`:
-  мадд арид и мадд лин 2 / 4 / 6, муттасиль и мунфасиль 4 / 5. Ступени
+  мадд арид и мадд лин 2 / 4 / 6, муттасиль 4 / 5, мунфасиль 2 / 4 / 5
+  (два счёта — каср, I13). Ступени
   на странице — I2: кнопка рядом с выбором суры, выбор хранится в браузере.
   Конвейер получает его как `ReadingOptions`. В обычном чтении стадии не выпадают
   целиком — каждая сама знает, что из неё основа: одинаковые буквы сливаются
