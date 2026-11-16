@@ -57,6 +57,18 @@
   <data name="Result.Title" xml:space="preserve">
     <value>Transliteration</value>
   </data>
+  <data name="Result.ReadingChip" xml:space="preserve">
+    <value>Reading level: {0}. Change</value>
+  </data>
+  <data name="Result.ReadingChipTitle" xml:space="preserve">
+    <value>Change the reading level</value>
+  </data>
+  <data name="Result.ProfileChip" xml:space="preserve">
+    <value>Profile: {0}. Change</value>
+  </data>
+  <data name="Result.ProfileChipTitle" xml:space="preserve">
+    <value>Change the profile</value>
+  </data>
   <data name="Copy.Action" xml:space="preserve">
     <value>Copy</value>
   </data>

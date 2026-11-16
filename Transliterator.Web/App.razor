@@ -68,13 +68,13 @@
                 @if (_catalog is not null)
                 {
                     <ReadingPicker Catalog="_catalog" Choice="_reading" ChoiceChanged="ChangeReadingAsync"
-                                   Transliterate="TransliterateExample" Preview="@_result" />
+                                   Transliterate="TransliterateExample" Preview="@_result" @ref="_readingPicker" />
                 }
 
                 @if (_profile is not null)
                 {
                     <ProfilePicker Profile="_profile" DefaultProfile="@DefaultProfile" Preview="@_result"
-                                   ProfileChanged="ChangeProfileAsync" ProfileDeleted="ResetProfileAsync" />
+                                   ProfileChanged="ChangeProfileAsync" ProfileDeleted="ResetProfileAsync" @ref="_profilePicker" />
                 }
 
                 @* «?» — что это за страница (D8). Последней: она ничего не выбирает. *@
@@ -88,26 +88,55 @@
         }
         else if (_result.Length > 0)
         {
+            @* Карточка вывода (D17). Шапка липнет к верху экрана, пока карточка
+               прокручивается: у суры кнопка копирования видна у любого аята. Метки
+               рядом с подписью — чем записан вывод; нажатие открывает свою панель.
+               Кнопка копирует _result целиком: строки ниже — только вёрстка. *@
             <section class="result" aria-labelledby="result-title">
-                <h2 id="result-title" class="visually-hidden">@L["Result.Title"]</h2>
-                <p class="result-text">@_result</p>
+                <div class="result-head">
+                    <h2 id="result-title" class="result-title">@L["Result.Title"]</h2>
 
-                <button type="button" class="copy-button" @onclick="CopyAsync">
-                    @if (_copyState == CopyState.Copied)
+                    <div class="result-chips">
+                        @if (_catalog is not null)
+                        {
+                            <button type="button" class="result-chip" title="@L["Result.ReadingChipTitle"]"
+                                    aria-label="@L["Result.ReadingChip", ReadingName]" @onclick="OpenReadingAsync">@ReadingName</button>
+                        }
+                        @if (_profile is not null)
+                        {
+                            <button type="button" class="result-chip" title="@L["Result.ProfileChipTitle"]"
+                                    aria-label="@L["Result.ProfileChip", _profile.Name]" @onclick="OpenProfileAsync">@_profile.Name</button>
+                        }
+                    </div>
+
+                    @* Значок и подпись — одни и те же узлы во всех состояниях: галочка
+                       дорисовывается поверх листов, а живая область объявляет новую
+                       подпись, а не появление новой кнопки. *@
+                    <button type="button" class="copy-button @CopyClass" @onclick="CopyAsync">
+                        <svg class="copy-icon" viewBox="0 0 24 24" aria-hidden="true">
+                            <g class="copy-icon-sheets"><rect x="9" y="9" width="11" height="11" rx="2" /><path d="M5 15V6a2 2 0 0 1 2-2h9" /></g>
+                            <path class="copy-icon-check" pathLength="1" d="M5 12.5l4.5 4.5L19 7.5" />
+                        </svg>
+                        <span class="copy-label" aria-live="polite">@CopyLabel</span>
+                    </button>
+                </div>
+
+                @* Аят на строке, номер — круглым знаком, как в мусхафе. Пробел перед
+                   номером остаётся в тексте строки, а знак держит саму цифру: выделенное
+                   мышью копируется тем же текстом, что и кнопкой. *@
+                <div class="result-text">
+                    @foreach (var line in ResultLine.Split(_result))
                     {
-                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>
-                        <span>@L["Copy.Done"]</span>
+                        if (line.Ayah is null)
+                        {
+                            <div class="result-line">@line.Text</div>
+                        }
+                        else
+                        {
+                            <div class="result-line">@line.Text<span class="ayah-mark">@line.Ayah</span></div>
+                        }
                     }
-                    else if (_copyState == CopyState.Failed)
-                    {
-                        <span>@L["Copy.Failed"]</span>
-                    }
-                    else
-                    {
-                        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2" /><path d="M5 15V6a2 2 0 0 1 2-2h9" /></svg>
-                        <span>@L["Copy.Action"]</span>
-                    }
-                </button>
+                </div>
             </section>
         }
     </main>
@@ -463,6 +492,31 @@
         if (stamp == _copyStamp)
             _copyState = CopyState.Idle;
     }
+
+    private string CopyLabel => _copyState switch
+    {
+        CopyState.Copied => L["Copy.Done"],
+        CopyState.Failed => L["Copy.Failed"],
+        _ => L["Copy.Action"],
+    };
+
+    private string? CopyClass => _copyState switch
+    {
+        CopyState.Copied => "is-copied",
+        CopyState.Failed => "is-failed",
+        _ => null,
+    };
+
+    private ReadingPicker? _readingPicker;
+    private ProfilePicker? _profilePicker;
+
+    /// <summary>Метка ступени над выводом (D17) — имя той же ступени, что у кнопки сбоку.</summary>
+    private string ReadingName => ReadingPicker.ModeName(L, _reading.Mode);
+
+    /// <summary>Метки над выводом (D17) открывают ту же панель, что и кнопка сбоку.</summary>
+    private Task OpenReadingAsync() => _readingPicker?.OpenAsync() ?? Task.CompletedTask;
+
+    private Task OpenProfileAsync() => _profilePicker?.OpenAsync() ?? Task.CompletedTask;
 
     private FeedbackButton? _feedback;
 

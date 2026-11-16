@@ -251,7 +251,10 @@
     private string ExampleOf(TajweedRuleExample example) =>
         Transliterate?.Invoke(example.Arabic) ?? example.Transliteration;
 
-    private string ModeName(ReadingMode mode) => mode switch
+    private string ModeName(ReadingMode mode) => ModeName(L, mode);
+
+    /// <summary>Имя ступени — и у кнопки, и в метке над выводом (D17).</summary>
+    public static string ModeName(IStringLocalizer<Strings> L, ReadingMode mode) => mode switch
     {
         ReadingMode.Variants => L["Mode.Variants"],
         ReadingMode.Plain => L["Mode.Plain"],
