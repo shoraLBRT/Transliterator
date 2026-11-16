@@ -135,7 +135,10 @@ namespace Transliterator.Tests.DocsTests
             Assert.DoesNotContain("RuleCount", reading);
             Assert.Contains("var total = group.Count();", reading);
             Assert.Contains("var read = group.Count(rule => !IsOff(rule));", reading);
-            Assert.Contains("<div id=\"@blockId\" class=\"reading-block-body\" hidden=\"@(!open)\">", reading);
+            // D21: свёрнутый блок остаётся в разметке и раскрывается плавно, но
+            // свёрнутый — inert и aria-hidden: Tab и диктор его не достают.
+            Assert.Contains("<div id=\"@blockId\" class=\"fold @(open ? \"is-open\" : null)\" inert=\"@(!open)\" aria-hidden=\"@(open ? null : \"true\")\"> <div class=\"fold-inner\"> <div class=\"reading-block-body\">", reading);
+            Assert.DoesNotContain("hidden=\"@(!open)\"", reading);
 
             Assert.Matches(@"protected override Task BeforeOpenAsync\(\) \{ _openBlocks\.Clear\(\);", reading);
             Assert.Matches(@"if \(mode == ReadingMode\.Variants\) _openBlocks\.Add\(TajweedTier\.Tajweed\);", reading);
@@ -210,7 +213,7 @@ namespace Transliterator.Tests.DocsTests
             var main = At("<span class=\"reading-rule-main\">");
             var name = At("class=\"reading-rule-name\"");
             var example = At("<span class=\"reading-example\">");
-            var description = At("<span id=\"@descriptionId\" class=\"reading-rule-text\" hidden=\"@(!described)\">");
+            var description = At("<span id=\"@descriptionId\" class=\"fold @(described ? \"is-open\" : null)\" inert=\"@(!described)\" aria-hidden=\"@(described ? null : \"true\")\"><span class=\"fold-inner\"><span class=\"reading-rule-text\">");
             var controls = At("<span class=\"reading-rule-controls\">");
             Assert.True(main < name && name < example && example < description && description < controls,
                         "the row is not: name, example, description, then the controls");
@@ -252,7 +255,9 @@ namespace Transliterator.Tests.DocsTests
             Assert.True(picker.IndexOf("<table class=\"profile-table\">", StringComparison.Ordinal) > settings, "the table is not inside the settings");
 
             // Свёрнуто при каждом закрытии панели, раскрыто у только что созданного профиля.
-            Assert.Matches(@"OnClosed\(\) \{ Cancel\(\); _settingsOpen = false; \}", picker);
+            Assert.Matches(@"OnClosed\(\) \{ Cancel\(\); _settingsOpen = false; _settingsKept = false; \}", picker);
+            // D21: свёрнутые настройки — inert и aria-hidden, раскрываются плавно.
+            Assert.Contains("<div id=\"profile-settings\" class=\"fold @(_settingsOpen ? \"is-open\" : null)\" inert=\"@(!_settingsOpen)\" aria-hidden=\"@(_settingsOpen ? null : \"true\")\"> <div class=\"fold-inner\"> <div class=\"profile-rules\">", picker);
             Assert.Matches(@"CreateAsync\(\) \{.*?_settingsOpen = true; await ProfileChanged\.InvokeAsync\(copy\);", picker);
 
             var css = Regex.Replace(Web("wwwroot", "css", "app.css"), @"\s+", " ");
@@ -261,7 +266,10 @@ namespace Transliterator.Tests.DocsTests
             Assert.Matches(@"\.profile-col-letter \{ width: [0-9.]+rem; \}", css);
             Assert.Matches(@"\.profile-col-value \{ width: [0-9.]+rem; \}", css);
             Assert.Matches(@"\.profile-row\.is-variant > td \{[^}]*color: var\(--ink-muted\);", css);
-            Assert.Matches(@"\.profile-rules\[hidden\] \{ display: none; \}", css);
+            // D21: свёрнутый блок — строка сетки 0fr и невидим, раскрытый — 1fr.
+            Assert.Matches(@"\.fold \{[^}]*grid-template-rows: 0fr;[^}]*visibility: hidden;", css);
+            Assert.Matches(@"\.fold\.is-open \{[^}]*grid-template-rows: 1fr;[^}]*visibility: visible;", css);
+            Assert.Matches(@"\.fold-inner \{[^}]*min-height: 0;[^}]*overflow: hidden;", css);
 
             foreach (var language in new[] { "ru", "en" })
             {

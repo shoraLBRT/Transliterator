@@ -127,8 +127,12 @@
                     </button>
                 </h3>
 
-                <div id="profile-settings" class="profile-rules" hidden="@(!_settingsOpen)">
-                    @if (_settingsOpen)
+                @* Раскрывается и сворачивается плавно (D21): содержимое, раз отрисовав,
+                   держим до закрытия панели — иначе свёрнутый блок уходил бы пустым. *@
+                <div id="profile-settings" class="fold @(_settingsOpen ? "is-open" : null)" inert="@(!_settingsOpen)" aria-hidden="@(_settingsOpen ? null : "true")">
+                <div class="fold-inner">
+                <div class="profile-rules">
+                    @if (_settingsOpen || _settingsKept)
                     {
                         <input type="search" class="profile-input profile-search" aria-label="@L["Profile.SearchLabel"]"
                                placeholder="@L["Profile.SearchPlaceholder"]" spellcheck="false" autocomplete="off"
@@ -197,6 +201,8 @@
                         }
                     }
                 </div>
+                </div>
+                </div>
             </section>
         </div>
     }
@@ -254,6 +260,12 @@
     /// <summary>Раскрыты ли «Настройки профиля» — поиск и таблица графем (E9).</summary>
     private bool _settingsOpen;
 
+    /// <summary>
+    /// Настройки раскрывали за это открытие панели: свёрнутые, они ещё в разметке,
+    /// чтобы уйти плавно (D21). Сбрасывается с закрытием панели.
+    /// </summary>
+    private bool _settingsKept;
+
     private TransliterationProfile? _grouped;
     private IReadOnlyList<RuleGroup> _groups = Array.Empty<RuleGroup>();
 
@@ -308,9 +320,14 @@
     {
         Cancel();
         _settingsOpen = false;
+        _settingsKept = false;
     }
 
-    private void ToggleSettings() => _settingsOpen = !_settingsOpen;
+    private void ToggleSettings()
+    {
+        _settingsOpen = !_settingsOpen;
+        _settingsKept = true;
+    }
 
     private async Task LoadProfilesAsync()
     {
