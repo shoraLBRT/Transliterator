@@ -81,13 +81,20 @@ namespace Transliterator.Core.Services
             return segments;
         }
 
-        /// <summary>Весь новый вывод по отрезкам; перевод строки — неизменный отрезок.</summary>
-        public IReadOnlyList<DiffSegment> Segments()
+        /// <summary>Первая строка с изменившимся словом; <c>-1</c>, если изменений нет.</summary>
+        public int FirstChangedLine => Array.FindIndex(_changed, spans => spans.Count > 0);
+
+        /// <summary>
+        /// Новый вывод по отрезкам с начала строки <paramref name="fromLine"/>;
+        /// перевод строки — неизменный отрезок.
+        /// </summary>
+        public IReadOnlyList<DiffSegment> Segments(int fromLine = 0)
         {
             var segments = new List<DiffSegment>();
-            for (var i = 0; i < _lines.Length; i++)
+            var first = Math.Max(fromLine, 0);
+            for (var i = first; i < _lines.Length; i++)
             {
-                if (i > 0)
+                if (i > first)
                     segments.Add(new DiffSegment("\n", false));
                 segments.AddRange(Segments(i, 0, _lines[i].Length));
             }

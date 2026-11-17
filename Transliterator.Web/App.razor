@@ -143,6 +143,11 @@
                 <div class="result-head">
                     <h2 id="result-title" class="result-title">@L["Result.Title"]</h2>
 
+                    @* Метки и подпись «Вывод не изменился» (D19) делят одно место в шапке:
+                       с 64rem, где панель стоит рядом с выводом, подпись на время сменяет
+                       метки — шапка не растёт, строки вывода не сдвигаются. Уже 64rem
+                       подпись стоит в шапке панели, а здесь скрыта. *@
+                    <div class="result-meta @(_unchangedNote ? "has-note" : null)">
                     <div class="result-chips">
                         @if (_catalog is not null)
                         {
@@ -155,6 +160,8 @@
                                     aria-label="@L["Result.ProfileChip", _profile.Name]" @onclick="OpenProfileAsync">@_profile.Name</button>
                         }
                     </div>
+                    <p class="result-note" role="status">@(_unchangedNote ? L["Output.Unchanged"].Value : null)</p>
+                    </div>
 
                     @* Значок и подпись — одни и те же узлы во всех состояниях: галочка
                        дорисовывается поверх листов, а живая область объявляет новую
@@ -166,11 +173,6 @@
                         </svg>
                         <span class="copy-label" aria-live="polite">@CopyLabel</span>
                     </button>
-
-                    @* Смена настройки не изменила вывод (D19) — подпись у шапки: шапка липнет
-                       к верху экрана и видна рядом с панелью. Уже 64rem панель закрывает
-                       вывод, и та же подпись стоит в её повторе вывода. *@
-                    <p class="result-note" role="status">@(_unchangedNote ? L["Output.Unchanged"].Value : null)</p>
                 </div>
 
                 @* Аят на строке, номер — круглым знаком, как в мусхафе. Пробел перед
@@ -287,6 +289,12 @@
     private int _changeKey;
     private bool _unchangedNote;
     private int _unchangedStamp;
+
+    /// <summary>
+    /// Сколько идёт подсветка (D19) — столько же, сколько --motion-highlight в app.css.
+    /// Потом отметки снимаются, и повтор вывода в панели снова начинается с начала.
+    /// </summary>
+    private static readonly TimeSpan HighlightDuration = TimeSpan.FromSeconds(1.2);
 
     /// <summary>Сколько держится подпись «Вывод не изменился» (D19).</summary>
     private static readonly TimeSpan UnchangedNoteDuration = TimeSpan.FromSeconds(3);
@@ -821,12 +829,24 @@
         if (diff.HasChanges)
         {
             _changes = diff;
-            _changeKey++;
+            _ = ExpireChangesAsync(++_changeKey);
         }
         else if (before == _result)
         {
             _ = ShowUnchangedNoteAsync();
         }
+    }
+
+    /// <summary>Подсветка отыграла — отметки снимаются, если новой смены за это время не было.</summary>
+    private async Task ExpireChangesAsync(int key)
+    {
+        await Task.Delay(HighlightDuration);
+
+        if (key != _changeKey || _changes is null)
+            return;
+
+        _changes = null;
+        StateHasChanged();
     }
 
     /// <summary>Подпись «не изменился» гаснет сама; новая смена начинает срок заново.</summary>

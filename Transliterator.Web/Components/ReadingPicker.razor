@@ -30,7 +30,8 @@
 
         <div id="reading-menu" class="picker-panel reading-panel @Closing.CssClass" inert="@Closing.IsClosing" aria-hidden="@Closing.AriaHidden" role="dialog" aria-labelledby="reading-menu-title"
              tabindex="-1" @ref="PanelElement" @onkeydown="OnPanelKeyDownAsync">
-            <PanelHead Id="reading-menu-title" Title="@L["Reading.Title"]" Close="CloseToToggleAsync" />
+            <PanelHead Id="reading-menu-title" Title="@L["Reading.Title"]" Close="CloseToToggleAsync"
+                       Note="@(Unchanged ? L["Output.Unchanged"].Value : null)" />
 
             <div class="reading-modes" role="radiogroup" aria-label="@L["Reading.ModesLabel"]">
                 @foreach (var mode in Modes)
@@ -50,12 +51,12 @@
             <div class="panel-preview reading-preview" aria-live="polite">
                 <span class="panel-preview-label">@L["Preview.Label"]</span>
                 @* Изменённое сменой настройки подсвечено и здесь (D19): на телефоне
-                   вывод под листом не виден. Ключ — тот же, что у строк вывода. *@
+                   вывод под листом не виден. Ключ — тот же, что у строк вывода; пока
+                   подсветка идёт, повтор начинается со строки первого изменения. *@
                 <span class="panel-preview-text" @key="ChangeKey">@if (string.IsNullOrEmpty(Preview))
                 {@L["Preview.Empty"]}
                 else
                 {<ChangedText Segments="ChangedText.Of(Changes, Preview)" />}</span>
-                <span class="panel-preview-note" role="status">@(Unchanged ? L["Output.Unchanged"].Value : null)</span>
             </div>
 
             @* Под ступенями — два блока правил (I8): сначала правила чтения на арабском,
@@ -207,7 +208,7 @@
     [Parameter]
     public int ChangeKey { get; set; }
 
-    /// <summary>Смена настройки не изменила вывод — подпись под повтором (D19).</summary>
+    /// <summary>Смена настройки не изменила вывод — подпись в шапке панели (D19).</summary>
     [Parameter]
     public bool Unchanged { get; set; }
 

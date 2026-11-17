@@ -242,7 +242,7 @@
     <value>Output</value>
   </data>
   <data name="Output.Unchanged" xml:space="preserve">
-    <value>The output did not change: this setting has nothing to change in the text</value>
+    <value>Output unchanged: this setting changes nothing in the text</value>
   </data>
   <data name="Preview.Empty" xml:space="preserve">
     <value>Type text in the field — you will see here how it is written</value>

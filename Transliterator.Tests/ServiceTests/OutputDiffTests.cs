@@ -62,6 +62,17 @@ namespace Transliterator.Tests.ServiceTests
         }
 
         [Fact]
+        public void FirstChangedLine_AndSegmentsFromIt()
+        {
+            const string now = "a b\nc d\ne f";
+            var diff = OutputDiff.Compare("a b\nc x\ne f", now);
+
+            Assert.Equal(1, diff.FirstChangedLine);
+            Assert.Equal("c d\ne f", string.Concat(diff.Segments(1).Select(s => s.Text)));
+            Assert.Equal(-1, OutputDiff.Compare(now, now).FirstChangedLine);
+        }
+
+        [Fact]
         public void Segments_JoinBackToTheText()
         {
             const string now = "a  b-c d 2\nx";

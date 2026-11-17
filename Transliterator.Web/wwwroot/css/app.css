@@ -660,6 +660,33 @@ svg {
     font-weight: 600;
 }
 
+/* «Вывод не изменился» (D19) — тихо, между именем и крестиком, до двух строк:
+   шапка листа своей высоты не меняет. С 64rem подпись — в шапке вывода. */
+.panel-head-note {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    flex: 1;
+    min-width: 0;
+    margin: 0;
+    overflow: hidden;
+    font-size: var(--text-xs);
+    line-height: 1.3;
+    color: var(--foam-700);
+    text-align: end;
+}
+
+.panel-head-note:not(:empty) {
+    animation: note-in var(--motion-duration) var(--motion-ease);
+}
+
+/* Подпись проявляется на месте, без сдвига (D19). */
+@keyframes note-in {
+    from {
+        opacity: 0;
+    }
+}
+
 /* ---- Кнопки сбоку: ступень чтения, профиль и «?» (D6, D8) ---- */
 
 /* Круглый значок и подпись рядом — что выбрано сейчас («Полный таджвид»,
@@ -1471,17 +1498,6 @@ html.is-sheet-open {
     color: var(--foam-700);
 }
 
-/* «Вывод не изменился» (D19) под повтором; повтор — живая область, пустая
-   подпись места не занимает. */
-.panel-preview-note {
-    font-size: var(--text-sm);
-    color: var(--foam-700);
-}
-
-.panel-preview-note:empty {
-    display: none;
-}
-
 .panel-preview-text {
     display: -webkit-box;
     -webkit-line-clamp: 3;
@@ -1815,28 +1831,32 @@ html.is-sheet-open {
     border-radius: var(--radius-2xl) var(--radius-2xl) 0 0;
 }
 
-/* «Вывод не изменился» (D19) — плашкой под шапкой, поверх текста: место в
-   шапке она не занимает и ничего не сдвигает. Видна, когда панель стоит рядом
-   с выводом (64rem); уже — подпись в повторе вывода панели. Пустая — не видна,
-   но в разметке всегда: живая область объявляет новую подпись. */
-.result-note {
-    display: none;
-    position: absolute;
-    top: calc(100% + var(--space-2));
-    right: var(--result-pad);
-    max-width: calc(100% - 2 * var(--result-pad));
-    margin: 0;
-    font-size: var(--text-sm);
-    color: var(--foam-700);
+/* Метки и подпись «Вывод не изменился» (D19) — в одной ячейке шапки: подпись
+   на время сменяет метки, шапка не растёт, и строки вывода не сдвигаются. Длинная
+   подпись обрезается многоточием, диктору она читается целиком. Уже 64rem подпись
+   стоит в шапке панели (лист закрывает вывод), и здесь скрыта; живая область в
+   разметке всегда. */
+.result-meta {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    flex: 1 1 0;
+    min-width: 0;
 }
 
-.result-note:not(:empty) {
-    padding: var(--space-1) var(--space-3);
-    border: 1px solid var(--foam-300);
-    border-radius: var(--radius-pill);
-    background: var(--paper);
-    box-shadow: var(--shadow-sm);
-    animation: toast-in var(--motion-duration) var(--motion-ease);
+.result-meta > * {
+    grid-area: 1 / 1;
+}
+
+.result-note {
+    display: none;
+    align-self: center;
+    min-width: 0;
+    margin: 0;
+    overflow: hidden;
+    font-size: var(--text-sm);
+    color: var(--foam-700);
+    white-space: nowrap;
+    text-overflow: ellipsis;
 }
 
 /* Подпись — в стиле подписи повтора в панелях: мелко, заглавными. */
@@ -2358,6 +2378,29 @@ mark.changed {
 @media (min-width: 64rem) {
     .result-note {
         display: block;
+        opacity: 0;
+        transition: opacity var(--motion-duration) var(--ease-soft);
+    }
+
+    .result-chips {
+        transition: opacity var(--motion-duration) var(--ease-soft),
+                    visibility var(--motion-instant) linear;
+    }
+
+    .result-meta.has-note .result-note {
+        opacity: 1;
+    }
+
+    /* Скрытые метки и из порядка Tab уходят: visibility, а не только прозрачность. */
+    .result-meta.has-note .result-chips {
+        visibility: hidden;
+        opacity: 0;
+        transition: opacity var(--motion-duration) var(--ease-soft),
+                    visibility var(--motion-instant) linear var(--motion-duration);
+    }
+
+    .panel-head-note {
+        display: none;
     }
 
     .shell {
@@ -2671,7 +2714,7 @@ mark.changed {
 
     /* На телефоне метки не помещаются между подписью и кнопкой: подпись и
        «Копировать» — первой строкой шапки, метки — второй (D17). */
-    .result-chips {
+    .result-meta {
         order: 1;
         flex-basis: 100%;
     }

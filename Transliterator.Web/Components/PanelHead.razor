@@ -6,6 +6,10 @@
     @* Ручка нижнего листа на телефоне (D14) — только знак, с 64rem скрыта. *@
     <span class="sheet-handle" aria-hidden="true"></span>
     <h2 id="@Id" class="panel-title">@Title</h2>
+    @* Подпись «Вывод не изменился» (D19): шапка листа липнет к его верху, и подпись
+       видна на любой глубине прокрутки — у переключателя правила внизу «Как читать» тоже.
+       Живая область в разметке всегда; с 64rem подпись стоит в шапке вывода. *@
+    <p class="panel-head-note" role="status">@Note</p>
     <button type="button" class="icon-button panel-close" title="@L["Panel.CloseTitle"]" aria-label="@L["Panel.CloseLabel"]" @onclick="Close">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" /></svg>
     </button>
@@ -21,4 +25,8 @@
 
     [Parameter]
     public EventCallback Close { get; set; }
+
+    /// <summary>Короткая подпись рядом с именем панели (D19); <c>null</c> — подписи нет.</summary>
+    [Parameter]
+    public string? Note { get; set; }
 }

@@ -733,7 +733,7 @@ namespace Transliterator.Tests.DocsTests
             Assert.Matches(@"private async Task RestoreReadingAsync\(\) \{.*?_reading = reading; Calculate\(\);", app);
             Assert.Matches(@"private void Calculate\(\) \{.*?_changes = null; _unchangedNote = false;", app);
             Assert.Contains("var diff = OutputDiff.Compare(before, _result);", app);
-            Assert.Matches(@"if \(diff\.HasChanges\) \{ _changes = diff; _changeKey\+\+; \} else if \(before == _result\) \{ _ = ShowUnchangedNoteAsync\(\); \}", app);
+            Assert.Matches(@"if \(diff\.HasChanges\) \{ _changes = diff; _ = ExpireChangesAsync\(\+\+_changeKey\); \} else if \(before == _result\) \{ _ = ShowUnchangedNoteAsync\(\); \}", app);
 
             // Подсветка проигрывается заново: новый ключ пересоздаёт строки и повтор в панелях.
             Assert.Contains("<div class=\"result-text\" @key=\"_changeKey\">", app);
@@ -743,13 +743,31 @@ namespace Transliterator.Tests.DocsTests
             {
                 var picker = Regex.Replace(Web("Components", file), @"\s+", " ");
                 Assert.Contains("<span class=\"panel-preview-text\" @key=\"ChangeKey\">", picker);
-                Assert.Contains("<span class=\"panel-preview-note\" role=\"status\">@(Unchanged ? L[\"Output.Unchanged\"].Value : null)</span>", picker);
+                Assert.Matches(@"<PanelHead Id=""[a-z]+-menu-title"" Title=""@L\[""[A-Za-z]+\.Title""\]"" Close=""CloseToToggleAsync"" Note=""@\(Unchanged \? L\[""Output\.Unchanged""\]\.Value : null\)"" />", picker);
+                Assert.DoesNotContain("panel-preview-note", picker);
             }
 
             // «Не изменился» у шапки вывода — только когда панель рядом (64rem), живая область всегда в разметке.
-            Assert.Contains("<p class=\"result-note\" role=\"status\">@(_unchangedNote ? L[\"Output.Unchanged\"].Value : null)</p>", app);
-            Assert.Matches(@"\.result-note \{ display: none; position: absolute;", css);
-            Assert.Matches(@"@media \(min-width: 64rem\) \{ \.result-note \{ display: block; \}", css);
+            // Подпись делит ячейку с метками и на время сменяет их: шапка не растёт, строки не сдвигаются.
+            Assert.Contains("<div class=\"result-meta @(_unchangedNote ? \"has-note\" : null)\"> <div class=\"result-chips\">", app);
+            Assert.Contains("</div> <p class=\"result-note\" role=\"status\">@(_unchangedNote ? L[\"Output.Unchanged\"].Value : null)</p> </div>", app);
+            Assert.Matches(@"\.result-meta \{ display: grid; grid-template-columns: minmax\(0, 1fr\);", css);
+            Assert.Matches(@"\.result-meta > \* \{ grid-area: 1 / 1; \}", css);
+            Assert.Matches(@"\.result-note \{ display: none;[^}]*white-space: nowrap; text-overflow: ellipsis; \}", css);
+            Assert.DoesNotMatch(@"\.result-note \{[^}]*position: absolute", css);
+            Assert.Matches(@"@media \(min-width: 64rem\) \{ \.result-note \{ display: block; opacity: 0;", css);
+            Assert.Matches(@"\.result-meta\.has-note \.result-chips \{ visibility: hidden; opacity: 0;", css);
+
+            // Уже 64rem подпись — в липкой шапке листа: видна на любой глубине прокрутки.
+            var panelHead = Regex.Replace(Web("Components", "PanelHead.razor"), @"\s+", " ");
+            Assert.Contains("<h2 id=\"@Id\" class=\"panel-title\">@Title</h2> @*", panelHead);
+            Assert.Contains("<p class=\"panel-head-note\" role=\"status\">@Note</p>", panelHead);
+            Assert.Matches(@"\.panel-head-note \{[^}]*-webkit-line-clamp: 2;", css);
+            Assert.Matches(@"@media \(min-width: 64rem\) \{.*?\.panel-head-note \{ display: none; \}", css);
+
+            // Повтор в панели обрезан до трёх строк — пока подсветка идёт, он начинается со строки изменения.
+            Assert.Contains("private static readonly TimeSpan HighlightDuration = TimeSpan.FromSeconds(1.2);", app);
+            Assert.Contains("return changes.Segments(first).Prepend(new DiffSegment(Ellipsis, false)).ToArray();", Web("Components", "ChangedText.razor"));
 
             // mark — только обёртка: цвет текста прежний, фон гаснет за токен движения.
             var text = Web("Components", "ChangedText.razor");

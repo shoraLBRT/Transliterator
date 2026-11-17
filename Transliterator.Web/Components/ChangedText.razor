@@ -17,11 +17,25 @@
     public IReadOnlyList<DiffSegment> Segments { get; set; } = Array.Empty<DiffSegment>();
 
     /// <summary>
-    /// Весь вывод по отрезкам. Отметки берутся, только если сравнение было
-    /// именно с этим выводом: с другим текстом они указали бы не туда.
+    /// Повтор вывода в панели (D19): он обрезан до трёх строк, и изменение ниже
+    /// осталось бы за обрезом. Пока подсветка идёт, повтор начинается со строки
+    /// первого изменения, а многоточие перед ней говорит, что начало пропущено.
+    /// Отметки берутся, только если сравнение было именно с этим выводом.
     /// </summary>
-    public static IReadOnlyList<DiffSegment> Of(OutputDiff? changes, string output) =>
-        changes is not null && changes.Text == output ? changes.Segments() : new[] { new DiffSegment(output, false) };
+    public static IReadOnlyList<DiffSegment> Of(OutputDiff? changes, string output)
+    {
+        if (changes is null || changes.Text != output)
+            return new[] { new DiffSegment(output, false) };
+
+        var first = changes.FirstChangedLine;
+        if (first <= 0)
+            return changes.Segments();
+
+        return changes.Segments(first).Prepend(new DiffSegment(Ellipsis, false)).ToArray();
+    }
+
+    /// <summary>Знак пропущенного начала вывода в повторе.</summary>
+    public const string Ellipsis = "… ";
 
     /// <summary>Кусок строки <paramref name="line"/> вывода с позиции <paramref name="start"/>.</summary>
     public static IReadOnlyList<DiffSegment> Of(OutputDiff? changes, string output, int line, int start, string text) =>
