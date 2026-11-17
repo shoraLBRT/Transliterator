@@ -30,7 +30,13 @@
         @* Подсказка печатается скриптом и сменяет себя. Экранному диктору она не
            читается: для него у поля есть постоянная подпись, а текст, меняющийся
            каждые несколько секунд, мешал бы. *@
+        @* С текстом в поле подсказка плавно схлопывается (D16) и печать стоит: блок
+           тот же .fold, что раскрывает панели (D21), — высота 1fr ↔ 0fr и прозрачность. *@
+        <div class="fold hint-fold @(HasText ? null : "is-open")" inert="@HasText">
+        <div class="fold-inner">
         <p class="hint" aria-hidden="true"><span class="hint-text" @ref="_hint"></span></p>
+        </div>
+        </div>
 
         <div class="composer">
             <label for="arabic" class="visually-hidden">@L["Composer.Label"]</label>
@@ -214,6 +220,7 @@
     private ElementReference _hint;
     private ElementReference _input;
     private bool _resizePending;
+    private bool _hintPaused;
     private CopyState _copyState;
     private int _copyStamp;
 
@@ -270,9 +277,19 @@
                                          L["Page.Title"].Value, L["Page.Description"].Value);
                 await RestoreDraftAsync();
                 await JS.InvokeVoidAsync("page.typewriter", _hint, Hints(), _input);
+                _hintPaused = false;
                 await JS.InvokeVoidAsync("page.autosize", _input);
                 await RestoreReadingAsync();
                 await RestoreProfileAsync();
+            }
+
+            // Подсказка стоит, пока в поле есть текст (D16). Значение поля Blazor меняет
+            // и сам (выбор суры, очистка) — событие input тогда не приходит, поэтому
+            // состояние ведётся отсюда, а не слушателем в скрипте.
+            if (HasText != _hintPaused)
+            {
+                _hintPaused = HasText;
+                await JS.InvokeVoidAsync("page.hintPaused", _hint, _hintPaused);
             }
 
             if (_resizePending)

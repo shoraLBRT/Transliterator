@@ -43,6 +43,23 @@ namespace Transliterator.Tests.DocsTests
         }
 
         [Fact]
+        public void TheHint_StopsTypingAndCollapses_WhileTheFieldHasText()
+        {
+            // D16: с текстом в поле подсказка схлопывается (.fold), а таймеры печати
+            // гасятся совсем — не опрашивают поле. Состояние ведёт страница: Blazor
+            // меняет значение поля сам, и событие input тогда не приходит.
+            var root = ReadmeTests.RepositoryRoot();
+            var app = Regex.Replace(File.ReadAllText(Path.Combine(root, "Transliterator.Web", "App.razor")), @"\s+", " ");
+            var script = File.ReadAllText(Path.Combine(root, "Transliterator.Web", "wwwroot", "js", "page.js"));
+
+            Assert.Contains("class=\"fold hint-fold @(HasText ? null : \"is-open\")\" inert=\"@HasText\"", app);
+            Assert.Contains("\"page.hintPaused\", _hint, _hintPaused", app);
+            Assert.Contains("function hintPaused(", script);
+            Assert.Contains("clearTimeout(timer)", script);
+            Assert.DoesNotContain("PausedDelay", script);
+        }
+
+        [Fact]
         public void SecondTier_IsCalledPartialTajweed_AndItsNoteNamesBothChoicesAndWhereToMakeThem()
         {
             // Решение владельца к I5: вторая ступень — «Неполный таджвид» и под полем,

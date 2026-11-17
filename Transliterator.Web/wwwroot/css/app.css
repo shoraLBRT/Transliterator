@@ -284,6 +284,14 @@ button {
     text-wrap: balance;
 }
 
+/* Схлопывание подсказки (D16): сам блок — .fold (D21), здесь только ход вровень
+   с отступом шапки, которая подтягивает поле в то же время. */
+.fold.hint-fold {
+    transition: grid-template-rows var(--motion-slow) var(--ease-soft),
+                opacity var(--motion-slow) var(--ease-soft),
+                visibility var(--motion-instant) linear var(--motion-slow);
+}
+
 .hint-text.is-typing::after {
     content: "";
     display: inline-block;
