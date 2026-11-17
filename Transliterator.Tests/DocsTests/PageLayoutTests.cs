@@ -231,7 +231,7 @@ namespace Transliterator.Tests.DocsTests
             {
                 Assert.Matches(@"<div class=""panel-preview[^""]*"" aria-live=""polite"">", picker);
                 Assert.Contains("@L[\"Preview.Label\"]", picker);
-                Assert.Contains("L[\"Preview.Empty\"] : Preview", picker);
+                Assert.Contains("@if (string.IsNullOrEmpty(Preview)) {@L[\"Preview.Empty\"]} else {<ChangedText Segments=\"ChangedText.Of(Changes, Preview)\" />}", picker);
             }
 
             // Повтор стоит под ступенями: выбор ступени и его вывод видны вместе.
@@ -403,7 +403,7 @@ namespace Transliterator.Tests.DocsTests
 
             var card = Regex.Match(app, @"<section class=""result"" aria-labelledby=""result-title"">(.*?)</section>");
             Assert.True(card.Success, "the output card is not found");
-            var head = Regex.Match(card.Groups[1].Value, @"<div class=""result-head"">(.*?)</div> (?:@\*(?:(?!\*@).)*\*@ )?<div class=""result-text"">");
+            var head = Regex.Match(card.Groups[1].Value, @"<div class=""result-head"">(.*?)</div> (?:@\*(?:(?!\*@).)*\*@ )?<div class=""result-text"" @key=""_changeKey"">");
             Assert.True(head.Success, "the card head is not found before the lines");
 
             Assert.Contains("<h2 id=\"result-title\" class=\"result-title\">@L[\"Result.Title\"]</h2>", head.Groups[1].Value);
@@ -420,10 +420,11 @@ namespace Transliterator.Tests.DocsTests
             Assert.Matches(@"<ProfilePicker [^>]*@ref=""_profilePicker"" />", app);
 
             // Номер аята — знак с цифрой текстом, пробел перед ним — в тексте строки.
-            Assert.Contains("@foreach (var line in ResultLine.Split(_result))", card.Groups[1].Value);
-            Assert.Contains("<div class=\"result-line\">@line.Lead<span class=\"ayah-tail\">@(line.Word)@(line.Gap)<span class=\"ayah-mark\">@line.Ayah</span></span></div>", card.Groups[1].Value);
+            // Текст строки — через ChangedText (D19): изменённые сменой настройки слова в mark.
+            Assert.Contains("@{ var lines = ResultLine.Split(_result); } @for (var i = 0; i < lines.Count; i++)", card.Groups[1].Value);
+            Assert.Contains("<div class=\"result-line\"><ChangedText Segments=\"Part(i, 0, line.Lead)\" /><span class=\"ayah-tail\"><ChangedText Segments=\"Part(i, line.Lead.Length, line.Word)\" />@(line.Gap)<span class=\"ayah-mark\">@line.Ayah</span></span></div>", card.Groups[1].Value);
             Assert.Matches(@"\.ayah-tail \{ white-space: nowrap; \}", css);
-            Assert.Contains("<div class=\"result-line\">@line.Text</div>", card.Groups[1].Value);
+            Assert.Contains("<div class=\"result-line\"><ChangedText Segments=\"Part(i, 0, line.Text)\" /></div>", card.Groups[1].Value);
             Assert.DoesNotMatch(@"\.ayah-mark[^{]*\{[^}]*(?<![\w-])content:", css);
 
             // Кнопка копирует весь вывод, как и прежде.
@@ -714,6 +715,52 @@ namespace Transliterator.Tests.DocsTests
             // D23: значок отзыва раскрывается подписью до 9rem — поля плашки шире раскрытой капсулы.
             Assert.Matches(@"@media \(min-width: 56rem\) \{ \.toast-region \{[^}]*padding: 0 calc\(var\(--space-5\) \+ 2\.75rem \+ 9rem \+ var\(--space-6\) \+ var\(--space-4\)\);", css);
             Assert.Matches(@"\.feedback-toggle\[aria-expanded=""true""\] \.feedback-label \{ max-width: 9rem;", css);
+        }
+
+        [Fact]
+        public void SettingChange_HighlightsChangedWords_TypingDoesNot()
+        {
+            // D19: смена ступени, правила, счёта и профиля идёт через RecalculateSetting —
+            // сравнение с прежним выводом; набор текста, сура и восстановление — через
+            // Calculate, который подсветку сбрасывает.
+            var app = Regex.Replace(Web("App.razor"), @"\s+", " ");
+            var css = Regex.Replace(Web("wwwroot", "css", "app.css"), @"\s+", " ");
+
+            Assert.Matches(@"private async Task ChangeReadingAsync\(ReadingChoice reading\) \{ _reading = reading; RecalculateSetting\(\);", app);
+            Assert.Matches(@"private async Task ChangeProfileAsync\(TransliterationProfile profile\) \{.*?if \(sameRules\) Calculate\(\); else RecalculateSetting\(\);", app);
+            Assert.Matches(@"private async Task ResetProfileAsync\(\) \{.*?_profile = profile; RecalculateSetting\(\);", app);
+            Assert.Matches(@"private void OnInput\(ChangeEventArgs e\) \{ _arabic = [^}]*; Calculate\(\);", app);
+            Assert.Matches(@"private async Task RestoreReadingAsync\(\) \{.*?_reading = reading; Calculate\(\);", app);
+            Assert.Matches(@"private void Calculate\(\) \{.*?_changes = null; _unchangedNote = false;", app);
+            Assert.Contains("var diff = OutputDiff.Compare(before, _result);", app);
+            Assert.Matches(@"if \(diff\.HasChanges\) \{ _changes = diff; _changeKey\+\+; \} else if \(before == _result\) \{ _ = ShowUnchangedNoteAsync\(\); \}", app);
+
+            // Подсветка проигрывается заново: новый ключ пересоздаёт строки и повтор в панелях.
+            Assert.Contains("<div class=\"result-text\" @key=\"_changeKey\">", app);
+            Assert.Matches(@"<ReadingPicker [^>]*Changes=""_changes"" ChangeKey=""_changeKey"" Unchanged=""_unchangedNote""", app);
+            Assert.Matches(@"<ProfilePicker [^>]*Changes=""_changes"" ChangeKey=""_changeKey"" Unchanged=""_unchangedNote""", app);
+            foreach (var file in new[] { "ReadingPicker.razor", "ProfilePicker.razor" })
+            {
+                var picker = Regex.Replace(Web("Components", file), @"\s+", " ");
+                Assert.Contains("<span class=\"panel-preview-text\" @key=\"ChangeKey\">", picker);
+                Assert.Contains("<span class=\"panel-preview-note\" role=\"status\">@(Unchanged ? L[\"Output.Unchanged\"].Value : null)</span>", picker);
+            }
+
+            // «Не изменился» у шапки вывода — только когда панель рядом (64rem), живая область всегда в разметке.
+            Assert.Contains("<p class=\"result-note\" role=\"status\">@(_unchangedNote ? L[\"Output.Unchanged\"].Value : null)</p>", app);
+            Assert.Matches(@"\.result-note \{ display: none; position: absolute;", css);
+            Assert.Matches(@"@media \(min-width: 64rem\) \{ \.result-note \{ display: block; \}", css);
+
+            // mark — только обёртка: цвет текста прежний, фон гаснет за токен движения.
+            var text = Web("Components", "ChangedText.razor");
+            Assert.Contains("{<mark class=\"changed\">@segment.Text</mark>}", text);
+            Assert.Matches(@"mark\.changed \{ background: transparent; color: inherit;[^}]*animation: change-flash var\(--motion-highlight\) var\(--ease-soft\);", css);
+            Assert.Equal(2, Regex.Matches(css, @"--highlight: #[0-9a-f]{6};").Count);
+            Assert.Contains("--motion-highlight: 1.2s;", css);
+
+            // Без движения — ровный фон столько же и снимается разом.
+            Assert.Matches(@"@media \(prefers-reduced-motion: reduce\) \{.*mark\.changed \{ animation: change-hold var\(--motion-highlight\) steps\(1\) !important; \}", css);
+            Assert.Matches(@"@keyframes change-hold \{ from, to \{ background-color: var\(--highlight\);", css);
         }
     }
 }

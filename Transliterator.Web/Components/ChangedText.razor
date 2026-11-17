@@ -1,0 +1,31 @@
+@using Transliterator.Core.Services
+
+@* Текст вывода с подсветкой изменённого (D19): изменившиеся слова — в mark,
+   остальное — как есть. mark только обёртка: выделение и копирование видят
+   тот же текст. Пробелов вокруг узлов нет — они попали бы в вывод. *@
+@foreach (var segment in Segments)
+{
+    if (segment.Changed)
+    {<mark class="changed">@segment.Text</mark>}
+    else
+    {@segment.Text}
+}
+
+@code {
+    /// <summary>Отрезки текста; без отметок — один неизменный отрезок.</summary>
+    [Parameter, EditorRequired]
+    public IReadOnlyList<DiffSegment> Segments { get; set; } = Array.Empty<DiffSegment>();
+
+    /// <summary>
+    /// Весь вывод по отрезкам. Отметки берутся, только если сравнение было
+    /// именно с этим выводом: с другим текстом они указали бы не туда.
+    /// </summary>
+    public static IReadOnlyList<DiffSegment> Of(OutputDiff? changes, string output) =>
+        changes is not null && changes.Text == output ? changes.Segments() : new[] { new DiffSegment(output, false) };
+
+    /// <summary>Кусок строки <paramref name="line"/> вывода с позиции <paramref name="start"/>.</summary>
+    public static IReadOnlyList<DiffSegment> Of(OutputDiff? changes, string output, int line, int start, string text) =>
+        changes is not null && changes.Text == output
+            ? changes.Segments(line, start, text.Length)
+            : new[] { new DiffSegment(text, false) };
+}

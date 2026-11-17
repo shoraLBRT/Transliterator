@@ -108,7 +108,13 @@
 
             <div class="panel-preview profile-preview" aria-live="polite">
                 <span class="panel-preview-label">@L["Preview.Label"]</span>
-                <span class="panel-preview-text">@(string.IsNullOrEmpty(Preview) ? L["Preview.Empty"] : Preview)</span>
+                @* Изменённое сменой настройки подсвечено и здесь (D19): на телефоне
+                   вывод под листом не виден. Ключ — тот же, что у строк вывода. *@
+                <span class="panel-preview-text" @key="ChangeKey">@if (string.IsNullOrEmpty(Preview))
+                {@L["Preview.Empty"]}
+                else
+                {<ChangedText Segments="ChangedText.Of(Changes, Preview)" />}</span>
+                <span class="panel-preview-note" role="status">@(Unchanged ? L["Output.Unchanged"].Value : null)</span>
             </div>
 
             @* Графемы — под стрелкой «Настройки профиля» (E9): профиль выбирают чаще,
@@ -225,6 +231,18 @@
     /// <summary>Вывод страницы: на телефоне панель закрывает результат и повторяет его в себе.</summary>
     [Parameter]
     public string Preview { get; set; } = string.Empty;
+
+    /// <summary>Что изменила последняя смена настройки (D19); <c>null</c> — подсветки нет.</summary>
+    [Parameter]
+    public OutputDiff? Changes { get; set; }
+
+    /// <summary>Новый при каждой смене настройки — подсветка проигрывается заново.</summary>
+    [Parameter]
+    public int ChangeKey { get; set; }
+
+    /// <summary>Смена настройки не изменила вывод — подпись под повтором (D19).</summary>
+    [Parameter]
+    public bool Unchanged { get; set; }
 
     /// <summary>
     /// Выбран другой профиль или изменён этот. Страница пересчитывает вывод

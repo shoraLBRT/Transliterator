@@ -15,6 +15,8 @@
     --foam-100: #def0e9;
     --foam-300: #a3d6c5;
     --foam-700: #2e7363;
+    /* Вспышка изменённого слова (D19): светлее пены-300, текст на ней читается. */
+    --highlight: #bfe5d7;
     --ink: #1f2d2a;
     --ink-muted: #5d6a66;
     --error: #b3261e;
@@ -70,6 +72,7 @@
     --motion-blink: 1s;
     --motion-pulse: 1.2s;
     --motion-hint-delay: 0.3s; /* подсказка у значка ждёт, пока курсор не задержится (D23) */
+    --motion-highlight: 1.2s; /* вспышка изменённого слова гаснет (D19) */
     --motion-ease: cubic-bezier(0.2, 0, 0, 1);
     --ease-soft: ease;
     --ease-in-out: ease-in-out;
@@ -115,6 +118,7 @@
         --foam-100: #21392f;
         --foam-300: #4f9583;
         --foam-700: #7fd0b8;
+        --highlight: #2f6556;
         --ink: #e7ece9;
         --ink-muted: #a5b2ad;
         --error: #ff9a8f;
@@ -1467,6 +1471,17 @@ html.is-sheet-open {
     color: var(--foam-700);
 }
 
+/* «Вывод не изменился» (D19) под повтором; повтор — живая область, пустая
+   подпись места не занимает. */
+.panel-preview-note {
+    font-size: var(--text-sm);
+    color: var(--foam-700);
+}
+
+.panel-preview-note:empty {
+    display: none;
+}
+
 .panel-preview-text {
     display: -webkit-box;
     -webkit-line-clamp: 3;
@@ -1800,6 +1815,30 @@ html.is-sheet-open {
     border-radius: var(--radius-2xl) var(--radius-2xl) 0 0;
 }
 
+/* «Вывод не изменился» (D19) — плашкой под шапкой, поверх текста: место в
+   шапке она не занимает и ничего не сдвигает. Видна, когда панель стоит рядом
+   с выводом (64rem); уже — подпись в повторе вывода панели. Пустая — не видна,
+   но в разметке всегда: живая область объявляет новую подпись. */
+.result-note {
+    display: none;
+    position: absolute;
+    top: calc(100% + var(--space-2));
+    right: var(--result-pad);
+    max-width: calc(100% - 2 * var(--result-pad));
+    margin: 0;
+    font-size: var(--text-sm);
+    color: var(--foam-700);
+}
+
+.result-note:not(:empty) {
+    padding: var(--space-1) var(--space-3);
+    border: 1px solid var(--foam-300);
+    border-radius: var(--radius-pill);
+    background: var(--paper);
+    box-shadow: var(--shadow-sm);
+    animation: toast-in var(--motion-duration) var(--motion-ease);
+}
+
 /* Подпись — в стиле подписи повтора в панелях: мелко, заглавными. */
 .result-title {
     margin: 0;
@@ -1855,6 +1894,40 @@ html.is-sheet-open {
     white-space: pre-wrap;
     overflow-wrap: anywhere;
     transition: background-color var(--motion-fast) var(--ease-soft);
+}
+
+/* Изменённое сменой настройки (D19): фон вспыхивает и гаснет, текст и его
+   места не меняются — mark только обёртка. Тень того же цвета даёт фону воздух
+   у букв, не сдвигая строку. Класс остаётся после вспышки: фон уже прозрачный. */
+mark.changed {
+    background: transparent;
+    color: inherit;
+    border-radius: var(--radius-sm);
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+    animation: change-flash var(--motion-highlight) var(--ease-soft);
+}
+
+@keyframes change-flash {
+    0%,
+    25% {
+        background-color: var(--highlight);
+        box-shadow: 0 0 0 0.12em var(--highlight);
+    }
+
+    100% {
+        background-color: transparent;
+        box-shadow: 0 0 0 0.12em transparent;
+    }
+}
+
+/* Ровный фон без затухания — для prefers-reduced-motion (D19). */
+@keyframes change-hold {
+    from,
+    to {
+        background-color: var(--highlight);
+        box-shadow: 0 0 0 0.12em var(--highlight);
+    }
 }
 
 .result-line + .result-line {
@@ -2283,6 +2356,10 @@ html.is-sheet-open {
    уже — нижний лист с подложкой (D14). Отступы считаются от края колонки
    страницы (у .shell свой отступ 1.25rem). */
 @media (min-width: 64rem) {
+    .result-note {
+        display: block;
+    }
+
     .shell {
         --panel-left: 4.75rem;
         --panel-width: 25rem;
@@ -2621,5 +2698,10 @@ html.is-sheet-open {
 
     .hint-text.is-typing::after {
         animation: caret var(--motion-blink) steps(1) infinite !important;
+    }
+
+    /* Изменённое (D19) подсвечено ровным фоном и снимается разом, без затухания. */
+    mark.changed {
+        animation: change-hold var(--motion-highlight) steps(1) !important;
     }
 }
