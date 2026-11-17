@@ -291,10 +291,11 @@
     private int _unchangedStamp;
 
     /// <summary>
-    /// Сколько идёт подсветка (D19) — столько же, сколько --motion-highlight в app.css.
-    /// Потом отметки снимаются, и повтор вывода в панели снова начинается с начала.
+    /// Сколько повтор вывода в панели держится на строке первого изменения (D19).
+    /// Вспышка слов короче (--motion-highlight в app.css) и гаснет сама; по этому
+    /// сроку снимаются отметки, и повтор снова начинается с начала текста.
     /// </summary>
-    private static readonly TimeSpan HighlightDuration = TimeSpan.FromSeconds(1.2);
+    private static readonly TimeSpan PreviewHoldDuration = TimeSpan.FromSeconds(3);
 
     /// <summary>Сколько держится подпись «Вывод не изменился» (D19).</summary>
     private static readonly TimeSpan UnchangedNoteDuration = TimeSpan.FromSeconds(3);
@@ -837,10 +838,13 @@
         }
     }
 
-    /// <summary>Подсветка отыграла — отметки снимаются, если новой смены за это время не было.</summary>
+    /// <summary>
+    /// Срок повтора с места изменения вышел — отметки снимаются, если новой смены
+    /// за это время не было: новая смена меняет ключ и начинает срок заново.
+    /// </summary>
     private async Task ExpireChangesAsync(int key)
     {
-        await Task.Delay(HighlightDuration);
+        await Task.Delay(PreviewHoldDuration);
 
         if (key != _changeKey || _changes is null)
             return;

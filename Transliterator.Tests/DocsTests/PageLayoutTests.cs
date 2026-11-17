@@ -766,7 +766,8 @@ namespace Transliterator.Tests.DocsTests
             Assert.Matches(@"@media \(min-width: 64rem\) \{.*?\.panel-head-note \{ display: none; \}", css);
 
             // Повтор в панели обрезан до трёх строк — пока подсветка идёт, он начинается со строки изменения.
-            Assert.Contains("private static readonly TimeSpan HighlightDuration = TimeSpan.FromSeconds(1.2);", app);
+            Assert.Contains("private static readonly TimeSpan PreviewHoldDuration = TimeSpan.FromSeconds(3);", app);
+            Assert.Matches(@"private async Task ExpireChangesAsync\(int key\) \{ await Task\.Delay\(PreviewHoldDuration\); if \(key != _changeKey \|\| _changes is null\) return;", app);
             Assert.Contains("return changes.Segments(first).Prepend(new DiffSegment(Ellipsis, false)).ToArray();", Web("Components", "ChangedText.razor"));
 
             // mark — только обёртка: цвет текста прежний, фон гаснет за токен движения.
