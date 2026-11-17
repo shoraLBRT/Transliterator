@@ -1,7 +1,10 @@
 /* Светлая пастельная палитра: кремовый фон, белые карточки, морская пена
-   акцентом. Цвет текста подобран с контрастом не ниже 4.5:1 к своему фону. */
+   акцентом. Цвет текста подобран с контрастом не ниже 4.5:1 к своему фону.
+   Цвета, отступы, радиусы, тени, кегли и движение (D12) заданы здесь и только
+   здесь: ниже по файлу — ссылки на токены, а тёмная тема переопределяет одни
+   цвета и тени. */
 :root {
-    color-scheme: light;
+    color-scheme: light dark;
 
     --cream: #fbf7ef;
     --paper: #ffffff;
@@ -15,17 +18,55 @@
     --ink: #1f2d2a;
     --ink-muted: #5d6a66;
     --error: #b3261e;
+    --error-bg: #fbeeea;
     --warn-bg: #fbf1dc;
     --warn-ink: #7a4f06;
+    /* Выключенный переключатель правила: дорожка и кругляш. */
+    --switch-track: var(--line);
+    --switch-knob: var(--paper);
 
-    --shadow: 0 1px 2px rgba(31, 45, 42, 0.04), 0 10px 30px rgba(31, 45, 42, 0.07);
+    /* Тени: sm — под мелкие плашки, md — карточки и панели, lg — то, что всплывает
+       над страницей. */
+    --shadow-sm: 0 1px 2px rgba(31, 45, 42, 0.05);
+    --shadow-md: 0 1px 2px rgba(31, 45, 42, 0.04), 0 10px 30px rgba(31, 45, 42, 0.07);
+    --shadow-lg: 0 2px 4px rgba(31, 45, 42, 0.05), 0 18px 48px rgba(31, 45, 42, 0.1);
+
+    /* Отступы — шаг в четверть rem; числа вне шкалы в файле оставлены как есть,
+       где они подогнаны под строку или кегль. */
+    --space-1: 0.25rem;
+    --space-2: 0.5rem;
+    --space-3: 0.75rem;
+    --space-4: 1rem;
+    --space-5: 1.25rem;
+    --space-6: 1.5rem;
+
+    --radius-sm: 0.6rem;
+    --radius-md: 0.85rem;
+    --radius-lg: 1rem;
+    --radius-xl: 1.25rem;
+    --radius-2xl: 1.5rem;
     --radius-card: 1.75rem;
+    --radius-pill: 999px;
+
+    --text-xs: 0.75rem;
+    --text-sm: 0.8rem;
+    --text-md: 0.9rem;
+    --text-base: 1rem;
+    --text-lg: 1.2rem;
+    --text-xl: 1.6rem;
 
     /* Движение (D10): одна длительность и одна кривая на панели и вывод.
        Длительность повторена в PanelClosing.Duration — столько уходящая панель
-       остаётся в разметке. */
+       остаётся в разметке. Рядом — короткая (наведение, переключатели), долгая
+       (сдвиг поля) и циклы курсора и загрузки (D12). */
+    --motion-fast: 0.15s;
     --motion-duration: 0.2s;
+    --motion-slow: 0.4s;
+    --motion-blink: 1s;
+    --motion-pulse: 1.2s;
     --motion-ease: cubic-bezier(0.2, 0, 0, 1);
+    --ease-soft: ease;
+    --ease-in-out: ease-in-out;
 
     --font-ui: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 
@@ -39,6 +80,37 @@
     font-family: var(--font-ui);
     color: var(--ink);
     background: var(--cream);
+}
+
+/* Тёмная тема (D12) — по системной настройке, своего переключателя нет. Тёплый
+   тёмно-зелёно-серый вместо чёрного, пена светлее, чтобы текст акцента на тёмном
+   держал 4.5:1; подложки пены — тёмные с зелёным оттенком. Тени темнее и тише:
+   карточки отделяет от фона рамка --line. */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --cream: #141a19;
+        --paper: #1c2422;
+        --line: #2c3633;
+        --line-strong: #3e4a46;
+        --variant-bg: #19201e;
+        --foam-50: #1c2d28;
+        --foam-100: #21392f;
+        --foam-300: #4f9583;
+        --foam-700: #7fd0b8;
+        --ink: #e7ece9;
+        --ink-muted: #a5b2ad;
+        --error: #ff9a8f;
+        --error-bg: #3a201d;
+        --warn-bg: #382c14;
+        --warn-ink: #f0c674;
+        /* Тёмный кругляш на тёмной дорожке не виден — светлее оба. */
+        --switch-track: #3e4a46;
+        --switch-knob: #a5b2ad;
+
+        --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+        --shadow-md: 0 1px 2px rgba(0, 0, 0, 0.3), 0 10px 30px rgba(0, 0, 0, 0.25);
+        --shadow-lg: 0 2px 4px rgba(0, 0, 0, 0.35), 0 18px 48px rgba(0, 0, 0, 0.4);
+    }
 }
 
 *,
@@ -83,7 +155,7 @@ button {
     min-height: 100vh;
     min-height: 100dvh;
     padding: 24vh 1.25rem 1.25rem;
-    transition: padding-top 0.4s ease;
+    transition: padding-top var(--motion-slow) var(--ease-soft);
 }
 
 .shell.is-active {
@@ -102,7 +174,7 @@ button {
     display: inline-flex;
     padding: 0.15rem;
     border: 1px solid var(--line);
-    border-radius: 999px;
+    border-radius: var(--radius-pill);
     background: var(--paper);
 }
 
@@ -111,11 +183,11 @@ button {
     min-height: 2rem;
     padding: 0.2rem 0.6rem;
     border: 0;
-    border-radius: 999px;
+    border-radius: var(--radius-pill);
     background: transparent;
     color: var(--ink-muted);
     font: inherit;
-    font-size: 0.8rem;
+    font-size: var(--text-sm);
     font-weight: 600;
     letter-spacing: 0.04em;
     cursor: pointer;
@@ -149,7 +221,7 @@ button {
     align-items: center;
     justify-content: center;
     min-height: 2.8em; /* две строки: текст печатается, а вёрстка не прыгает */
-    margin: 0 0 1.25rem;
+    margin: 0 0 var(--space-5);
     font-size: clamp(1.25rem, 1rem + 1.2vw, 1.75rem);
     font-weight: 500;
     line-height: 1.4;
@@ -166,7 +238,7 @@ button {
     margin-inline-start: 3px;
     vertical-align: -0.15em;
     background: var(--foam-700);
-    animation: caret 1s steps(1) infinite;
+    animation: caret var(--motion-blink) steps(1) infinite;
 }
 
 @keyframes caret {
@@ -180,13 +252,13 @@ button {
     background: var(--paper);
     border: 1px solid var(--line);
     border-radius: var(--radius-card);
-    box-shadow: var(--shadow);
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: var(--shadow-md);
+    transition: border-color var(--motion-duration) var(--ease-soft), box-shadow var(--motion-duration) var(--ease-soft);
 }
 
 .composer:focus-within {
     border-color: var(--foam-300);
-    box-shadow: var(--shadow), 0 0 0 4px var(--foam-50);
+    box-shadow: var(--shadow-md), 0 0 0 4px var(--foam-50);
 }
 
 .composer-input {
@@ -200,7 +272,7 @@ button {
     background: transparent;
     color: var(--ink);
     font-family: var(--font-arabic);
-    font-size: 1.6rem;
+    font-size: var(--text-xl);
     line-height: 1.9;
     resize: none;
     overflow-y: hidden;
@@ -220,8 +292,8 @@ button {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 0.5rem;
-    padding: 0.25rem 0.75rem 0.75rem;
+    gap: var(--space-2);
+    padding: var(--space-1) var(--space-3) var(--space-3);
 }
 
 .icon-button {
@@ -236,7 +308,7 @@ button {
     background: transparent;
     color: var(--ink-muted);
     cursor: pointer;
-    transition: background-color 0.15s ease, color 0.15s ease;
+    transition: background-color var(--motion-fast) var(--ease-soft), color var(--motion-fast) var(--ease-soft);
 }
 
 .icon-button:hover {
@@ -260,16 +332,16 @@ svg {
 .picker-toggle {
     display: inline-flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: var(--space-2);
     padding: 0.45rem 0.9rem;
     border: 1px solid var(--line);
-    border-radius: 999px;
+    border-radius: var(--radius-pill);
     background: var(--paper);
     color: var(--foam-700);
-    font-size: 0.9rem;
+    font-size: var(--text-md);
     font-weight: 500;
     cursor: pointer;
-    transition: background-color 0.15s ease, border-color 0.15s ease;
+    transition: background-color var(--motion-fast) var(--ease-soft), border-color var(--motion-fast) var(--ease-soft);
 }
 
 /* Текст кнопки не переносится: длинное имя своего профиля обрезается многоточием
@@ -310,11 +382,11 @@ svg {
     width: min(100%, 24rem);
     max-height: min(60vh, 26rem);
     overflow-y: auto;
-    padding: 0.5rem;
+    padding: var(--space-2);
     background: var(--paper);
     border: 1px solid var(--line);
-    border-radius: 1.25rem;
-    box-shadow: var(--shadow);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-md);
     animation: panel-in var(--motion-duration) var(--motion-ease);
 }
 
@@ -327,8 +399,8 @@ svg {
 .panel-head {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    padding: 0 0 0 0.75rem;
+    gap: var(--space-2);
+    padding: 0 0 0 var(--space-3);
 }
 
 .panel-title {
@@ -348,9 +420,9 @@ svg {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 0.5rem 1.25rem;
-    margin-top: 0.75rem;
-    padding-inline: 0.5rem;
+    gap: var(--space-2) var(--space-5);
+    margin-top: var(--space-3);
+    padding-inline: var(--space-2);
 }
 
 .side-rail .picker-toggle {
@@ -369,9 +441,9 @@ svg {
     border: 1px solid var(--line);
     border-radius: 50%;
     background: var(--paper);
-    box-shadow: var(--shadow);
+    box-shadow: var(--shadow-md);
     color: var(--foam-700);
-    transition: background-color 0.15s ease, border-color 0.15s ease;
+    transition: background-color var(--motion-fast) var(--ease-soft), border-color var(--motion-fast) var(--ease-soft);
 }
 
 .side-rail .picker-toggle:hover,
@@ -409,7 +481,7 @@ svg {
 
 .picker-caption {
     margin: 0.4rem 0.75rem 0.5rem;
-    font-size: 0.8rem;
+    font-size: var(--text-sm);
     color: var(--ink-muted);
 }
 
@@ -423,11 +495,11 @@ svg {
     display: grid;
     grid-template-columns: 2.25rem minmax(0, 1fr) auto;
     align-items: center;
-    gap: 0.5rem;
+    gap: var(--space-2);
     width: 100%;
-    padding: 0.5rem 0.75rem;
+    padding: var(--space-2) var(--space-3);
     border: 0;
-    border-radius: 0.85rem;
+    border-radius: var(--radius-md);
     background: transparent;
     text-align: start;
     cursor: pointer;
@@ -446,7 +518,7 @@ svg {
     border-radius: 50%;
     background: var(--foam-100);
     color: var(--foam-700);
-    font-size: 0.75rem;
+    font-size: var(--text-xs);
     font-weight: 600;
     font-variant-numeric: tabular-nums;
 }
@@ -457,7 +529,7 @@ svg {
 
 .picker-arabic {
     font-family: var(--font-arabic);
-    font-size: 1.2rem;
+    font-size: var(--text-lg);
     color: var(--ink-muted);
 }
 
@@ -468,7 +540,7 @@ svg {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 0.5rem;
+    gap: var(--space-2);
 }
 
 .reading-panel {
@@ -477,7 +549,7 @@ svg {
 
 .reading-modes {
     display: grid;
-    gap: 0.25rem;
+    gap: var(--space-1);
 }
 
 .reading-mode {
@@ -486,7 +558,7 @@ svg {
     width: 100%;
     padding: 0.55rem 0.75rem;
     border: 1px solid transparent;
-    border-radius: 0.85rem;
+    border-radius: var(--radius-md);
     background: transparent;
     color: var(--ink);
     font: inherit;
@@ -510,13 +582,13 @@ svg {
 }
 
 .reading-mode-note {
-    font-size: 0.8rem;
+    font-size: var(--text-sm);
     color: var(--ink-muted);
 }
 
 .reading-variants-note {
     margin: 0 0 0.6rem;
-    font-size: 0.8rem;
+    font-size: var(--text-sm);
     line-height: 1.45;
     color: var(--ink-muted);
 }
@@ -551,14 +623,14 @@ svg {
 
 .reading-counts {
     display: inline-flex;
-    gap: 0.25rem;
+    gap: var(--space-1);
 }
 
 .reading-count {
     min-width: 2.25rem;
     padding: 0.3rem 0.6rem;
     border: 1px solid var(--line);
-    border-radius: 999px;
+    border-radius: var(--radius-pill);
     background: var(--paper);
     color: var(--ink);
     font: inherit;
@@ -584,11 +656,11 @@ svg {
     gap: 0.45rem;
     padding: 0.25rem 0.6rem 0.25rem 0.3rem;
     border: 1px solid var(--line);
-    border-radius: 999px;
+    border-radius: var(--radius-pill);
     background: var(--paper);
     color: var(--ink);
     font: inherit;
-    font-size: 0.8rem;
+    font-size: var(--text-sm);
     cursor: pointer;
 }
 
@@ -615,9 +687,9 @@ svg {
     position: relative;
     width: 1.9rem;
     height: 1.1rem;
-    border-radius: 999px;
-    background: var(--line);
-    transition: background 0.15s;
+    border-radius: var(--radius-pill);
+    background: var(--switch-track);
+    transition: background var(--motion-fast);
 }
 
 .reading-switch-track::after {
@@ -628,8 +700,8 @@ svg {
     width: 0.8rem;
     height: 0.8rem;
     border-radius: 50%;
-    background: var(--paper);
-    transition: transform 0.15s;
+    background: var(--switch-knob);
+    transition: transform var(--motion-fast), background var(--motion-fast);
 }
 
 .reading-switch[aria-checked="true"] {
@@ -642,13 +714,14 @@ svg {
 }
 
 .reading-switch[aria-checked="true"] .reading-switch-track::after {
+    background: var(--paper);
     transform: translateX(0.8rem);
 }
 
 /* Два блока правил (I8): свёрнуты, пока их не откроют. */
 .reading-block {
-    margin-top: 0.5rem;
-    padding: 0 0.75rem;
+    margin-top: var(--space-2);
+    padding: 0 var(--space-3);
 }
 
 .reading-block-body {
@@ -666,7 +739,7 @@ svg {
     margin: 0 -0.75rem;
     background: var(--paper);
     border-bottom: 2px solid var(--foam-300);
-    font-size: 0.8rem;
+    font-size: var(--text-sm);
     font-weight: 700;
     letter-spacing: 0.03em;
     text-transform: uppercase;
@@ -678,7 +751,7 @@ svg {
 .reading-group-toggle {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: var(--space-2);
     width: 100%;
     padding: 0.6rem 0.75rem 0.45rem;
     border: 0;
@@ -709,7 +782,7 @@ svg {
     stroke-width: 2;
     stroke-linecap: round;
     stroke-linejoin: round;
-    transition: transform 0.15s;
+    transition: transform var(--motion-fast);
 }
 
 .reading-group-toggle[aria-expanded="true"] .reading-group-chevron {
@@ -766,7 +839,7 @@ svg {
     margin-top: -0.1rem;
     padding: 0;
     border: 0;
-    border-radius: 999px;
+    border-radius: var(--radius-pill);
     background: transparent;
     color: var(--ink-muted);
     cursor: pointer;
@@ -785,7 +858,7 @@ svg {
     stroke-width: 2;
     stroke-linecap: round;
     stroke-linejoin: round;
-    transition: transform 0.15s;
+    transition: transform var(--motion-fast);
 }
 
 .reading-rule-toggle[aria-expanded="true"] .reading-rule-chevron {
@@ -802,7 +875,7 @@ svg {
     display: flex;
     flex-wrap: wrap;
     align-items: baseline;
-    gap: 0 0.5rem;
+    gap: 0 var(--space-2);
 }
 
 /* Название правила и его перевод в скобках (I7). Флекс, а не пробел в разметке:
@@ -816,11 +889,11 @@ svg {
 }
 
 .reading-rule-name {
-    font-size: 0.9rem;
+    font-size: var(--text-md);
 }
 
 .reading-rule-translation {
-    font-size: 0.8rem;
+    font-size: var(--text-sm);
     color: var(--ink-muted);
 }
 
@@ -832,7 +905,7 @@ svg {
 
 .reading-rule-text {
     margin-top: 0.15rem;
-    font-size: 0.8rem;
+    font-size: var(--text-sm);
     line-height: 1.45;
     color: var(--ink-muted);
 }
@@ -847,7 +920,7 @@ svg {
 .profile-actions {
     display: grid;
     gap: 0.4rem;
-    margin-top: 0.5rem;
+    margin-top: var(--space-2);
     padding: 0.6rem 0.75rem;
     border-top: 1px solid var(--line);
 }
@@ -867,7 +940,7 @@ svg {
 .profile-button {
     padding: 0.35rem 0.8rem;
     border: 1px solid var(--line);
-    border-radius: 999px;
+    border-radius: var(--radius-pill);
     background: var(--paper);
     color: var(--ink);
     font: inherit;
@@ -896,7 +969,7 @@ svg {
 
 .profile-note {
     margin: 0;
-    font-size: 0.8rem;
+    font-size: var(--text-sm);
     line-height: 1.45;
     color: var(--ink-muted);
 }
@@ -915,10 +988,10 @@ svg {
     gap: 0.2rem;
     margin: 0.25rem 0 0.35rem;
     padding: 0.45rem 0.65rem;
-    border-radius: 0.6rem;
+    border-radius: var(--radius-sm);
     background: var(--warn-bg);
     color: var(--warn-ink);
-    font-size: 0.8rem;
+    font-size: var(--text-sm);
     line-height: 1.45;
 }
 
@@ -936,11 +1009,11 @@ svg {
     min-width: 0;
     padding: 0.35rem 0.6rem;
     border: 1px solid var(--line);
-    border-radius: 0.6rem;
+    border-radius: var(--radius-sm);
     background: var(--paper);
     color: var(--ink);
     font: inherit;
-    font-size: 0.9rem;
+    font-size: var(--text-md);
 }
 
 .profile-input:focus-visible {
@@ -992,14 +1065,14 @@ svg {
    набран как заголовки блоков правил (I6), но не липнет: к верху панели
    на телефоне уже прилип повтор вывода. */
 .profile-settings {
-    margin-top: 0.5rem;
-    padding: 0 0.75rem;
+    margin-top: var(--space-2);
+    padding: 0 var(--space-3);
 }
 
 .profile-settings-head {
     margin: 0 -0.75rem;
     border-bottom: 2px solid var(--foam-300);
-    font-size: 0.8rem;
+    font-size: var(--text-sm);
     font-weight: 700;
     letter-spacing: 0.03em;
     text-transform: uppercase;
@@ -1009,7 +1082,7 @@ svg {
 .profile-settings-toggle {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: var(--space-2);
     width: 100%;
     padding: 0.6rem 0.75rem 0.45rem;
     border: 0;
@@ -1040,7 +1113,7 @@ svg {
     stroke-width: 2;
     stroke-linecap: round;
     stroke-linejoin: round;
-    transition: transform 0.15s;
+    transition: transform var(--motion-fast);
 }
 
 .profile-settings-toggle[aria-expanded="true"] .profile-settings-chevron {
@@ -1049,7 +1122,7 @@ svg {
 
 .profile-rules {
     display: grid;
-    gap: 0.5rem;
+    gap: var(--space-2);
     padding: 0.6rem 0 0.25rem;
 }
 
@@ -1103,7 +1176,7 @@ svg {
    правым краем. */
 .profile-table .profile-key {
     font-family: var(--font-arabic);
-    font-size: 1.6rem;
+    font-size: var(--text-xl);
     font-weight: 400;
     line-height: 1.2;
     text-align: center;
@@ -1127,7 +1200,7 @@ svg {
 .profile-row.is-variant > td {
     height: 2.1rem;
     background: var(--variant-bg);
-    font-size: 0.8rem;
+    font-size: var(--text-sm);
     color: var(--ink-muted);
 }
 
@@ -1141,7 +1214,7 @@ svg {
 
 .profile-variant {
     display: block;
-    font-size: 0.75rem;
+    font-size: var(--text-xs);
     color: var(--ink-muted);
     overflow: hidden;
     text-overflow: ellipsis;
@@ -1150,7 +1223,7 @@ svg {
 /* У варианта под именем — пояснение по-русски (E7). */
 .profile-variant-note {
     display: block;
-    font-size: 0.75rem;
+    font-size: var(--text-xs);
     line-height: 1.3;
     color: var(--ink-muted);
 }
@@ -1162,7 +1235,7 @@ svg {
 
 .profile-value.is-empty,
 .profile-value.is-missing {
-    font-size: 0.8rem;
+    font-size: var(--text-sm);
     font-weight: 400;
     color: var(--ink-muted);
     font-style: italic;
@@ -1174,17 +1247,17 @@ svg {
 }
 
 .profile-row:not(.is-variant) .profile-value-input {
-    font-size: 1rem;
+    font-size: var(--text-base);
     font-weight: 600;
 }
 
 .profile-row.is-variant .profile-value-input {
-    font-size: 0.8rem;
+    font-size: var(--text-sm);
 }
 
 /* Пустая графема у поля — та же тихая подпись, что у встроенного профиля. */
 .profile-value-input::placeholder {
-    font-size: 0.8rem;
+    font-size: var(--text-sm);
     font-weight: 400;
     font-style: italic;
     color: var(--ink-muted);
@@ -1212,13 +1285,13 @@ svg {
 .about-body {
     display: grid;
     gap: 0.9rem;
-    padding: 0.5rem 0.75rem 0.75rem;
+    padding: var(--space-2) var(--space-3) var(--space-3);
     font-size: 0.88rem;
     line-height: 1.5;
 }
 
 .about-section p {
-    margin: 0.25rem 0 0;
+    margin: var(--space-1) 0 0;
 }
 
 .about-heading {
@@ -1238,9 +1311,9 @@ svg {
     display: grid;
     gap: 0.3rem;
     margin: 0.35rem 0 0;
-    padding: 0.5rem 0.75rem;
+    padding: var(--space-2) var(--space-3);
     border: 1px solid var(--line);
-    border-radius: 0.85rem;
+    border-radius: var(--radius-md);
 }
 
 .about-example-row {
@@ -1249,13 +1322,13 @@ svg {
 }
 
 .about-example dt {
-    font-size: 0.75rem;
+    font-size: var(--text-xs);
     color: var(--ink-muted);
 }
 
 .about-example dd {
     margin: 0;
-    font-size: 1rem;
+    font-size: var(--text-base);
     overflow-wrap: anywhere;
 }
 
@@ -1269,10 +1342,10 @@ svg {
 }
 
 .about-feedback {
-    margin-top: 0.5rem;
+    margin-top: var(--space-2);
     padding: 0.45rem 1rem;
     border: 1px solid var(--line);
-    border-radius: 999px;
+    border-radius: var(--radius-pill);
     background: var(--paper);
     color: var(--foam-700);
     font: inherit;
@@ -1289,11 +1362,11 @@ svg {
 
 .result {
     position: relative;
-    margin-top: 1.25rem;
-    padding: 1.25rem 1.5rem 0.75rem;
+    margin-top: var(--space-5);
+    padding: var(--space-5) var(--space-6) var(--space-3);
     background: var(--foam-50);
     border: 1px solid var(--foam-100);
-    border-radius: 1.5rem;
+    border-radius: var(--radius-2xl);
     animation: panel-in var(--motion-duration) var(--motion-ease);
 }
 
@@ -1312,7 +1385,7 @@ svg {
     margin: 0.5rem 0 0 -0.6rem;
     padding: 0.35rem 0.6rem;
     border: 0;
-    border-radius: 999px;
+    border-radius: var(--radius-pill);
     background: transparent;
     color: var(--foam-700);
     font-size: 0.85rem;
@@ -1330,10 +1403,10 @@ svg {
 }
 
 .error {
-    margin: 1rem 0 0;
-    padding: 0.75rem 1rem;
-    border-radius: 1rem;
-    background: #fbeeea;
+    margin: var(--space-4) 0 0;
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius-lg);
+    background: var(--error-bg);
     color: var(--error);
     font-size: 0.95rem;
 }
@@ -1347,7 +1420,7 @@ svg {
     gap: 0.4rem;
     margin-top: auto;
     padding-top: 3rem;
-    font-size: 0.8rem;
+    font-size: var(--text-sm);
     color: var(--ink-muted);
 }
 
@@ -1399,14 +1472,14 @@ svg {
     left: 1rem;
     z-index: 13;
     display: grid;
-    gap: 0.75rem;
+    gap: var(--space-3);
     padding: 1.1rem 1.25rem 1.25rem;
     background: var(--paper);
     border: 1px solid var(--line);
-    border-radius: 1.25rem;
-    box-shadow: var(--shadow);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-md);
     color: var(--ink);
-    font-size: 0.9rem;
+    font-size: var(--text-md);
     text-align: start;
     --panel-shift-y: 0.4rem; /* у нижнего края — всплывает снизу */
     animation: panel-in var(--motion-duration) var(--motion-ease);
@@ -1414,7 +1487,7 @@ svg {
 
 .feedback-title {
     margin: 0;
-    font-size: 1rem;
+    font-size: var(--text-base);
     font-weight: 600;
 }
 
@@ -1423,7 +1496,7 @@ svg {
     min-height: 6.5rem;
     padding: 0.7rem 0.85rem;
     border: 1px solid var(--line);
-    border-radius: 0.85rem;
+    border-radius: var(--radius-md);
     background: var(--paper);
     color: var(--ink);
     font: inherit;
@@ -1441,7 +1514,7 @@ svg {
 .feedback-attach {
     display: flex;
     align-items: flex-start;
-    gap: 0.5rem;
+    gap: var(--space-2);
     line-height: 1.4;
     cursor: pointer;
 }
@@ -1487,10 +1560,10 @@ svg {
     justify-self: start;
     padding: 0.55rem 1.1rem;
     border: 0;
-    border-radius: 999px;
+    border-radius: var(--radius-pill);
     background: var(--foam-700);
     color: var(--paper);
-    font-size: 0.9rem;
+    font-size: var(--text-md);
     font-weight: 500;
     text-decoration: none;
     cursor: pointer;
@@ -1534,10 +1607,10 @@ svg {
         border: 1px solid var(--line);
         border-radius: 50%;
         background: var(--paper);
-        box-shadow: var(--shadow);
+        box-shadow: var(--shadow-md);
         color: var(--ink-muted);
         text-decoration: none;
-        transition: color 0.15s ease, border-color 0.15s ease;
+        transition: color var(--motion-fast) var(--ease-soft), border-color var(--motion-fast) var(--ease-soft);
     }
 
     .feedback-toggle:hover,
@@ -1597,7 +1670,7 @@ svg {
         flex-wrap: nowrap;
         align-items: flex-start;
         justify-content: center;
-        gap: 0.75rem;
+        gap: var(--space-3);
         margin: 0;
         padding: 0;
         pointer-events: none; /* полоса во всю высоту не ловит щелчки мимо кнопок */
@@ -1609,7 +1682,7 @@ svg {
 
     .side-rail .picker-toggle-text {
         max-width: 10rem;
-        font-size: 0.8rem;
+        font-size: var(--text-sm);
     }
 
     /* Пока открыта колонка, подписи ушли бы под неё: они прячутся с экрана,
@@ -1646,7 +1719,7 @@ svg {
 .boot {
     display: grid;
     place-items: center;
-    gap: 1rem;
+    gap: var(--space-4);
     min-height: 100vh;
     min-height: 100dvh;
     color: var(--ink-muted);
@@ -1658,7 +1731,7 @@ svg {
     height: 0.75rem;
     border-radius: 50%;
     background: var(--foam-300);
-    animation: pulse 1.2s ease-in-out infinite;
+    animation: pulse var(--motion-pulse) var(--ease-in-out) infinite;
 }
 
 @keyframes pulse {
@@ -1676,14 +1749,14 @@ svg {
     margin: 0 auto;
     padding: 0.85rem 1.25rem;
     border: 1px solid var(--line);
-    border-radius: 1rem;
+    border-radius: var(--radius-lg);
     background: var(--paper);
-    box-shadow: var(--shadow);
+    box-shadow: var(--shadow-md);
     color: var(--ink);
 }
 
 #blazor-error-ui a {
-    margin-inline-start: 0.5rem;
+    margin-inline-start: var(--space-2);
     color: var(--foam-700);
 }
 
@@ -1695,11 +1768,11 @@ svg {
     }
 
     .shell.is-active {
-        padding-top: 1.5rem;
+        padding-top: var(--space-6);
     }
 
     .hint {
-        margin-bottom: 1rem;
+        margin-bottom: var(--space-4);
     }
 
     .composer-input {
@@ -1715,12 +1788,12 @@ svg {
        с подписью «О чём проект?» (D8, D9) рядом с ними не помещается и переносится
        под них строкой ниже. */
     .side-rail {
-        gap: 0.5rem 1rem;
+        gap: var(--space-2) var(--space-4);
         padding-inline: 0;
     }
 
     .side-rail .picker-toggle svg {
-        padding: 0.5rem;
+        padding: var(--space-2);
     }
 
     .result {
@@ -1746,6 +1819,6 @@ svg {
     }
 
     .hint-text.is-typing::after {
-        animation: caret 1s steps(1) infinite !important;
+        animation: caret var(--motion-blink) steps(1) infinite !important;
     }
 }

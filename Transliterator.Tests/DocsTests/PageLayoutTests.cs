@@ -333,6 +333,42 @@ namespace Transliterator.Tests.DocsTests
             Assert.Contains(".picker-panel.is-closing, .feedback-panel.is-closing { display: none; }", reduced.Groups[1].Value);
         }
 
+        /// <summary>
+        /// Токены дизайна и тёмная тема (D12): цвета и длительности заданы только в
+        /// <c>:root</c> и в блоке тёмной темы, правила ниже берут их ссылками, а у
+        /// полосы браузера — цвет фона своей темы.
+        /// </summary>
+        [Fact]
+        public void ColorsAndDurations_LiveInTokens_AndTheDarkThemeFollowsTheSystem()
+        {
+            var css = Regex.Replace(Web("wwwroot", "css", "app.css"), @"/\*.*?\*/", " ", RegexOptions.Singleline);
+            css = Regex.Replace(css, @"\s+", " ");
+
+            var root = Regex.Match(css, @"^ ?:root \{([^}]*)\}");
+            Assert.True(root.Success, "the :root tokens are not first in the file");
+            var dark = Regex.Match(css, @"@media \(prefers-color-scheme: dark\) \{ :root \{([^}]*)\} \}");
+            Assert.True(dark.Success, "the dark theme block is not found");
+            Assert.Contains("color-scheme: light dark;", root.Groups[1].Value);
+
+            var tokens = Regex.Matches(root.Groups[1].Value, @"(--[a-z0-9-]+): ([^;]+);")
+                              .ToDictionary(m => m.Groups[1].Value, m => m.Groups[2].Value);
+            var darkTokens = Regex.Matches(dark.Groups[1].Value, @"(--[a-z0-9-]+): ([^;]+);")
+                                  .ToDictionary(m => m.Groups[1].Value, m => m.Groups[2].Value);
+            foreach (var name in darkTokens.Keys)
+                Assert.True(tokens.ContainsKey(name), $"the dark theme overrides {name}, which the light theme does not define");
+            foreach (var name in new[] { "--cream", "--paper", "--ink", "--ink-muted", "--foam-700", "--error", "--error-bg", "--warn-bg", "--warn-ink", "--shadow-md" })
+                Assert.True(darkTokens.ContainsKey(name), $"the dark theme does not set {name}");
+
+            var rules = css.Remove(dark.Index, dark.Length).Remove(root.Index, root.Length);
+            Assert.DoesNotMatch(@"#[0-9a-fA-F]{3,8}\b|rgba?\(|hsla?\(", rules);
+            foreach (Match declaration in Regex.Matches(rules, @"(?:transition|animation): ([^;]*);"))
+                Assert.DoesNotMatch(@"(?<![\w-])[0-9.]+m?s\b", declaration.Groups[1].Value);
+
+            var index = Web("wwwroot", "index.html");
+            Assert.Contains($"<meta name=\"theme-color\" content=\"{tokens["--cream"]}\" media=\"(prefers-color-scheme: light)\" />", index);
+            Assert.Contains($"<meta name=\"theme-color\" content=\"{darkTokens["--cream"]}\" media=\"(prefers-color-scheme: dark)\" />", index);
+        }
+
         [Fact]
         public void OnAWideScreen_ThePanelIsAColumnBesideTheFieldAndTheOutput()
         {
