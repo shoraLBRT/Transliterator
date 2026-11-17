@@ -1,0 +1,10 @@
+{
+  "Sounds": [
+    {
+      "Letter": "ع",
+      "Name": { "ru": "Айн", "en": "ʿAyn" },
+      "Pronunciation": { "ru": "Звонкий звук из глубины горла." },
+      "NotInRussian": true
+    }
+  ]
+}

@@ -1,0 +1,265 @@
+{
+  "Sounds": [
+    {
+      "Letter": "ء",
+      "Name": { "ru": "Хамза", "en": "Hamza" },
+      "Pronunciation": {
+        "ru": "Короткая смычка в горле: голос на миг обрывается и начинается снова, как между слогами в «не-а».",
+        "en": "A catch in the throat: the voice stops for a moment and starts again, as in the middle of “uh-oh”."
+      },
+      "NotInRussian": true
+    },
+    {
+      "Letter": "ا",
+      "Name": { "ru": "Алиф", "en": "Alif" },
+      "Pronunciation": {
+        "ru": "Своего звука нет: после «а» тянет её вдвое дольше, в начале слова несёт гласный.",
+        "en": "Has no sound of its own: after “a” it makes the vowel twice as long; at the start of a word it carries a vowel."
+      },
+      "NotInRussian": false
+    },
+    {
+      "Letter": "ب",
+      "Name": { "ru": "Ба", "en": "Ba" },
+      "Pronunciation": {
+        "ru": "Как русское «б», но и на конце слога не оглушается в «п».",
+        "en": "Like English “b”."
+      },
+      "NotInRussian": false
+    },
+    {
+      "Letter": "ت",
+      "Name": { "ru": "Та", "en": "Ta" },
+      "Pronunciation": {
+        "ru": "Как твёрдое русское «т».",
+        "en": "Like “t”, with the tongue at the upper teeth and without the puff of air of English “t”."
+      },
+      "NotInRussian": false
+    },
+    {
+      "Letter": "ث",
+      "Name": { "ru": "Са", "en": "Tha" },
+      "Pronunciation": {
+        "ru": "Глухой звук с кончиком языка между зубами, как английское th в «think». Не «с».",
+        "en": "Like “th” in “think”: the tip of the tongue between the teeth."
+      },
+      "NotInRussian": true
+    },
+    {
+      "Letter": "ج",
+      "Name": { "ru": "Джим", "en": "Jim" },
+      "Pronunciation": {
+        "ru": "Слитное «дж», как в слове «джем».",
+        "en": "Like “j” in “jam”."
+      },
+      "NotInRussian": false
+    },
+    {
+      "Letter": "ح",
+      "Name": { "ru": "Ха", "en": "Ḥa" },
+      "Pronunciation": {
+        "ru": "Сильный глухой выдох из сжатого горла, без хрипа: как дыхание на стекло, только горло напряжено. Не «х» и не «h».",
+        "en": "A strong breath from a tightened throat, with no rasp: like breathing on glasses to clean them, with the throat squeezed."
+      },
+      "NotInRussian": true
+    },
+    {
+      "Letter": "خ",
+      "Name": { "ru": "Ха", "en": "Kha" },
+      "Pronunciation": {
+        "ru": "Как «х», но глубже и с хрипотцой — у самого мягкого нёба, как в немецком «Bach».",
+        "en": "Like “ch” in Scottish “loch” or German “Bach”: a rasp at the back of the mouth."
+      },
+      "NotInRussian": true
+    },
+    {
+      "Letter": "د",
+      "Name": { "ru": "Даль", "en": "Dal" },
+      "Pronunciation": {
+        "ru": "Как русское «д», но и на конце слога не оглушается в «т».",
+        "en": "Like “d”, with the tongue at the upper teeth."
+      },
+      "NotInRussian": false
+    },
+    {
+      "Letter": "ذ",
+      "Name": { "ru": "Заль", "en": "Dhal" },
+      "Pronunciation": {
+        "ru": "Звонкий звук с кончиком языка между зубами, как английское th в «this». Не «з».",
+        "en": "Like “th” in “this”: the tip of the tongue between the teeth, voiced."
+      },
+      "NotInRussian": true
+    },
+    {
+      "Letter": "ر",
+      "Name": { "ru": "Ра", "en": "Ra" },
+      "Pronunciation": {
+        "ru": "Как русское «р».",
+        "en": "A tapped or rolled “r”, as in Spanish."
+      },
+      "NotInRussian": false
+    },
+    {
+      "Letter": "ز",
+      "Name": { "ru": "Зай", "en": "Zay" },
+      "Pronunciation": {
+        "ru": "Как русское «з».",
+        "en": "Like “z”."
+      },
+      "NotInRussian": false
+    },
+    {
+      "Letter": "س",
+      "Name": { "ru": "Син", "en": "Sin" },
+      "Pronunciation": {
+        "ru": "Как русское «с».",
+        "en": "Like “s”."
+      },
+      "NotInRussian": false
+    },
+    {
+      "Letter": "ش",
+      "Name": { "ru": "Шин", "en": "Shin" },
+      "Pronunciation": {
+        "ru": "Как русское «ш», но мягче — между «ш» и «щ».",
+        "en": "Like “sh”."
+      },
+      "NotInRussian": false
+    },
+    {
+      "Letter": "ص",
+      "Name": { "ru": "Сад", "en": "Ṣad" },
+      "Pronunciation": {
+        "ru": "Тяжёлое «с»: корень языка поднят, и гласные рядом звучат глубже, «а» — ближе к «о».",
+        "en": "A heavy “s”: the back of the tongue is raised, and nearby vowels sound deeper."
+      },
+      "NotInRussian": true
+    },
+    {
+      "Letter": "ض",
+      "Name": { "ru": "Дад", "en": "Ḍad" },
+      "Pronunciation": {
+        "ru": "Тяжёлое «д»: корень языка поднят, и гласные рядом звучат глубже.",
+        "en": "A heavy “d”: the back of the tongue is raised, and nearby vowels sound deeper."
+      },
+      "NotInRussian": true
+    },
+    {
+      "Letter": "ط",
+      "Name": { "ru": "Та", "en": "Ṭa" },
+      "Pronunciation": {
+        "ru": "Тяжёлое «т»: корень языка поднят, и гласные рядом звучат глубже.",
+        "en": "A heavy “t”: the back of the tongue is raised, and nearby vowels sound deeper."
+      },
+      "NotInRussian": true
+    },
+    {
+      "Letter": "ظ",
+      "Name": { "ru": "За", "en": "Ẓa" },
+      "Pronunciation": {
+        "ru": "Тяжёлый межзубный звук: язык между зубами, как у ذ, но корень языка поднят.",
+        "en": "A heavy “th” as in “this”: the tongue between the teeth, as for ذ, with the back of the tongue raised."
+      },
+      "NotInRussian": true
+    },
+    {
+      "Letter": "ع",
+      "Name": { "ru": "Айн", "en": "ʿAyn" },
+      "Pronunciation": {
+        "ru": "Звонкий звук из глубины горла: горло сжимается, и голос проходит сквозь него с напряжением. Близкого звука в русском нет.",
+        "en": "A voiced sound from deep in the throat: the throat tightens and the voice is pushed through it. English has nothing close."
+      },
+      "NotInRussian": true
+    },
+    {
+      "Letter": "غ",
+      "Name": { "ru": "Гайн", "en": "Ghayn" },
+      "Pronunciation": {
+        "ru": "Звонкая пара к خ: как картавое французское «r» или южнорусское фрикативное «г».",
+        "en": "The voiced pair of خ, like the French “r” in “Paris”."
+      },
+      "NotInRussian": true
+    },
+    {
+      "Letter": "ف",
+      "Name": { "ru": "Фа", "en": "Fa" },
+      "Pronunciation": {
+        "ru": "Как русское «ф».",
+        "en": "Like “f”."
+      },
+      "NotInRussian": false
+    },
+    {
+      "Letter": "ق",
+      "Name": { "ru": "Каф", "en": "Qaf" },
+      "Pronunciation": {
+        "ru": "Глубокое «к»: корень языка смыкается с маленьким язычком в глубине рта.",
+        "en": "A “k” made further back, where the back of the tongue meets the uvula."
+      },
+      "NotInRussian": true
+    },
+    {
+      "Letter": "ك",
+      "Name": { "ru": "Каф", "en": "Kaf" },
+      "Pronunciation": {
+        "ru": "Как русское «к».",
+        "en": "Like “k”."
+      },
+      "NotInRussian": false
+    },
+    {
+      "Letter": "ل",
+      "Name": { "ru": "Лям", "en": "Lam" },
+      "Pronunciation": {
+        "ru": "Среднее между «л» и «ль»; в имени «Аллах» после «а» или «у» — твёрдое.",
+        "en": "Like the clear “l” in “leaf”; in the name “Allah” after “a” or “u” it is heavy."
+      },
+      "NotInRussian": false
+    },
+    {
+      "Letter": "م",
+      "Name": { "ru": "Мим", "en": "Mim" },
+      "Pronunciation": {
+        "ru": "Как русское «м».",
+        "en": "Like “m”."
+      },
+      "NotInRussian": false
+    },
+    {
+      "Letter": "ن",
+      "Name": { "ru": "Нун", "en": "Nun" },
+      "Pronunciation": {
+        "ru": "Как русское «н».",
+        "en": "Like “n”."
+      },
+      "NotInRussian": false
+    },
+    {
+      "Letter": "ه",
+      "Name": { "ru": "Ха", "en": "Ha" },
+      "Pronunciation": {
+        "ru": "Лёгкий выдох без трения, как английское h в «hat»; звучит и на конце слова. Не «х».",
+        "en": "Like “h” in “hat”, and it is said even at the end of a word."
+      },
+      "NotInRussian": true
+    },
+    {
+      "Letter": "و",
+      "Name": { "ru": "Вав", "en": "Waw" },
+      "Pronunciation": {
+        "ru": "Как английское w: губы округлены, как для «у», и сразу размыкаются. Не «в». После «у» тянет её вдвое дольше.",
+        "en": "Like “w”; after “u” it makes the vowel twice as long."
+      },
+      "NotInRussian": true
+    },
+    {
+      "Letter": "ي",
+      "Name": { "ru": "Йа", "en": "Ya" },
+      "Pronunciation": {
+        "ru": "Как русское «й»; после «и» тянет её вдвое дольше.",
+        "en": "Like “y” in “yes”; after “i” it makes the vowel twice as long."
+      },
+      "NotInRussian": false
+    }
+  ]
+}

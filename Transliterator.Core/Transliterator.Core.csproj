@@ -57,6 +57,8 @@
     <!-- Каталог правил таджвида (I1) — только ресурс: рядом со сборкой его
          никто не правит, и читается он одинаково в браузере и в CLI. -->
     <EmbeddedResource Include="Resources\TajweedRules.json" />
+    <!-- Таблица звуков (D11) — тоже только ресурс, по той же причине. -->
+    <EmbeddedResource Include="Resources\Sounds.json" />
   </ItemGroup>
 
   <ItemGroup>
