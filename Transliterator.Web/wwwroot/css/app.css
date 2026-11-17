@@ -31,6 +31,10 @@
     --shadow-md: 0 1px 2px rgba(31, 45, 42, 0.04), 0 10px 30px rgba(31, 45, 42, 0.07);
     --shadow-lg: 0 2px 4px rgba(31, 45, 42, 0.05), 0 18px 48px rgba(31, 45, 42, 0.1);
 
+    /* Подложка под нижним листом панели на телефоне (D14): страница под ней
+       видна, но отступает. */
+    --scrim: rgb(31 45 42 / 0.4);
+
     /* Отступы — шаг в четверть rem; числа вне шкалы в файле оставлены как есть,
        где они подогнаны под строку или кегль. */
     --space-1: 0.25rem;
@@ -123,6 +127,8 @@
         --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
         --shadow-md: 0 1px 2px rgba(0, 0, 0, 0.3), 0 10px 30px rgba(0, 0, 0, 0.25);
         --shadow-lg: 0 2px 4px rgba(0, 0, 0, 0.35), 0 18px 48px rgba(0, 0, 0, 0.4);
+        /* На тёмном фоне та же доля почти не видна — подложка гуще. */
+        --scrim: rgb(0 0 0 / 0.55);
     }
 }
 
@@ -563,26 +569,47 @@ svg {
     border-color: var(--foam-100);
 }
 
+/* Уже 64rem панель — нижний лист (D14): прижат к низу экрана, скруглён сверху,
+   до 85% высоты экрана и со своей прокруткой; под ним затемнённая подложка,
+   щелчок по ней закрывает лист. Прокрутка внутри не утягивает страницу
+   (overscroll-behavior), а саму страницу, пока лист открыт, держит класс
+   is-sheet-open на <html> (page.sheetOpen). На планшете лист не шире 40rem —
+   по центру. Подложка и лист выше значка отзыва (z 11 с 56rem), но ниже формы
+   отзыва: та открывается из «О чём проект?» и ложится поверх. С 64rem — колонка
+   сбоку, как прежде (см. ниже). */
 .picker-backdrop {
     position: fixed;
     inset: 0;
-    z-index: 10;
+    z-index: 12;
+    background: var(--scrim);
+    animation: scrim-in var(--motion-duration) var(--motion-ease);
+}
+
+.picker-backdrop.is-closing {
+    animation: scrim-out var(--motion-duration) var(--motion-ease) forwards;
+    pointer-events: none;
 }
 
 .picker-panel {
-    position: absolute;
-    top: calc(100% + 0.5rem);
+    --panel-head-height: 3.5rem; /* шапка с ручкой: к её низу липнут заголовки внутри */
+    position: fixed;
+    right: 0;
+    bottom: 0;
     left: 0;
-    z-index: 11;
-    width: min(100%, 24rem);
-    max-height: min(60vh, 26rem);
+    z-index: 12;
+    width: min(100%, 40rem);
+    max-height: 85vh;
+    max-height: 85dvh;
+    margin-inline: auto;
     overflow-y: auto;
-    padding: var(--space-2);
+    overscroll-behavior: contain;
+    padding: 0 var(--space-2) calc(var(--space-2) + env(safe-area-inset-bottom, 0px));
     background: var(--paper);
     border: 1px solid var(--line);
-    border-radius: var(--radius-xl);
-    box-shadow: var(--shadow-md);
-    animation: panel-in var(--motion-duration) var(--motion-ease);
+    border-bottom: 0;
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+    box-shadow: var(--shadow-lg);
+    animation: sheet-in var(--motion-duration) var(--motion-ease);
 }
 
 .picker-panel:focus-visible {
@@ -590,12 +617,32 @@ svg {
 }
 
 /* Шапка панели (D6): имя и крестик. На широком экране подложки нет, и закрывают
-   панель крестиком, Escape или той же кнопкой. */
+   панель крестиком, Escape или той же кнопкой. В листе (D14) шапка липнет к его
+   верху, и крестик доступен на любой глубине прокрутки; над ней — ручка листа.
+   Шапка во всю ширину листа: прокручиваемое не просвечивает у её краёв. */
 .panel-head {
+    position: sticky;
+    top: 0;
+    z-index: 2;
     display: flex;
     align-items: center;
     gap: var(--space-2);
-    padding: 0 0 0 var(--space-3);
+    height: var(--panel-head-height);
+    margin-inline: calc(-1 * var(--space-2));
+    padding: var(--space-4) var(--space-2) var(--space-1) calc(var(--space-3) + var(--space-2));
+    background: var(--paper);
+}
+
+/* Ручка — знак листа: ничего не делает, и диктору её нет. */
+.sheet-handle {
+    position: absolute;
+    top: var(--space-2);
+    left: 50%;
+    width: 2.25rem;
+    height: 0.25rem;
+    border-radius: var(--radius-pill);
+    background: var(--line-strong);
+    transform: translateX(-50%);
 }
 
 .panel-title {
@@ -609,7 +656,7 @@ svg {
 /* Круглый значок и подпись рядом — что выбрано сейчас («Полный таджвид»,
    «Профиль: Standard», E6). Подпись — текст самой кнопки: по ней же кнопку
    называет экранный диктор. На телефоне кнопки стоят строкой под полем,
-   и панель открывается под ними, поверх вывода, как прежде. */
+   и панель открывается нижним листом поверх страницы (D14). */
 .side-rail {
     position: relative;
     display: flex;
@@ -671,6 +718,36 @@ svg {
 .feedback-panel.is-closing {
     animation: panel-out var(--motion-duration) var(--motion-ease) forwards;
     pointer-events: none;
+}
+
+/* Лист (D14) выезжает снизу целиком и уходит обратно, подложка проявляется
+   и гаснет с ним. С 64rem колонка снова берёт panel-in и panel-out. */
+@keyframes sheet-in {
+    from { transform: translateY(100%); }
+}
+
+@keyframes sheet-out {
+    to { transform: translateY(100%); }
+}
+
+@keyframes scrim-in {
+    from { opacity: 0; }
+}
+
+@keyframes scrim-out {
+    to { opacity: 0; }
+}
+
+.picker-panel.is-closing {
+    animation-name: sheet-out;
+}
+
+/* Страница под листом не прокручивается (D14). Только overflow, без position:
+   fixed — место прокрутки не теряется; место полосы прокрутки сохранено,
+   и страница не дёргается вбок. */
+html.is-sheet-open {
+    overflow: hidden;
+    scrollbar-gutter: stable;
 }
 
 .picker-caption {
@@ -735,10 +812,6 @@ svg {
     flex-wrap: wrap;
     align-items: center;
     gap: var(--space-2);
-}
-
-.reading-panel {
-    max-height: min(70vh, 32rem);
 }
 
 .reading-modes {
@@ -955,11 +1028,12 @@ svg {
 
 /* Заголовок блока — заголовок, а не ещё одна строка (I6): отбит линией,
    набран темнее строк и прилипает к верху панели, пока его блок прокручивается.
-   Панель с отступом 0.5rem, поэтому top отрицательный — иначе над заголовком
+   В листе (D14) — под липкой шапкой листа; в колонке с 64rem шапка не липнет,
+   у панели отступ 0.5rem, и top отрицательный — иначе над заголовком
    просвечивали бы уезжающие строки. Сам заголовок — кнопка блока (I8). */
 .reading-group {
     position: sticky;
-    top: -0.5rem;
+    top: var(--panel-head-height);
     z-index: 1;
     margin: 0 -0.75rem;
     background: var(--paper);
@@ -1144,11 +1218,6 @@ svg {
 
 /* ---- Свои профили ---- */
 
-.profile-panel {
-    width: min(100%, 26rem);
-    max-height: min(75vh, 36rem);
-}
-
 .profile-actions {
     display: grid;
     gap: 0.4rem;
@@ -1267,10 +1336,11 @@ svg {
 }
 
 /* В панели профиля повтор липнет к верху прокрутки — виден и под таблицей.
-   В «Как читать» он стоит под ступенями: к верху там липнут заголовки блоков правил. */
+   В «Как читать» он стоит под ступенями: к верху там липнут заголовки блоков правил.
+   В листе (D14) повтор липнет под шапкой листа. */
 .profile-preview {
     position: sticky;
-    top: -0.5rem;
+    top: var(--panel-head-height);
     z-index: 1;
     margin: 0 -0.5rem;
 }
@@ -1506,11 +1576,6 @@ svg {
 
 /* Короткие абзацы с подзаголовками. Пример — арабские слова и под ними две
    записи: привычная тише, страницы — в цвет вывода. */
-.about-panel {
-    width: min(100%, 26rem);
-    max-height: min(75vh, 36rem);
-}
-
 .about-body {
     display: grid;
     gap: 0.9rem;
@@ -2082,7 +2147,7 @@ svg {
    тоже) — колонкой справа от них. Поле, вывод и подвал отодвигаются вправо ровно
    на ширину колонки и остаются рабочими: подложки нет, щелчок по полю панель
    не закрывает. С 64rem рядом с колонкой ещё помещается поле шириной ~32rem;
-   уже — как на телефоне, панель поверх. Отступы считаются от края колонки
+   уже — нижний лист с подложкой (D14). Отступы считаются от края колонки
    страницы (у .shell свой отступ 1.25rem). */
 @media (min-width: 64rem) {
     .shell {
@@ -2159,7 +2224,45 @@ svg {
         --panel-shift-y: 0;
     }
 
+    /* Колонка, не лист (D14): скругление со всех сторон, отступ вокруг, движение
+       сбоку, шапка без ручки и не липнет — заголовки внутри липнут к верху
+       колонки за её отступом. Страницу рядом с колонкой можно прокручивать. */
+    .picker-panel {
+        right: auto;
+        bottom: auto;
+        z-index: 11;
+        margin-inline: 0;
+        padding: var(--space-2);
+        border-bottom: 1px solid var(--line);
+        border-radius: var(--radius-xl);
+        box-shadow: var(--shadow-md);
+        animation-name: panel-in;
+    }
+
+    .picker-panel.is-closing {
+        animation-name: panel-out;
+    }
+
+    .panel-head {
+        position: static;
+        height: auto;
+        margin-inline: 0;
+        padding: 0 0 0 var(--space-3);
+        background: transparent;
+    }
+
+    .reading-group,
+    .profile-preview {
+        top: -0.5rem;
+    }
+
+    html.is-sheet-open {
+        overflow: visible;
+        scrollbar-gutter: auto;
+    }
+
     .picker-backdrop,
+    .sheet-handle,
     .panel-preview {
         display: none;
     }
@@ -2239,10 +2342,6 @@ svg {
         font-size: 1.4rem;
     }
 
-    .picker-panel {
-        width: 100%;
-    }
-
     /* Ступень и профиль — в одну строку под полем на экране в 375px. Кнопка «?»
        с подписью «О чём проект?» (D8, D9) рядом с ними не помещается и переносится
        под них строкой ниже. */
@@ -2281,6 +2380,7 @@ svg {
 
     /* Без анимации уходящей панели не на что задерживаться — скрыта сразу. */
     .picker-panel.is-closing,
+    .picker-backdrop.is-closing,
     .feedback-panel.is-closing,
     .toast.is-closing {
         display: none;

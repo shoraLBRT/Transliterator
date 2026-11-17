@@ -389,9 +389,11 @@ namespace Transliterator.Tests.DocsTests
 
         /// <summary>
         /// D10: панели и вывод появляются и уходят коротко и плавно. Уходящая панель
-        /// ещё миг в разметке, но inert и скрыта от диктора; подложки у неё уже нет.
-        /// Одна пара анимаций и одна длительность на всё, и та же длительность —
-        /// в коде, что держит уходящую панель. С prefers-reduced-motion движения нет.
+        /// ещё миг в разметке, но inert и скрыта от диктора. Подложка формы отзыва
+        /// уходит сразу; подложка листа панели (D14) гаснет вместе с ним, уже не ловя
+        /// щелчков, а щелчок по открытой закрывает лист и возвращает фокус на кнопку.
+        /// Одна длительность на всё, и та же длительность — в коде, что держит
+        /// уходящую панель. С prefers-reduced-motion движения нет.
         /// </summary>
         [Theory]
         [InlineData("SurahPicker.razor", "Closing", "IsShown")]
@@ -402,9 +404,13 @@ namespace Transliterator.Tests.DocsTests
         public void ClosingPanel_StaysAMoment_InertAndHiddenFromTheReader(string file, string closing, string shown)
         {
             var picker = Regex.Replace(Web("Components", file), @"\s+", " ");
+            picker = Regex.Replace(picker, @"@\*.*?\*@ ?", string.Empty);
 
-            Assert.Contains($"@if ({shown}) {{ if (", picker);
-            Assert.Matches(@"if \((IsOpen|_open)\) \{ <div class=""(picker|feedback)-backdrop""", picker);
+            Assert.Contains($"@if ({shown}) {{ ", picker);
+            if (file == "FeedbackButton.razor")
+                Assert.Matches(@"if \(_open\) \{ <div class=""feedback-backdrop""", picker);
+            else
+                Assert.Contains($"@if ({shown}) {{ <div class=\"picker-backdrop @Closing.CssClass\" @onclick=\"CloseToToggleAsync\"></div>", picker);
             Assert.Matches($@"class=""(picker|feedback)-panel[^""]*@{closing}\.CssClass"" inert=""@{closing}\.IsClosing"" aria-hidden=""@{closing}\.AriaHidden"" role=""dialog""", picker);
         }
 
@@ -423,16 +429,23 @@ namespace Transliterator.Tests.DocsTests
 
             Assert.Contains("@keyframes panel-in {", css);
             Assert.Contains("@keyframes panel-out {", css);
-            foreach (var block in new[] { "picker-panel", "feedback-panel", "result" })
+            foreach (var block in new[] { "feedback-panel", "result" })
                 Assert.Matches($@"\.{block} \{{[^}}]*animation: panel-in var\(--motion-duration\) var\(--motion-ease\);", css);
             Assert.Matches(@"\.picker-panel\.is-closing, \.feedback-panel\.is-closing \{ animation: panel-out var\(--motion-duration\) var\(--motion-ease\) forwards; pointer-events: none; \}", css);
+            // D14: уже 64rem панель — лист и выезжает снизу на той же длительности;
+            // колонка с 64rem берёт прежнюю пару panel-in / panel-out.
+            Assert.Matches(@"\.picker-panel \{[^}]*animation: sheet-in var\(--motion-duration\) var\(--motion-ease\);", css);
+            Assert.Contains(".picker-panel.is-closing { animation-name: sheet-out; }", css);
+            Assert.Matches(@"\.picker-backdrop \{[^}]*animation: scrim-in var\(--motion-duration\) var\(--motion-ease\);", css);
+            Assert.Contains(".picker-backdrop.is-closing { animation: scrim-out var(--motion-duration) var(--motion-ease) forwards; pointer-events: none; }", css);
             Assert.DoesNotMatch(@"animation: rise", css);
 
             var reduced = Regex.Match(css, @"@media \(prefers-reduced-motion: reduce\) \{(.*)$");
             Assert.True(reduced.Success, "the reduced-motion block is not found");
             Assert.Contains("animation: none !important; transition: none !important;", reduced.Groups[1].Value);
-            // D20: уходящая плашка отмены очистки скрыта сразу — как уходящие панели.
-            Assert.Contains(".picker-panel.is-closing, .feedback-panel.is-closing, .toast.is-closing { display: none; }", reduced.Groups[1].Value);
+            // D20: уходящая плашка отмены очистки скрыта сразу — как уходящие панели
+            // и подложка листа (D14).
+            Assert.Contains(".picker-panel.is-closing, .picker-backdrop.is-closing, .feedback-panel.is-closing, .toast.is-closing { display: none; }", reduced.Groups[1].Value);
         }
 
         /// <summary>
@@ -485,8 +498,57 @@ namespace Transliterator.Tests.DocsTests
             Assert.Matches(@"\.stage, \.footer \{[^}]*margin-left: max\(var\(--rail-space\)", rules);
 
             // Ни подложки, которая закрыла бы панель щелчком по полю, ни повтора вывода
-            // в панелях профиля (E4) и «Как читать» (I10): вывод и так рядом.
-            Assert.Matches(@"\.picker-backdrop, \.panel-preview \{ display: none; \}", rules);
+            // в панелях профиля (E4) и «Как читать» (I10): вывод и так рядом. Ни ручки
+            // листа (D14), ни запрета прокрутки страницы рядом с колонкой.
+            Assert.Matches(@"\.picker-backdrop, \.sheet-handle, \.panel-preview \{ display: none; \}", rules);
+            Assert.Contains("html.is-sheet-open { overflow: visible;", rules);
+            Assert.Contains(".picker-panel.is-closing { animation-name: panel-out; }", rules);
+            Assert.Matches(@"\.picker-panel \{[^}]*border-radius: var\(--radius-xl\);[^}]*animation-name: panel-in;", rules);
+        }
+
+        /// <summary>
+        /// D14: уже 64rem панель — нижний лист: прижат к низу, скруглён сверху, до 85%
+        /// высоты экрана, со своей прокруткой, которая не утягивает страницу, и с
+        /// отступом под вырез телефона. Под ним затемнённая подложка из токена обеих
+        /// тем; шапка с ручкой липнет к верху листа, заголовки внутри — под неё.
+        /// Пока панель открыта, страница получает класс, снимающий её прокрутку.
+        /// </summary>
+        [Fact]
+        public void OnAPhone_ThePanelIsABottomSheetOverAScrim_AndThePageDoesNotScroll()
+        {
+            var css = Regex.Replace(Web("wwwroot", "css", "app.css"), @"\s+", " ");
+            var wide = css.IndexOf("@media (min-width: 64rem) {", StringComparison.Ordinal);
+            Assert.True(wide > 0, "the wide-screen layout is not found");
+            var narrow = css[..wide];
+
+            var sheet = Regex.Match(narrow, @"\.picker-panel \{([^}]*)\}");
+            Assert.True(sheet.Success, "the sheet rule is not found");
+            foreach (var declaration in new[]
+            {
+                "position: fixed;", "right: 0;", "bottom: 0;", "left: 0;", "max-height: 85dvh;",
+                "overflow-y: auto;", "overscroll-behavior: contain;",
+                "border-radius: var(--radius-xl) var(--radius-xl) 0 0;",
+                "env(safe-area-inset-bottom, 0px)",
+            })
+                Assert.Contains(declaration, sheet.Groups[1].Value);
+
+            Assert.Matches(@"\.picker-backdrop \{[^}]*position: fixed; inset: 0;[^}]*background: var\(--scrim\);", narrow);
+            Assert.Matches(@":root \{[^}]*--scrim: ", css);
+            Assert.Matches(@"@media \(prefers-color-scheme: dark\) \{ :root \{[^}]*--scrim: ", css);
+
+            Assert.Matches(@"\.panel-head \{ position: sticky; top: 0;[^}]*height: var\(--panel-head-height\);", narrow);
+            Assert.Matches(@"\.reading-group \{ position: sticky; top: var\(--panel-head-height\);", narrow);
+            Assert.Matches(@"\.profile-preview \{ position: sticky; top: var\(--panel-head-height\);", narrow);
+            Assert.Contains("html.is-sheet-open { overflow: hidden;", narrow);
+
+            var head = Regex.Replace(Web("Components", "PanelHead.razor"), @"\s+", " ");
+            Assert.Contains("<div class=\"panel-head\"> ", head);
+            Assert.Contains("<span class=\"sheet-handle\" aria-hidden=\"true\"></span>", head);
+
+            var app = Regex.Replace(Web("App.razor"), @"\s+", " ");
+            Assert.Contains("JS.InvokeVoidAsync(\"page.sheetOpen\", Panels.Current is not null)", app);
+            var script = Web("wwwroot", "js", "page.js");
+            Assert.Contains("document.documentElement.classList.toggle(\"is-sheet-open\", open);", script);
         }
 
         /// <summary>
