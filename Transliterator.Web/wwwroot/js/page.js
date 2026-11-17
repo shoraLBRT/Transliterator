@@ -397,8 +397,18 @@ window.page = (() => {
         document.querySelector('meta[name="description"]')?.setAttribute("content", description);
     }
 
+    /**
+     * Открыта ли панель (D14). Уже 64rem панель — нижний лист, и страница под ним
+     * не должна прокручиваться: класс на <html> снимает её прокрутку (app.css),
+     * с 64rem он ничего не делает — рядом с колонкой страница прокручивается.
+     * Только класс, без position: fixed на body: место прокрутки не сбрасывается.
+     */
+    function sheetOpen(open) {
+        document.documentElement.classList.toggle("is-sheet-open", open);
+    }
+
     return {
-        typewriter, hintPaused, autosize, resize, canPaste, paste, copy, guard, guardToken, guardReset, guardRemove,
+        typewriter, hintPaused, autosize, resize, sheetOpen, canPaste, paste, copy, guard, guardToken, guardReset, guardRemove,
         load, save, storageSet, storageRemove, storageKeys,
         browserLanguages, sessionSave, sessionTake, reload, setDocument,
     };

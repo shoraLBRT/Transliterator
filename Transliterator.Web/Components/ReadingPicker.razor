@@ -24,10 +24,9 @@
 
     @if (IsShown)
     {
-        if (IsOpen)
-        {
-            <div class="picker-backdrop" @onclick="Close"></div>
-        }
+        @* Подложка листа (D14) гаснет вместе с ним; щелчок по ней закрывает лист
+           и возвращает фокус на кнопку — как крестик и Escape. *@
+        <div class="picker-backdrop @Closing.CssClass" @onclick="CloseToToggleAsync"></div>
 
         <div id="reading-menu" class="picker-panel reading-panel @Closing.CssClass" inert="@Closing.IsClosing" aria-hidden="@Closing.AriaHidden" role="dialog" aria-labelledby="reading-menu-title"
              tabindex="-1" @ref="PanelElement" @onkeydown="OnPanelKeyDownAsync">
