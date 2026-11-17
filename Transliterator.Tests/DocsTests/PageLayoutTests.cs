@@ -420,6 +420,11 @@ namespace Transliterator.Tests.DocsTests
             Assert.Contains("if (sources[i] is { } source) { <div class=\"fold result-source @(_arabicLines ? \"is-open\" : null)\" inert=\"@(!_arabicLines)\"><div class=\"fold-inner\"><p class=\"result-source-text\" dir=\"rtl\" lang=\"ar\">@source</p></div></div> }", card.Groups[1].Value);
             Assert.Matches(@"\.result-source-text \{[^}]*font-family: var\(--font-arabic\);[^}]*color: var\(--ink-muted\); text-align: right;[^}]*user-select: none;", css);
 
+            // Близость: арабская вплотную к своей строке, пары — с воздухом и чертой.
+            Assert.Matches(@"\.result-line \+ \.result-source\.is-open \{ margin-top: var\(--space-2\); padding-top: var\(--space-3\); border-top: 1px solid var\(--foam-100\); \}", css);
+            Assert.Matches(@"\.result-source\.is-open \+ \.result-line \{ margin-top: 0; padding-top: 0\.15rem; \}", css);
+            Assert.Matches(@"\.result-source-text \{[^}]*line-height: 1\.6;", css);
+
             // На телефоне — одна иконка, подпись остаётся имени кнопки.
             Assert.Matches(@"@media \(max-width: 36rem\) \{.*\.arabic-toggle-label \{ position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect\(0 0 0 0\);", css);
 
