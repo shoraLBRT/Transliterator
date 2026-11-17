@@ -1005,6 +1005,23 @@ html.is-sheet-open {
     color: var(--ink-muted);
 }
 
+/* Ссылка «Подробнее» (I14): стоит в конце короткой фразы, выглядит ссылкой,
+   а не кнопкой; фокус виден. */
+.reading-note-more {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--foam-700);
+    font: inherit;
+    text-decoration: underline;
+    text-underline-offset: 0.15em;
+    cursor: pointer;
+}
+
+.reading-note-more:hover {
+    color: var(--ink);
+}
+
 /* Счёт и переключатель стоят в строке своего правила (I8), в её правой колонке
    (I9): прижаты к правому краю и не переносятся — переносится название слева. */
 .reading-rule-controls {

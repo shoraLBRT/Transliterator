@@ -161,13 +161,27 @@
     <value>Без таджвида</value>
   </data>
   <data name="ModeNote.Full" xml:space="preserve">
-    <value>Как требует таджвид</value>
+    <value>Все правила таджвида</value>
   </data>
   <data name="ModeNote.Variants" xml:space="preserve">
-    <value>Таджвид на ваш выбор: ниже, в «Правилах таджвида», — сколько тянуть мадд и что можно не читать</value>
+    <value>Сами выбираете правила ниже</value>
   </data>
   <data name="ModeNote.Plain" xml:space="preserve">
-    <value>Обычное арабское чтение</value>
+    <value>Обычное чтение, без таджвида</value>
+  </data>
+  <data name="Reading.CountsLead" xml:space="preserve">
+    <value>Счёт — сколько тянуть гласную.</value>
+  </data>
+  <data name="Reading.SwitchableLead" xml:space="preserve">
+    <value>Переключатель выключает правило.</value>
+  </data>
+  <data name="Reading.More" xml:space="preserve">
+    <value>Подробнее</value>
+    <comment>Link that opens the details of a note (I14)</comment>
+  </data>
+  <data name="Reading.Less" xml:space="preserve">
+    <value>Свернуть</value>
+    <comment>Link that closes the details of a note (I14)</comment>
   </data>
   <data name="Reading.CountsNote" xml:space="preserve">
     <value>Счёт — сколько тянется долгая гласная: два — обычная долгая, четыре и шесть — вдвое и втрое дольше. На письме долгота — повтор буквы, но букв не столько, сколько харакатов: два счёта — две буквы, четыре — три, пять — четыре, шесть — пять. Запись не считает харакаты буквами: она ставит долготы по порядку, и каждый счёт выглядит по-своему.</value>
