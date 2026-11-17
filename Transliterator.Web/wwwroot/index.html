@@ -16,14 +16,66 @@
     <!-- ?v= — первые 8 знаков SHA-256 файла (переводы строк как LF). Браузер не берёт
          из кеша прежний page.js или app.css к новой сборке: файл изменился — изменился
          и адрес. Сверяет PageAssetVersionTests и подсказывает новое значение. -->
-    <link rel="stylesheet" href="css/app.css?v=6fdc04de" />
+    <link rel="stylesheet" href="css/app.css?v=1f8391a2" />
 </head>
 
 <body>
     <div id="app">
-        <div class="boot" role="status">
-            <span class="boot-dot" aria-hidden="true"></span>
-            <span data-shell="loading">Загрузка…</span>
+        <!-- Экран загрузки (D22) — скелет той же страницы: те же классы каркаса, что
+             у App.razor (шапка, подсказка, поле, кнопки сбоку), поэтому поле стоит
+             там же, где встанет настоящее, и подмена его не сдвигает. Blazor
+             заменяет всё содержимое #app при старте. Полосу и проценты ведёт
+             --blazor-load-percentage, которую Blazor ставит на <html>; диктору —
+             aria-valuenow, его обновляет page.js. -->
+        <div class="shell boot" aria-busy="true">
+            <div class="boot-progress" role="progressbar" aria-labelledby="boot-loading"
+                 aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                <span class="boot-progress-bar"></span>
+            </div>
+
+            <div class="topbar" aria-hidden="true">
+                <div class="topbar-brand">
+                    <svg class="topbar-mark" viewBox="5 5 22 22">
+                        <path d="M6.5 8.5C6.5 18 10.5 23.5 16 23.5C21.5 23.5 25.5 18.5 25.5 11C24.2 17.1 20.8 20.7 16 20.7C11.2 20.7 7.6 16.1 6.5 8.5Z" />
+                        <circle cx="16" cy="11" r="2.2" />
+                    </svg>
+                    <span class="topbar-name" data-shell="heading">Транслитерация Корана</span>
+                </div>
+                <span class="boot-block boot-language"></span>
+            </div>
+
+            <div class="stage">
+                <p class="hint" aria-hidden="true">
+                    <span class="boot-hint"><span class="boot-block"></span><span class="boot-block"></span></span>
+                </p>
+
+                <div class="composer" aria-hidden="true">
+                    <div class="composer-input"><span class="boot-block boot-text"></span></div>
+                    <div class="composer-bar">
+                        <span class="picker-toggle boot-toggle"><span class="boot-block boot-icon"></span><span class="boot-block boot-label"></span></span>
+                    </div>
+                </div>
+
+                <div class="quick-start-body">
+                    <div class="quick-start-chips" aria-hidden="true">
+                        <span class="boot-block boot-label"></span>
+                        <span class="picker-toggle boot-chip">&nbsp;</span>
+                        <span class="picker-toggle boot-chip">&nbsp;</span>
+                        <span class="picker-toggle boot-chip">&nbsp;</span>
+                    </div>
+                    <p class="quick-start-note boot-status" role="status">
+                        <span id="boot-loading" data-shell="loading">Загрузка…</span><span class="boot-percent"></span>
+                    </p>
+                </div>
+
+                <!-- Кнопки в обёртке .picker, как в компонентах: высоту строки рейла
+                     даёт она. -->
+                <div class="side-rail" aria-hidden="true">
+                    <div class="picker"><span class="picker-toggle"><svg viewBox="0 0 24 24"></svg><span class="picker-toggle-text boot-block boot-label"></span></span></div>
+                    <div class="picker"><span class="picker-toggle"><svg viewBox="0 0 24 24"></svg><span class="picker-toggle-text boot-block boot-label"></span></span></div>
+                    <div class="picker"><span class="picker-toggle"><svg viewBox="0 0 24 24"></svg><span class="picker-toggle-text boot-block boot-label"></span></span></div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -32,7 +84,7 @@
         <a href="" class="reload" data-shell="reload">Перезагрузить</a>
     </div>
 
-    <script src="js/page.js?v=60ffc350"></script>
+    <script src="js/page.js?v=bd3e42d0"></script>
     <script src="_framework/blazor.webassembly.js"></script>
 </body>
 

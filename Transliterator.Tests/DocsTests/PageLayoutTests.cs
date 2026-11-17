@@ -52,6 +52,45 @@ namespace Transliterator.Tests.DocsTests
         }
 
         [Fact]
+        public void TheLoadingScreen_IsASkeletonOfThePage_WithProgress()
+        {
+            // D22: пока грузится WebAssembly, в #app — скелет той же страницы на тех же
+            // классах каркаса, что в App.razor, поэтому поле встаёт на своё место без
+            // скачка. Полоса и проценты — по --blazor-load-percentage, диктору —
+            // progressbar с aria-valuenow от page.js. Готовая страница проявляется.
+            var index = Web("wwwroot", "index.html");
+            var css = Regex.Replace(Web("wwwroot", "css", "app.css"), @"\s+", " ");
+            var script = Web("wwwroot", "js", "page.js");
+
+            var app = Regex.Match(index, "<div id=\"app\">(.*?)<div id=\"blazor-error-ui\">", RegexOptions.Singleline);
+            Assert.True(app.Success, "the app root is not found");
+            var boot = app.Groups[1].Value;
+
+            Assert.Contains("<div class=\"shell boot\" aria-busy=\"true\">", boot);
+            foreach (var part in new[] { "class=\"topbar\"", "class=\"stage\"", "class=\"hint\"", "class=\"composer\"", "class=\"composer-input\"", "class=\"composer-bar\"", "class=\"side-rail\"" })
+                Assert.Contains(part, boot);
+            Assert.True(boot.IndexOf("class=\"topbar\"", StringComparison.Ordinal) < boot.IndexOf("class=\"hint\"", StringComparison.Ordinal)
+                        && boot.IndexOf("class=\"hint\"", StringComparison.Ordinal) < boot.IndexOf("class=\"composer\"", StringComparison.Ordinal),
+                        "the skeleton is not in the order of the page");
+            Assert.DoesNotContain("<h1", boot);
+
+            Assert.Matches(@"role=""progressbar"" aria-labelledby=""boot-loading""\s+aria-valuemin=""0"" aria-valuemax=""100"" aria-valuenow=""0""", boot);
+            Assert.Contains("<span id=\"boot-loading\" data-shell=\"loading\">", boot);
+            Assert.Contains("data-shell=\"heading\"", boot);
+            Assert.Matches(@"\.boot-progress-bar \{[^}]*width: var\(--blazor-load-percentage, 0%\)", css);
+            Assert.Contains("content: \" \" var(--blazor-load-percentage-text, \"\");", css);
+            Assert.Contains("root.style.getPropertyValue(\"--blazor-load-percentage\")", script);
+            Assert.Contains("bar.setAttribute(\"aria-valuenow\"", script);
+
+            Assert.Contains(".shell:not(.boot) { animation: shell-in var(--motion-duration) var(--motion-ease) backwards; }", css);
+            Assert.Contains("@keyframes shell-in { from { opacity: 0.6; } }", css);
+            Assert.Matches(@"\.boot-block \{[^}]*animation: shimmer var\(--motion-shimmer\) linear infinite;", css);
+            var reduced = Regex.Match(css, @"@media \(prefers-reduced-motion: reduce\) \{(.*)\}\s*$");
+            Assert.True(reduced.Success, "the reduced-motion block is not found");
+            Assert.Contains(".boot-block { background: var(--line); }", reduced.Groups[1].Value);
+        }
+
+        [Fact]
         public void TheHeader_NamesThePage_AndHoldsTheLanguage_InTheFlow()
         {
             // D13: шапка над полем — знак и видимое имя (единственный h1) слева,

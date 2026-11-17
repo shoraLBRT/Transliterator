@@ -1,15 +1,15 @@
 // Мелочи страницы, которых нет в Blazor: печать подсказки, высота поля по тексту
 // и буфер обмена. Всё здесь — удобство: без этого файла страница остаётся рабочей.
 
-// Оболочка страницы до запуска приложения (D7): «Загрузка…» и полоса ошибки
-// показываются раньше, чем загрузятся ресурсы с переводами, поэтому их тексты
+// Оболочка страницы до запуска приложения (D7): скелет загрузки с именем страницы
+// (D22), «Загрузка…» и полоса ошибки показываются раньше, чем загрузятся ресурсы с переводами, поэтому их тексты
 // здесь. Язык выбирается так же, как в приложении (PageLanguages.Resolve):
 // сохранённый выбор, иначе первый подходящий язык браузера, иначе русский.
 // Языки здесь те же, что у страницы, — это проверяет тест PageLocalizationTests.
 (() => {
     const Shell = {
-        ru: { loading: "Загрузка…", error: "Произошла непредвиденная ошибка.", reload: "Перезагрузить" },
-        en: { loading: "Loading…", error: "An unexpected error has occurred.", reload: "Reload" },
+        ru: { heading: "Транслитерация Корана", loading: "Загрузка…", error: "Произошла непредвиденная ошибка.", reload: "Перезагрузить" },
+        en: { heading: "Quran Transliteration", loading: "Loading…", error: "An unexpected error has occurred.", reload: "Reload" },
     };
 
     let stored = null;
@@ -27,9 +27,33 @@
 
     document.documentElement.lang = language;
 
+    // Доля загрузки (D22): Blazor пишет её в --blazor-load-percentage на <html>
+    // (свойство style). Полоса и проценты берут её прямо в CSS, а диктору то же
+    // число отдаёт aria-valuenow полосы. Скелет заменён приложением — наблюдать
+    // больше нечего.
+    const watchProgress = () => {
+        const bar = document.querySelector(".boot-progress");
+        if (!bar)
+            return;
+
+        const root = document.documentElement;
+        const observer = new MutationObserver(() => {
+            if (!bar.isConnected) {
+                observer.disconnect();
+                return;
+            }
+
+            const percent = parseFloat(root.style.getPropertyValue("--blazor-load-percentage"));
+            if (!Number.isNaN(percent))
+                bar.setAttribute("aria-valuenow", String(Math.floor(percent)));
+        });
+        observer.observe(root, { attributes: true, attributeFilter: ["style"] });
+    };
+
     const apply = () => {
         for (const element of document.querySelectorAll("[data-shell]"))
             element.textContent = texts[element.dataset.shell];
+        watchProgress();
     };
 
     if (document.readyState === "loading")
