@@ -431,7 +431,8 @@ namespace Transliterator.Tests.DocsTests
             var reduced = Regex.Match(css, @"@media \(prefers-reduced-motion: reduce\) \{(.*)$");
             Assert.True(reduced.Success, "the reduced-motion block is not found");
             Assert.Contains("animation: none !important; transition: none !important;", reduced.Groups[1].Value);
-            Assert.Contains(".picker-panel.is-closing, .feedback-panel.is-closing { display: none; }", reduced.Groups[1].Value);
+            // D20: уходящая плашка отмены очистки скрыта сразу — как уходящие панели.
+            Assert.Contains(".picker-panel.is-closing, .feedback-panel.is-closing, .toast.is-closing { display: none; }", reduced.Groups[1].Value);
         }
 
         /// <summary>
@@ -486,6 +487,48 @@ namespace Transliterator.Tests.DocsTests
             // Ни подложки, которая закрыла бы панель щелчком по полю, ни повтора вывода
             // в панелях профиля (E4) и «Как читать» (I10): вывод и так рядом.
             Assert.Matches(@"\.picker-backdrop, \.panel-preview \{ display: none; \}", rules);
+        }
+
+        /// <summary>
+        /// Поле ввода (D20): растёт по тексту без своей прокрутки, пустое предлагает
+        /// вставку из буфера, а очистку можно отменить плашкой внизу страницы.
+        /// </summary>
+        [Fact]
+        public void TheField_GrowsWithoutItsOwnScroll_OffersPaste_AndClearingCanBeUndone()
+        {
+            var app = Regex.Replace(Web("App.razor"), @"\s+", " ");
+            var css = Regex.Replace(Web("wwwroot", "css", "app.css"), @"\s+", " ");
+            var script = Web("wwwroot", "js", "page.js");
+
+            // Своей прокрутки нет: ни потолка в стилях, ни потолка в скрипте; ширину
+            // поля, которую сдвигает панель-колонка, отслеживает ResizeObserver.
+            var input = Regex.Match(css, @"\.composer-input \{([^}]*)\}");
+            Assert.True(input.Success, "the field style is not found");
+            Assert.DoesNotContain("max-height", input.Groups[1].Value);
+            Assert.Contains("overflow-y: hidden;", input.Groups[1].Value);
+            Assert.DoesNotContain("maxHeight", script);
+            Assert.Contains("element.style.height = `${element.scrollHeight}px`;", script);
+            Assert.Contains("new ResizeObserver(", script);
+
+            // «Вставить» — только у пустого поля и только если браузер читает буфер.
+            Assert.Contains("_canPaste = await JS.InvokeAsync<bool>(\"page.canPaste\");", app);
+            Assert.Matches(@"@if \(HasText\) \{ <button type=""button"" class=""icon-button""[^>]*@onclick=""ClearAsync"">.*?</button> \} else if \(_canPaste\) \{ <button type=""button"" class=""picker-toggle paste-button""[^>]*@onclick=""PasteAsync"">", app);
+            Assert.Contains("@if (!HasText && _canPaste) { <p class=\"composer-note\" role=\"status\">@_pasteNote</p> }", app);
+            Assert.Contains("navigator.clipboard.readText()", script);
+            Assert.Matches(@"_pasteNote = text is null \? L\[""Composer.PasteFailed""\]", app);
+
+            // Плашка: живая область в разметке всегда, внутри — текст и «Вернуть».
+            Assert.Matches(@"<div class=""toast-region"" role=""status"" aria-live=""polite""> @if \(_cleared is not null\) \{ <div class=""toast[^>]*> <span class=""toast-text"">@L\[""Toast.Cleared""\]</span> <button type=""button"" class=""toast-action""[^>]*@onclick=""UndoClearAsync"">@L\[""Toast.Undo""\]</button>", app);
+            Assert.Contains("_cleared = _arabic;", app);
+            Assert.Matches(@"private async Task UndoClearAsync\(\) \{ .*?_arabic = _cleared; _resizePending = true; Calculate\(\);.*?await _input.FocusAsync\(\);", app);
+            Assert.Matches(@"private void OnInput\(ChangeEventArgs e\) \{ [^}]*_ = HideToastAsync\(\); \}", app);
+
+            // Снизу по центру, над вырезом телефона, на токенах движения, и с 56rem
+            // поля шире значка отзыва в углу.
+            Assert.Matches(@"\.toast-region \{[^}]*position: fixed;[^}]*bottom: calc\(var\(--space-4\) \+ env\(safe-area-inset-bottom, 0px\)\);[^}]*justify-content: center;", css);
+            Assert.Matches(@"\.toast \{[^}]*animation: toast-in var\(--motion-duration\) var\(--motion-ease\);", css);
+            Assert.Matches(@"\.toast\.is-closing \{ animation: toast-out var\(--motion-duration\) var\(--motion-ease\) forwards; \}", css);
+            Assert.Matches(@"@media \(min-width: 56rem\) \{ \.toast-region \{[^}]*padding: 0 calc\(var\(--space-5\) \+ 2\.75rem \+ var\(--space-4\)\);", css);
         }
     }
 }

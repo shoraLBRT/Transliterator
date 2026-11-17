@@ -323,11 +323,12 @@ button {
     box-shadow: var(--shadow-md), 0 0 0 4px var(--foam-50);
 }
 
+/* Потолка у поля нет (D20): оно растёт по тексту целиком (page.resize), и у суры
+   прокручивается одна страница, а не ещё и поле в ней. */
 .composer-input {
     display: block;
     width: 100%;
     min-height: 3.5rem;
-    max-height: 45vh;
     padding: 1.1rem 1.5rem 0.4rem;
     border: 0;
     border-radius: var(--radius-card) var(--radius-card) 0 0;
@@ -356,6 +357,98 @@ button {
     justify-content: space-between;
     gap: var(--space-2);
     padding: var(--space-1) var(--space-3) var(--space-3);
+}
+
+/* «Вставить» (D20) — справа, на месте крестика; строка о неудаче — под кнопками,
+   своей строкой: рядом с кнопками на телефоне ей нет места. */
+.paste-button {
+    flex: none;
+    margin-inline-start: auto;
+}
+
+.composer-note {
+    margin: calc(-1 * var(--space-1)) var(--space-4) 0;
+    padding-bottom: var(--space-3);
+    font-size: var(--text-sm);
+    line-height: 1.35;
+    color: var(--ink-muted);
+    text-align: end;
+}
+
+.composer-note:empty {
+    display: none;
+}
+
+/* ---- Плашка отмены очистки (D20) ---- */
+
+/* Внизу по центру, над краем экрана с учётом выреза телефона. Область — во всю
+   ширину и не ловит нажатий, сама плашка — ловит. С 56rem в правом нижнем углу
+   стоит значок отзыва (2.75rem в 1.25rem от края): плашка уже, чем место между
+   такими полями слева и справа, и на него не наезжает. */
+.toast-region {
+    position: fixed;
+    right: 0;
+    bottom: calc(var(--space-4) + env(safe-area-inset-bottom, 0px));
+    left: 0;
+    z-index: 12;
+    display: flex;
+    justify-content: center;
+    padding: 0 var(--space-4);
+    pointer-events: none;
+}
+
+.toast {
+    max-width: 100%;
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-2) var(--space-2) var(--space-2) var(--space-4);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-pill);
+    background: var(--paper);
+    box-shadow: var(--shadow-lg);
+    color: var(--ink);
+    font-size: var(--text-md);
+    pointer-events: auto;
+    animation: toast-in var(--motion-duration) var(--motion-ease);
+}
+
+.toast.is-closing {
+    animation: toast-out var(--motion-duration) var(--motion-ease) forwards;
+}
+
+.toast-text {
+    min-width: 0;
+}
+
+.toast-action {
+    flex: none;
+    padding: 0.35rem 0.85rem;
+    border: 0;
+    border-radius: var(--radius-pill);
+    background: var(--foam-50);
+    color: var(--foam-700);
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.toast-action:hover {
+    background: var(--foam-100);
+}
+
+@keyframes toast-in {
+    from { opacity: 0; transform: translateY(0.75rem); }
+}
+
+@keyframes toast-out {
+    to { opacity: 0; transform: translateY(0.75rem); }
+}
+
+@media (min-width: 56rem) {
+    .toast-region {
+        bottom: calc(var(--space-5) + env(safe-area-inset-bottom, 0px));
+        padding: 0 calc(var(--space-5) + 2.75rem + var(--space-4));
+    }
 }
 
 .icon-button {
@@ -1936,7 +2029,8 @@ svg {
 .profile-settings-toggle,
 .about-feedback,
 .feedback-toggle,
-.feedback-send {
+.feedback-send,
+.toast-action {
     transition: var(--control-transition);
 }
 
@@ -1951,7 +2045,8 @@ svg {
 .profile-button:active:not(:disabled),
 .about-feedback:active:not(:disabled),
 .feedback-toggle:active:not(:disabled),
-.feedback-send:active:not(:disabled) {
+.feedback-send:active:not(:disabled),
+.toast-action:active {
     transform: scale(var(--press-scale));
 }
 
@@ -2186,7 +2281,8 @@ svg {
 
     /* Без анимации уходящей панели не на что задерживаться — скрыта сразу. */
     .picker-panel.is-closing,
-    .feedback-panel.is-closing {
+    .feedback-panel.is-closing,
+    .toast.is-closing {
         display: none;
     }
 

@@ -132,24 +132,67 @@ window.page = (() => {
             paused ? hintControl.pause() : hintControl.resume();
     }
 
-    /** Поле растёт по тексту до потолка из CSS, дальше прокручивается. */
+    /**
+     * Поле растёт по тексту целиком, своей прокрутки у него нет (D20): у длинной
+     * суры прежде прокручивались и страница, и поле в ней. Высота сбрасывается
+     * в auto, чтобы поле могло и сжаться, — на миг страница короче, и браузер
+     * поджал бы прокрутку; поэтому её место возвращается.
+     */
     function resize(element) {
         if (!element)
             return;
 
+        const scroll = window.scrollY;
         element.style.height = "auto";
-        const limit = parseFloat(getComputedStyle(element).maxHeight) || Infinity;
-        element.style.height = `${Math.min(element.scrollHeight, limit)}px`;
-        element.style.overflowY = element.scrollHeight > limit ? "auto" : "hidden";
+        element.style.height = `${element.scrollHeight}px`;
+        if (window.scrollY !== scroll)
+            window.scrollTo(window.scrollX, scroll);
     }
 
+    /**
+     * Пересчёт при вводе и при смене ширины поля (D20). Ширина меняется не только
+     * с окном: на широком экране открытая панель-колонка сдвигает поле, и окно
+     * об этом не знает, — поэтому следит ResizeObserver, и только за шириной:
+     * высоту поле меняет само. Арабский шрифт может догрузиться позже — тогда
+     * строки другой высоты, и высота пересчитывается ещё раз.
+     */
     function autosize(element) {
         if (!element)
             return;
 
         element.addEventListener("input", () => resize(element));
-        window.addEventListener("resize", () => resize(element));
+
+        if (window.ResizeObserver) {
+            let width = element.clientWidth;
+            new ResizeObserver(() => {
+                if (element.clientWidth !== width) {
+                    width = element.clientWidth;
+                    resize(element);
+                }
+            }).observe(element);
+        } else {
+            window.addEventListener("resize", () => resize(element));
+        }
+
+        document.fonts?.ready.then(() => resize(element));
         resize(element);
+    }
+
+    /**
+     * Вставка из буфера (D20). Кнопка «Вставить» показывается, только если
+     * браузер умеет читать буфер; читать его он может и не дать — запрет
+     * разрешения, страница не в фокусе. Тогда null, и страница скажет об этом.
+     */
+    function canPaste() {
+        return !!(navigator.clipboard && navigator.clipboard.readText);
+    }
+
+    async function paste() {
+        try {
+            return await navigator.clipboard.readText();
+        } catch {
+            return null;
+        }
     }
 
     /**
@@ -355,7 +398,7 @@ window.page = (() => {
     }
 
     return {
-        typewriter, hintPaused, autosize, resize, copy, guard, guardToken, guardReset, guardRemove,
+        typewriter, hintPaused, autosize, resize, canPaste, paste, copy, guard, guardToken, guardReset, guardRemove,
         load, save, storageSet, storageRemove, storageKeys,
         browserLanguages, sessionSave, sessionTake, reload, setDocument,
     };
