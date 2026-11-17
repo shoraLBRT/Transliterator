@@ -926,6 +926,13 @@ namespace Transliterator.Tests.DocsTests
 
             // Лист на телефоне держит Tab в себе: за подложкой кнопок не видно.
             Assert.Contains("const sheet = document.querySelector(\".picker-panel:not(.is-closing)\");", script);
+            // Лист модален только листом: aria-modal ставится уже 64rem и снимается в колонке.
+            Assert.Contains("panel.setAttribute(\"aria-modal\", \"true\");", script);
+            Assert.Contains("requestAnimationFrame(markModal);", script);
+
+            // Поле в фокусе — рамкой карточки цвета --focus-ring; Tab не прячет цель под липкими шапками.
+            Assert.Matches(@"\.composer:focus-within \{ border-color: var\(--focus-ring\);", css);
+            Assert.Contains("scroll-padding-top: calc(var(--panel-head-height) + var(--target-min));", css);
         }
     }
 }

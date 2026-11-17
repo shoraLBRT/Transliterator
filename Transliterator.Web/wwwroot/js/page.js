@@ -468,7 +468,25 @@ window.page = (() => {
      */
     function sheetOpen(open) {
         document.documentElement.classList.toggle("is-sheet-open", open);
+        requestAnimationFrame(markModal);
     }
+
+    /**
+     * Лист уже 64rem модален (D25): подложка закрывает страницу, и диктору
+     * говорится aria-modal="true" — читать за листом нечего. С 64rem колонка
+     * рядом с полем не модальна, атрибута нет. Та же граница, что у фокуса ниже;
+     * ширина меняется — атрибут переставляется.
+     */
+    function markModal() {
+        for (const panel of document.querySelectorAll(".picker-panel")) {
+            if (!wide() && !panel.classList.contains("is-closing"))
+                panel.setAttribute("aria-modal", "true");
+            else
+                panel.removeAttribute("aria-modal");
+        }
+    }
+
+    window.matchMedia("(min-width: 64rem)").addEventListener?.("change", markModal);
 
     /**
      * Фокус в нижнем листе (D25). Уже 64rem лист закрывает страницу подложкой, и Tab

@@ -340,8 +340,9 @@ button {
     transition: border-color var(--motion-duration) var(--ease-soft), box-shadow var(--motion-duration) var(--ease-soft);
 }
 
+/* Рамка карточки в фокусе — --focus-ring (D25): пена-300 давала 1.5:1 к фону. */
 .composer:focus-within {
-    border-color: var(--foam-300);
+    border-color: var(--focus-ring);
     box-shadow: var(--shadow-md), 0 0 0 4px var(--foam-50);
 }
 
@@ -610,6 +611,9 @@ svg {
 
 .picker-panel {
     --panel-head-height: 3.5rem; /* шапка с ручкой: к её низу липнут заголовки внутри */
+    /* Tab прокручивает лист к цели ниже липких шапки панели и заголовка блока
+       правил (D25): иначе первая стрелка правила пряталась под заголовком. */
+    scroll-padding-top: calc(var(--panel-head-height) + var(--target-min));
     position: fixed;
     right: 0;
     bottom: 0;
