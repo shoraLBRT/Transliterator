@@ -31,6 +31,11 @@ namespace Transliterator.Tests.DocsTests
             var side = app[rail..railEnd];
 
             Assert.Contains("<SurahPicker", field);
+
+            // D24: быстрый старт под полем — тоже выбор суры (ChooseAsync), а не
+            // настройка чтения или профиля; те по-прежнему только сбоку.
+            Assert.Contains("class=\"fold quick-start", field);
+            Assert.Contains("@onclick=\"() => ChooseAsync(surah)\"", field);
             Assert.DoesNotContain("<ReadingPicker", field);
             Assert.DoesNotContain("<ProfilePicker", field);
 
