@@ -62,11 +62,24 @@
     --motion-fast: 0.15s;
     --motion-duration: 0.2s;
     --motion-slow: 0.4s;
+    --motion-instant: 0s; /* шаг без хода: visibility свёрнутого блока (D21) */
     --motion-blink: 1s;
     --motion-pulse: 1.2s;
     --motion-ease: cubic-bezier(0.2, 0, 0, 1);
     --ease-soft: ease;
     --ease-in-out: ease-in-out;
+    /* Микровзаимодействия (D21): пружина ручки переключателя — с лёгким перелётом,
+       шаг каскада строк панели, сжатие кнопки под пальцем (широкие строки — меньше)
+       и один переход на все состояния кнопок — наведение, нажатие, выбор. */
+    --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+    --stagger-step: 20ms;
+    --press-scale: 0.97;
+    --press-scale-wide: 0.985;
+    --control-transition: background-color var(--motion-fast) var(--ease-soft),
+                          border-color var(--motion-fast) var(--ease-soft),
+                          color var(--motion-fast) var(--ease-soft),
+                          box-shadow var(--motion-fast) var(--ease-soft),
+                          transform var(--motion-fast) var(--motion-ease);
 
     --font-ui: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 
@@ -349,7 +362,6 @@ button {
     background: transparent;
     color: var(--ink-muted);
     cursor: pointer;
-    transition: background-color var(--motion-fast) var(--ease-soft), color var(--motion-fast) var(--ease-soft);
 }
 
 .icon-button:hover {
@@ -382,7 +394,6 @@ svg {
     font-size: var(--text-md);
     font-weight: 500;
     cursor: pointer;
-    transition: background-color var(--motion-fast) var(--ease-soft), border-color var(--motion-fast) var(--ease-soft);
 }
 
 /* Текст кнопки не переносится: длинное имя своего профиля обрезается многоточием
@@ -484,7 +495,6 @@ svg {
     background: var(--paper);
     box-shadow: var(--shadow-md);
     color: var(--foam-700);
-    transition: background-color var(--motion-fast) var(--ease-soft), border-color var(--motion-fast) var(--ease-soft);
 }
 
 .side-rail .picker-toggle:hover,
@@ -730,7 +740,7 @@ svg {
     height: 1.1rem;
     border-radius: var(--radius-pill);
     background: var(--switch-track);
-    transition: background var(--motion-fast);
+    transition: background-color var(--motion-duration) var(--ease-soft);
 }
 
 .reading-switch-track::after {
@@ -742,7 +752,9 @@ svg {
     height: 0.8rem;
     border-radius: 50%;
     background: var(--switch-knob);
-    transition: transform var(--motion-fast), background var(--motion-fast);
+    /* Ручка доходит до края с лёгким перелётом и возвращается (D21). */
+    transition: transform var(--motion-duration) var(--ease-spring),
+                background-color var(--motion-duration) var(--ease-soft);
 }
 
 .reading-switch[aria-checked="true"] {
@@ -767,6 +779,35 @@ svg {
 
 .reading-block-body {
     padding: 0.6rem 0 0.5rem;
+}
+
+/* Свёрнутый блок (D21): блок правил, описание правила, «Настройки профиля».
+   Раскрывается и сворачивается плавно — высота строки сетки 0fr ↔ 1fr и
+   прозрачность, — а не рывком, как с hidden. Отступы — у содержимого внутри
+   .fold-inner: свёрнутый блок высотой ровно 0. Свёрнутый ещё и inert в разметке:
+   Tab в него не попадает, диктор его не читает; visibility гаснет в конце хода,
+   и до тех пор блок виден уходящим. */
+.fold {
+    display: grid;
+    grid-template-rows: 0fr;
+    opacity: 0;
+    visibility: hidden;
+    transition: grid-template-rows var(--motion-duration) var(--motion-ease),
+                opacity var(--motion-duration) var(--ease-soft),
+                margin-top var(--motion-duration) var(--motion-ease),
+                visibility var(--motion-instant) linear var(--motion-duration);
+}
+
+.fold.is-open {
+    grid-template-rows: 1fr;
+    opacity: 1;
+    visibility: visible;
+    transition-delay: var(--motion-instant);
+}
+
+.fold-inner {
+    min-height: 0;
+    overflow: hidden;
 }
 
 /* Заголовок блока — заголовок, а не ещё одна строка (I6): отбит линией,
@@ -823,7 +864,7 @@ svg {
     stroke-width: 2;
     stroke-linecap: round;
     stroke-linejoin: round;
-    transition: transform var(--motion-fast);
+    transition: transform var(--motion-duration) var(--motion-ease); /* в такт раскрытию блока (D21) */
 }
 
 .reading-group-toggle[aria-expanded="true"] .reading-group-chevron {
@@ -899,7 +940,7 @@ svg {
     stroke-width: 2;
     stroke-linecap: round;
     stroke-linejoin: round;
-    transition: transform var(--motion-fast);
+    transition: transform var(--motion-duration) var(--motion-ease); /* в такт раскрытию блока (D21) */
 }
 
 .reading-rule-toggle[aria-expanded="true"] .reading-rule-chevron {
@@ -944,7 +985,14 @@ svg {
     color: var(--ink-muted);
 }
 
+/* Свёрнутое описание не занимает и зазора сетки над собой — строка правила той же
+   высоты, что прежде с hidden (D21). */
+.reading-rule-main > .fold:not(.is-open) {
+    margin-top: -0.15rem;
+}
+
 .reading-rule-text {
+    display: block;
     margin-top: 0.15rem;
     font-size: var(--text-sm);
     line-height: 1.45;
@@ -989,7 +1037,7 @@ svg {
     cursor: pointer;
 }
 
-.profile-button:hover {
+.profile-button:hover:not(:disabled) {
     background: var(--foam-50);
 }
 
@@ -1154,7 +1202,7 @@ svg {
     stroke-width: 2;
     stroke-linecap: round;
     stroke-linejoin: round;
-    transition: transform var(--motion-fast);
+    transition: transform var(--motion-duration) var(--motion-ease); /* в такт раскрытию блока (D21) */
 }
 
 .profile-settings-toggle[aria-expanded="true"] .profile-settings-chevron {
@@ -1167,9 +1215,6 @@ svg {
     padding: 0.6rem 0 0.25rem;
 }
 
-.profile-rules[hidden] {
-    display: none;
-}
 
 /* Таблица графем (E9): table-layout: fixed даёт столбцам одну ширину во всех
    строках, а ширину столбцов задают col, а не содержимое ячеек. Буква и графема —
@@ -1610,7 +1655,7 @@ svg {
     cursor: pointer;
 }
 
-.feedback .feedback-send:hover {
+.feedback .feedback-send:hover:not(:disabled) {
     background: var(--ink);
 }
 
@@ -1651,7 +1696,6 @@ svg {
         box-shadow: var(--shadow-md);
         color: var(--ink-muted);
         text-decoration: none;
-        transition: color var(--motion-fast) var(--ease-soft), border-color var(--motion-fast) var(--ease-soft);
     }
 
     .feedback-toggle:hover,
@@ -1672,6 +1716,70 @@ svg {
         width: 22rem;
     }
 }
+
+/* ---- Микровзаимодействия (D21) ---- */
+
+/* Все кнопки откликаются одинаково: наведение, выбор и нажатие сменяются одним
+   переходом из токенов, под пальцем кнопка чуть сжимается, широкая строка
+   списка — меньше. Выключенная кнопка не откликается ни на что. */
+.icon-button,
+.picker-toggle,
+.side-rail .picker-toggle svg,
+.copy-button,
+.language-option,
+.picker-item,
+.reading-mode,
+.reading-count,
+.reading-switch,
+.reading-group-toggle,
+.reading-rule-toggle,
+.profile-button,
+.profile-settings-toggle,
+.about-feedback,
+.feedback-toggle,
+.feedback-send {
+    transition: var(--control-transition);
+}
+
+.icon-button:active:not(:disabled),
+.picker-toggle:active:not(:disabled),
+.copy-button:active:not(:disabled),
+.language-option:active:not([aria-pressed="true"]),
+.reading-count:active:not(:disabled),
+.reading-switch:active:not(:disabled),
+.reading-rule-toggle:active:not(:disabled),
+.profile-button:active:not(:disabled),
+.about-feedback:active:not(:disabled),
+.feedback-toggle:active:not(:disabled),
+.feedback-send:active:not(:disabled) {
+    transform: scale(var(--press-scale));
+}
+
+.picker-item:active:not(:disabled),
+.reading-mode:active:not(:disabled),
+.reading-group-toggle:active:not(:disabled),
+.profile-settings-toggle:active:not(:disabled) {
+    transform: scale(var(--press-scale-wide));
+}
+
+/* Строки панели при её открытии появляются каскадом: прозрачность и сдвиг
+   на 4px, задержка растёт у первых шести строк, дальше одна — весь каскад
+   не дольше 250ms. Строки ниже видимой части панели ждут столько же. */
+@keyframes item-in {
+    from { opacity: 0; transform: translateY(4px); }
+}
+
+.picker-list > li,
+.reading-modes > .reading-mode {
+    animation: item-in var(--motion-fast) var(--motion-ease) backwards;
+    animation-delay: calc(var(--stagger-step) * 5);
+}
+
+.picker-list > li:nth-child(1), .reading-modes > .reading-mode:nth-child(1) { animation-delay: 0s; }
+.picker-list > li:nth-child(2), .reading-modes > .reading-mode:nth-child(2) { animation-delay: var(--stagger-step); }
+.picker-list > li:nth-child(3), .reading-modes > .reading-mode:nth-child(3) { animation-delay: calc(var(--stagger-step) * 2); }
+.picker-list > li:nth-child(4), .reading-modes > .reading-mode:nth-child(4) { animation-delay: calc(var(--stagger-step) * 3); }
+.picker-list > li:nth-child(5), .reading-modes > .reading-mode:nth-child(5) { animation-delay: calc(var(--stagger-step) * 4); }
 
 /* ---- Широкий экран: панель сбоку (D6) ---- */
 
