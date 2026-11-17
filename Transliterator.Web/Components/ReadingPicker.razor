@@ -15,7 +15,7 @@
 <div class="picker">
     @* Значок — звуковая волна: кнопка выбирает, как текст звучит. *@
     <button type="button" class="picker-toggle" aria-expanded="@(IsOpen ? "true" : "false")"
-            aria-controls="reading-menu" title="@ModeName(Choice.Mode)" @onclick="ToggleAsync" @ref="ToggleButton">
+            aria-controls="reading-menu" @onclick="ToggleAsync" @ref="ToggleButton">
         <svg viewBox="0 0 24 24" aria-hidden="true">
             <path d="M4 10v4M8 7v10M12 4v16M16 8v8M20 11v2" />
         </svg>
