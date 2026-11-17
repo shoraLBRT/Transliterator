@@ -173,7 +173,7 @@
     <value>Счёт — сколько тянуть гласную.</value>
   </data>
   <data name="Reading.SwitchableLead" xml:space="preserve">
-    <value>Переключатель выключает правило.</value>
+    <value>Правила с переключателем можно не читать.</value>
   </data>
   <data name="Reading.More" xml:space="preserve">
     <value>Подробнее</value>
@@ -226,7 +226,7 @@
     <value>Профиль записи</value>
   </data>
   <data name="Profile.Caption" xml:space="preserve">
-    <value>Профиль решает, какими буквами записать каждый звук</value>
+    <value>Профиль выбирает буквы для каждого звука</value>
   </data>
   <data name="Profile.ListLabel" xml:space="preserve">
     <value>Профиль</value>
@@ -260,14 +260,14 @@
     <value>Переименовать</value>
   </data>
   <data name="Profile.Conflicts" xml:space="preserve">
-    <value>Спорных графем: {0}. Профиль сохранён, но некоторые буквы по выводу не отличить — подробности у букв ниже.</value>
+    <value>Совпадающих записей: {0}. Профиль сохранён, но эти буквы в выводе не отличить; подробности ниже, у букв.</value>
     <comment>{0} — count</comment>
   </data>
   <data name="Preview.Label" xml:space="preserve">
     <value>Вывод</value>
   </data>
   <data name="Output.Unchanged" xml:space="preserve">
-    <value>Вывод не изменился: этой настройке нечего менять в тексте</value>
+    <value>Вывод не изменился: настройка здесь ничего не меняет</value>
   </data>
   <data name="Preview.Empty" xml:space="preserve">
     <value>Введите текст в поле — здесь будет видно, как он пишется</value>
@@ -314,18 +314,18 @@
     <comment>{0} — profile key</comment>
   </data>
   <data name="Conflict.Composed" xml:space="preserve">
-    <value>«{0}» у {1} = «{2}» у {3} + «{4}» у {5}: {1} по выводу не отличить от {3}, за которой идёт {5}.</value>
+    <value>«{0}» у {1} = «{2}» у {3} + «{4}» у {5}: {1} в выводе не отличить от {3} и {5} подряд.</value>
     <comment>{0}, {2}, {4} — graphemes; {1}, {3}, {5} — Arabic letters</comment>
   </data>
   <data name="Conflict.Same" xml:space="preserve">
-    <value>«{0}» — так же пишется {1}: {2} и {1} по выводу не отличить.</value>
+    <value>«{0}» так же пишется {1}: {2} и {1} в выводе не отличить.</value>
     <comment>{0} — grapheme; {1}, {2} — Arabic letters</comment>
   </data>
   <data name="Feedback.Toggle" xml:space="preserve">
     <value>Обратная связь</value>
   </data>
   <data name="Feedback.Title" xml:space="preserve">
-    <value>Ошибка в транслитерации или отзыв</value>
+    <value>Отзыв или ошибка</value>
   </data>
   <data name="Feedback.MessageLabel" xml:space="preserve">
     <value>Сообщение</value>
@@ -334,16 +334,16 @@
     <value>Что понравилось, что не так?</value>
   </data>
   <data name="Feedback.Attach" xml:space="preserve">
-    <value>Приложить текст из поля и транслитерацию — так ошибку проще повторить</value>
+    <value>Приложить текст и транслитерацию — так ошибку проще повторить</value>
   </data>
   <data name="Feedback.Saved" xml:space="preserve">
     <value>Написанное сохранено.</value>
   </data>
   <data name="Feedback.ViaGitHub" xml:space="preserve">
-    <value>Отправить через форму на GitHub</value>
+    <value>Отправить через GitHub</value>
   </data>
   <data name="Feedback.NeedsAccount" xml:space="preserve">
-    <value>— для неё нужен аккаунт.</value>
+    <value>— нужен аккаунт.</value>
   </data>
   <data name="Feedback.ViewOnGitHub" xml:space="preserve">
     <value>Посмотреть на GitHub</value>
@@ -355,13 +355,13 @@
     <value>Отправить</value>
   </data>
   <data name="Feedback.Truncated" xml:space="preserve">
-    <value>Текст длинный, и в форму попадёт только его начало. Оставьте в поле только место с ошибкой.</value>
+    <value>Текст длинный: в форму попадёт только начало. Оставьте в поле место с ошибкой.</value>
   </data>
   <data name="Feedback.Opened" xml:space="preserve">
-    <value>Форма открылась в новой вкладке — отправьте её там. Написанное здесь остаётся, пока страница открыта.</value>
+    <value>Форма открылась в новой вкладке: отправьте её там. Текст здесь сохранится, пока страница открыта.</value>
   </data>
   <data name="Feedback.WillOpen" xml:space="preserve">
-    <value>Откроется форма на GitHub: там сообщение можно поправить и отправить. Нужен аккаунт GitHub.</value>
+    <value>Откроется форма GitHub: там сообщение можно поправить и отправить (нужен аккаунт).</value>
   </data>
   <data name="Feedback.OpenForm" xml:space="preserve">
     <value>Открыть форму на GitHub</value>
@@ -370,7 +370,7 @@
     <value>Спасибо, сообщение получено.</value>
   </data>
   <data name="Feedback.GuardFailed" xml:space="preserve">
-    <value>Проверка «не робот» не загрузилась — возможно, её блокирует расширение браузера.</value>
+    <value>Проверка «не робот» не загрузилась: возможно, её блокирует расширение браузера.</value>
   </data>
   <data name="Feedback.NotVerified" xml:space="preserve">
     <value>Проверка «не робот» не прошла. Попробуйте отправить ещё раз.</value>
@@ -394,7 +394,7 @@
     <value>Зачем эта страница</value>
   </data>
   <data name="About.Why" xml:space="preserve">
-    <value>Страница записывает арабский текст Корана буквами, понятными тем, кто не читает по-арабски. На многих сайтах такая запись — транслитерация — сделана с ошибками: разные арабские звуки сливаются в одну букву, а правила чтения теряются.</value>
+    <value>Коран буквами, понятными без знания арабского: у каждого звука своя буква, правила чтения сохранены.</value>
   </data>
   <data name="About.ExampleTitle" xml:space="preserve">
     <value>Пример</value>
@@ -411,27 +411,27 @@
     <comment>The value next to it is computed live by the pipeline with the current profile</comment>
   </data>
   <data name="About.ExampleNote" xml:space="preserve">
-    <value>В обычной записи одна «х» стоит и за ح, и за ه, хотя звучат они по-разному, и не видно, где гласный долгий. Здесь у разных звуков разные буквы, а долгота видна.</value>
+    <value>Обычно ح и ه пишут одной «х», а долготу не видно. Здесь у них разные буквы, и долгота видна.</value>
   </data>
   <data name="About.HowTitle" xml:space="preserve">
     <value>Как это устроено</value>
   </data>
   <data name="About.How" xml:space="preserve">
-    <value>Текст проходит конвейер, в нём {0}. По порядку учитываются правила таджвида — паузы, слияние звуков, носовые звуки, твёрдость и мягкость, долгота гласных, отзвук, — и только потом текст становится буквами.</value>
+    <value>Сначала применяются правила таджвида, затем текст записывается буквами. Это {0} обработки.</value>
     <comment>{0} is the stage count with its noun (StageCount), taken from the pipeline</comment>
   </data>
   <data name="About.ProfilesTitle" xml:space="preserve">
     <value>Своя запись</value>
   </data>
   <data name="About.Profiles" xml:space="preserve">
-    <value>Если вы привыкли к другим обозначениям, запись можно поменять: в панели профиля нажмите «{0}» и поправьте буквы — они под стрелкой «{1}».</value>
+    <value>Привычны другие обозначения? В панели профиля нажмите «{0}» и поправьте буквы под стрелкой «{1}».</value>
     <comment>{0}, {1} are the button texts Profile.Create and Profile.Settings</comment>
   </data>
   <data name="About.ThanksTitle" xml:space="preserve">
     <value>Спасибо</value>
   </data>
   <data name="About.Thanks" xml:space="preserve">
-    <value>Спасибо всем, кто пишет отзывы: по ним страница становится точнее. И спасибо, что делитесь ею с теми, кому она пригодится.</value>
+    <value>Спасибо за отзывы: по ним страница становится точнее. И за то, что делитесь ею.</value>
   </data>
   <data name="About.FeedbackAction" xml:space="preserve">
     <value>Написать отзыв</value>

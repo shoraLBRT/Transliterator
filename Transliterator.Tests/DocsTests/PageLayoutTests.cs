@@ -364,8 +364,15 @@ namespace Transliterator.Tests.DocsTests
             Assert.DoesNotContain("visually-hidden", toggle.Groups[1].Value);
             Assert.Contains("class=\"picker-panel about-panel @Closing.CssClass\"", about);
 
-            foreach (var heading in new[] { "WhyTitle", "ExampleTitle", "HowTitle", "ProfilesTitle", "ThanksTitle" })
+            foreach (var heading in new[] { "WhyTitle", "ExampleTitle" })
                 Assert.Contains($"<h3 class=\"about-heading\">@L[\"About.{heading}\"]</h3>", about);
+
+            // D26: лид и пример видны сразу, остальные разделы — под заголовком-кнопкой
+            // (aria-expanded, свёрнутое тело inert + aria-hidden).
+            foreach (var (id, heading) in new[] { ("how", "HowTitle"), ("profiles", "ProfilesTitle"), ("thanks", "ThanksTitle") })
+                Assert.Contains($"@Folded(\"{id}\", \"About.{heading}\", ", about);
+            Assert.Contains("class=\"about-fold-toggle\" aria-expanded=", about);
+            Assert.Contains("inert=\"@(!open)\" aria-hidden=\"@(open ? null : \"true\")\"", about);
 
             Assert.Contains("private string? Ours => Transliterate?.Invoke(ExampleArabic);", about);
             Assert.Contains("<dd>@ours</dd>", about);

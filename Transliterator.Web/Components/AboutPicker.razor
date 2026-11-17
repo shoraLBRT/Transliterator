@@ -56,21 +56,10 @@
                     <p>@L["About.ExampleNote"]</p>
                 </section>
 
-                <section class="about-section">
-                    <h3 class="about-heading">@L["About.HowTitle"]</h3>
-                    <p>@L["About.How", L.Count("StageCount", TransliterationService.StageCount)]</p>
-                </section>
-
-                <section class="about-section">
-                    <h3 class="about-heading">@L["About.ProfilesTitle"]</h3>
-                    <p>@L["About.Profiles", L["Profile.Create"].Value, L["Profile.Settings"].Value]</p>
-                </section>
-
-                <section class="about-section">
-                    <h3 class="about-heading">@L["About.ThanksTitle"]</h3>
-                    <p>@L["About.Thanks"]</p>
-                    <button type="button" class="about-feedback" @onclick="OpenFeedbackAsync">@L["About.FeedbackAction"]</button>
-                </section>
+                @* Остальные разделы свёрнуты (D26): лид и пример читаются сразу, подробности — по нажатию. *@
+                @Folded("how", "About.HowTitle", HowBody)
+                @Folded("profiles", "About.ProfilesTitle", ProfilesBody)
+                @Folded("thanks", "About.ThanksTitle", ThanksBody)
             </div>
         </div>
     }
@@ -96,6 +85,54 @@
     public EventCallback OpenFeedback { get; set; }
 
     protected override string Panel => "about";
+
+    /// <summary>Раскрытые разделы (D26). При открытии панели все свёрнуты.</summary>
+    private readonly HashSet<string> _openSections = new();
+
+    protected override Task BeforeOpenAsync()
+    {
+        _openSections.Clear();
+        return Task.CompletedTask;
+    }
+
+    private void ToggleSection(string id)
+    {
+        if (!_openSections.Remove(id))
+            _openSections.Add(id);
+    }
+
+    /// <summary>
+    /// Раздел с заголовком-кнопкой и свёрнутым телом (D26): тот же приём `.fold`,
+    /// что у блоков правил, — свёрнутое тело inert и aria-hidden.
+    /// </summary>
+    private RenderFragment Folded(string id, string titleKey, RenderFragment body) => __builder =>
+    {
+        var open = _openSections.Contains(id);
+        var bodyId = $"about-fold-{id}";
+        <section class="about-section">
+            <h3 class="about-heading">
+                <button type="button" class="about-fold-toggle" aria-expanded="@(open ? "true" : "false")" aria-controls="@bodyId"
+                        @onclick="() => ToggleSection(id)">
+                    <span>@L[titleKey]</span>
+                    <svg class="about-fold-chevron" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M6 9l6 6 6-6" />
+                    </svg>
+                </button>
+            </h3>
+            <div id="@bodyId" class="fold @(open ? "is-open" : null)" inert="@(!open)" aria-hidden="@(open ? null : "true")">
+                <div class="fold-inner">@body</div>
+            </div>
+        </section>
+    };
+
+    private RenderFragment HowBody => @<p>@L["About.How", L.Count("StageCount", TransliterationService.StageCount)]</p>;
+
+    private RenderFragment ProfilesBody => @<p>@L["About.Profiles", L["Profile.Create"].Value, L["Profile.Settings"].Value]</p>;
+
+    private RenderFragment ThanksBody => @<text>
+        <p>@L["About.Thanks"]</p>
+        <button type="button" class="about-feedback" @onclick="OpenFeedbackAsync">@L["About.FeedbackAction"]</button>
+    </text>;
 
     private string? Ours => Transliterate?.Invoke(ExampleArabic);
 
