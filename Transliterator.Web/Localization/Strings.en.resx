@@ -78,6 +78,12 @@
   <data name="Result.Title" xml:space="preserve">
     <value>Transliteration</value>
   </data>
+  <data name="Result.Arabic" xml:space="preserve">
+    <value>With Arabic</value>
+  </data>
+  <data name="Result.ArabicTitle" xml:space="preserve">
+    <value>Show the Arabic line above each line of the transliteration</value>
+  </data>
   <data name="Result.ReadingChip" xml:space="preserve">
     <value>Reading level: {0}. Change</value>
   </data>

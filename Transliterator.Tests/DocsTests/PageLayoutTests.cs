@@ -396,6 +396,50 @@ namespace Transliterator.Tests.DocsTests
         }
 
         /// <summary>
+        /// «С арабским» (D18): тумблер в шапке карточки над каждой строкой вывода
+        /// раскрывает её арабскую строку поля — справа налево, тише, шрифтом поля,
+        /// не выделяемую мышью. Пары — из ядра (ResultLine.Sources), строке без пары
+        /// арабской нет. Выбор помнится в браузере, а кнопка копирует только вывод.
+        /// </summary>
+        [Fact]
+        public void TheArabicToggle_ShowsEachLinesArabicAbove_RemembersTheChoice_AndCopiesOnlyTheResult()
+        {
+            var app = Regex.Replace(Web("App.razor"), @"\s+", " ");
+            var css = Regex.Replace(Web("wwwroot", "css", "app.css"), @"\s+", " ");
+
+            var card = Regex.Match(app, @"<section class=""result"" aria-labelledby=""result-title"">(.*?)</section>");
+            Assert.True(card.Success, "the output card is not found");
+            var head = Regex.Match(card.Groups[1].Value, @"<div class=""result-head"">(.*?)<div class=""result-text""");
+            Assert.True(head.Success, "the card head is not found");
+
+            // Тумблер — в шапке перед «Копировать», с aria-pressed и подписью из строк.
+            Assert.Matches(@"<button type=""button"" class=""arabic-toggle"" aria-pressed=""@\(_arabicLines \? ""true"" : ""false""\)"" title=""@L\[""Result\.ArabicTitle""\]"" @onclick=""ToggleArabicLinesAsync"">.*<span class=""arabic-toggle-label"">@L\[""Result\.Arabic""\]</span> </button>.*<button type=""button"" class=""copy-button", head.Groups[1].Value);
+
+            // Над строкой вывода — её арабская строка, свёрнутая и inert без тумблера.
+            Assert.Contains("var sources = ResultLine.Sources(_arabic, lines.Count);", card.Groups[1].Value);
+            Assert.Contains("if (sources[i] is { } source) { <div class=\"fold result-source @(_arabicLines ? \"is-open\" : null)\" inert=\"@(!_arabicLines)\"><div class=\"fold-inner\"><p class=\"result-source-text\" dir=\"rtl\" lang=\"ar\">@source</p></div></div> }", card.Groups[1].Value);
+            Assert.Matches(@"\.result-source-text \{[^}]*font-family: var\(--font-arabic\);[^}]*color: var\(--ink-muted\); text-align: right;[^}]*user-select: none;", css);
+
+            // Близость: арабская вплотную к своей строке, пары — с воздухом и чертой.
+            Assert.Matches(@"\.result-line \+ \.result-source\.is-open \{ margin-top: var\(--space-2\); padding-top: var\(--space-3\); border-top: 1px solid var\(--foam-100\); \}", css);
+            Assert.Matches(@"\.result-source\.is-open \+ \.result-line \{ margin-top: 0; padding-top: 0\.15rem; \}", css);
+            Assert.Matches(@"\.result-source-text \{[^}]*line-height: 1\.6;", css);
+
+            // На телефоне — одна иконка, подпись остаётся имени кнопки.
+            Assert.Matches(@"@media \(max-width: 36rem\) \{.*\.arabic-toggle-label \{ position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect\(0 0 0 0\);", css);
+
+            // Выбор помнится; копирование — только вывод.
+            Assert.Contains("private const string ArabicLinesKey = \"transliterator.arabicLines\";", app);
+            Assert.Contains("await JS.InvokeAsync<string?>(\"page.load\", ArabicLinesKey)", app);
+            Assert.Contains("await JS.InvokeVoidAsync(\"page.save\", ArabicLinesKey, _arabicLines ? \"1\" : string.Empty);", app);
+            Assert.Matches(@"if \(firstRender\) \{.*await RestoreArabicLinesAsync\(\);", app);
+            Assert.Contains("copied = await JS.InvokeAsync<bool>(\"page.copy\", _result);", app);
+
+            Assert.Equal("С арабским", PageStrings.Web("ru")["Result.Arabic"]);
+            Assert.Equal("With Arabic", PageStrings.Web("en")["Result.Arabic"]);
+        }
+
+        /// <summary>
         /// Карточка вывода (D17): видимая подпись, метки ступени и профиля, которые
         /// открывают свои панели, и кнопка копирования в шапке, липнущей к верху
         /// экрана. Аят — строкой, номер — круглым знаком с цифрой текстом, а кнопка
@@ -428,7 +472,7 @@ namespace Transliterator.Tests.DocsTests
 
             // Номер аята — знак с цифрой текстом, пробел перед ним — в тексте строки.
             // Текст строки — через ChangedText (D19): изменённые сменой настройки слова в mark.
-            Assert.Contains("@{ var lines = ResultLine.Split(_result); } @for (var i = 0; i < lines.Count; i++)", card.Groups[1].Value);
+            Assert.Contains("@{ var lines = ResultLine.Split(_result); var sources = ResultLine.Sources(_arabic, lines.Count); } @for (var i = 0; i < lines.Count; i++)", card.Groups[1].Value);
             Assert.Contains("<div class=\"result-line\"><ChangedText Segments=\"Part(i, 0, line.Lead)\" /><span class=\"ayah-tail\"><ChangedText Segments=\"Part(i, line.Lead.Length, line.Word)\" />@(line.Gap)<span class=\"ayah-mark\">@line.Ayah</span></span></div>", card.Groups[1].Value);
             Assert.Matches(@"\.ayah-tail \{ white-space: nowrap; \}", css);
             Assert.Contains("<div class=\"result-line\"><ChangedText Segments=\"Part(i, 0, line.Text)\" /></div>", card.Groups[1].Value);

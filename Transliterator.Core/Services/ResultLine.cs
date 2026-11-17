@@ -56,6 +56,23 @@ namespace Transliterator.Core.Services
                       : new ResultLine(line, null))
                   .ToArray();
 
+        /// <summary>
+        /// Арабские строки поля к строкам вывода (D18): транслитерация сохраняет
+        /// переводы строки, и у суры строка поля — тот же аят, что строка вывода.
+        /// Сопоставление — по номеру строки: у строки вывода, которой в поле нет
+        /// пары или пара пуста (лишние пустые строки, ручной ввод), — <c>null</c>,
+        /// и страница арабскую строку над ней не показывает.
+        /// </summary>
+        /// <param name="arabic">Текст поля.</param>
+        /// <param name="count">Число строк вывода.</param>
+        public static IReadOnlyList<string?> Sources(string arabic, int count)
+        {
+            var source = arabic.Split('\n');
+            return Enumerable.Range(0, count)
+                             .Select(i => i < source.Length && source[i].Trim() is { Length: > 0 } line ? line : null)
+                             .ToArray();
+        }
+
         /// <summary>Строки обратно в текст — тот же, что был разбит.</summary>
         public static string Join(IEnumerable<ResultLine> lines) =>
             string.Join('\n', lines.Select(line => line.Text + line.Ayah));
