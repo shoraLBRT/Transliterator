@@ -173,7 +173,7 @@
     <value>Счёт — сколько тянуть гласную.</value>
   </data>
   <data name="Reading.SwitchableLead" xml:space="preserve">
-    <value>Переключатель выключает правило.</value>
+    <value>Правила с переключателем можно не читать.</value>
   </data>
   <data name="Reading.More" xml:space="preserve">
     <value>Подробнее</value>
@@ -394,7 +394,7 @@
     <value>Зачем эта страница</value>
   </data>
   <data name="About.Why" xml:space="preserve">
-    <value>Арабский текст Корана — буквами, понятными без арабского. Разные звуки — разные буквы.</value>
+    <value>Коран буквами, понятными без знания арабского: у каждого звука своя буква, правила чтения сохранены.</value>
   </data>
   <data name="About.ExampleTitle" xml:space="preserve">
     <value>Пример</value>
@@ -411,7 +411,7 @@
     <comment>The value next to it is computed live by the pipeline with the current profile</comment>
   </data>
   <data name="About.ExampleNote" xml:space="preserve">
-    <value>У ح и ه обычно одна «х», долгота не видна. Здесь буквы разные, долгота видна.</value>
+    <value>Обычно ح и ه пишут одной «х», а долготу не видно. Здесь у них разные буквы, и долгота видна.</value>
   </data>
   <data name="About.HowTitle" xml:space="preserve">
     <value>Как это устроено</value>

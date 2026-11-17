@@ -169,7 +169,7 @@
     <value>A count is how long to hold a vowel.</value>
   </data>
   <data name="Reading.SwitchableLead" xml:space="preserve">
-    <value>A switch turns a rule off.</value>
+    <value>Rules with a switch can be skipped.</value>
   </data>
   <data name="Reading.More" xml:space="preserve">
     <value>More</value>
@@ -379,7 +379,7 @@
     <value>Why this page</value>
   </data>
   <data name="About.Why" xml:space="preserve">
-    <value>The Quran in letters you can read without Arabic. Different sounds get different letters.</value>
+    <value>The Quran in letters you can read without Arabic: each sound has its own letter, and the reading rules are kept.</value>
   </data>
   <data name="About.ExampleTitle" xml:space="preserve">
     <value>An example</value>
@@ -394,7 +394,7 @@
     <value>As this page writes it</value>
   </data>
   <data name="About.ExampleNote" xml:space="preserve">
-    <value>Usually ح and ه are one “h” and length is hidden. Here the letters differ and length shows.</value>
+    <value>Usually ح and ه are both written “h”, and vowel length is lost. Here they get different letters, and length shows.</value>
   </data>
   <data name="About.HowTitle" xml:space="preserve">
     <value>How it works</value>
