@@ -54,6 +54,27 @@
   <data name="Composer.ClearLabel" xml:space="preserve">
     <value>Очистить поле</value>
   </data>
+  <data name="Composer.Paste" xml:space="preserve">
+    <value>Вставить</value>
+  </data>
+  <data name="Composer.PasteTitle" xml:space="preserve">
+    <value>Вставить текст из буфера обмена</value>
+  </data>
+  <data name="Composer.PasteFailed" xml:space="preserve">
+    <value>Браузер не дал прочитать буфер — вставьте вручную</value>
+  </data>
+  <data name="Composer.PasteEmpty" xml:space="preserve">
+    <value>В буфере обмена нет текста</value>
+  </data>
+  <data name="Toast.Cleared" xml:space="preserve">
+    <value>Поле очищено</value>
+  </data>
+  <data name="Toast.Undo" xml:space="preserve">
+    <value>Вернуть</value>
+  </data>
+  <data name="Toast.UndoLabel" xml:space="preserve">
+    <value>Вернуть очищенный текст</value>
+  </data>
   <data name="Rail.Label" xml:space="preserve">
     <value>Как читать и писать</value>
   </data>
