@@ -43,7 +43,6 @@ window.page = (() => {
     const EraseDelay = 28;
     const HoldDelay = 6000; // успеть прочитать фразу, в том числе арабский пример
     const GapDelay = 450;
-    const PausedDelay = 500;
 
     /**
      * Фразы печатаются и стираются по кругу.
@@ -53,25 +52,25 @@ window.page = (() => {
      * по просьбе человека: в Windows его ставит выключенный параметр «Показывать
      * анимацию», и из-за этой проверки подсказка у владельца не менялась вовсе.
      *
-     * Пока в поле есть текст, подсказка замирает на дописанной фразе: человек
+     * Пока в поле есть текст, печать остановлена, таймеров нет (D16): человек
      * уже работает, и меняющаяся строка над полем только отвлекала бы.
      */
+    // Печать одной подсказки на странице: останавливается и возобновляется снаружи (D16).
+    let hintControl = null;
+
     function typewriter(element, phrases, input) {
+        hintControl = null;
+
         if (!element || !phrases || phrases.length === 0)
             return;
-
-        if (phrases.length === 1) {
-            element.textContent = phrases[0];
-            return;
-        }
-
-        const busy = () => !!input && input.value.trim() !== "";
 
         let phrase = 0;
         let length = 0;
         let erasing = false;
+        let timer = 0;
+        let paused = !!input && input.value.trim() !== "";
 
-        element.classList.add("is-typing");
+        const later = (callback, delay) => { timer = setTimeout(callback, delay); };
 
         const tick = () => {
             const text = phrases[phrase];
@@ -81,9 +80,9 @@ window.page = (() => {
 
                 if (length === text.length) {
                     erasing = true;
-                    setTimeout(hold, HoldDelay);
+                    later(tick, HoldDelay);
                 } else {
-                    setTimeout(tick, TypeDelay);
+                    later(tick, TypeDelay);
                 }
                 return;
             }
@@ -93,16 +92,44 @@ window.page = (() => {
             if (length === 0) {
                 erasing = false;
                 phrase = (phrase + 1) % phrases.length;
-                setTimeout(tick, GapDelay);
+                later(tick, GapDelay);
             } else {
-                setTimeout(tick, EraseDelay);
+                later(tick, EraseDelay);
             }
         };
 
-        // Дописанная фраза стоит, пока поле занято; стирается, когда оно опустело.
-        const hold = () => setTimeout(busy() ? hold : tick, busy() ? PausedDelay : 0);
+        const start = () => {
+            phrase = 0;
+            length = 0;
+            erasing = false;
+            element.textContent = "";
 
-        tick();
+            if (phrases.length === 1) {
+                element.textContent = phrases[0];
+                return;
+            }
+
+            element.classList.add("is-typing");
+            tick();
+        };
+
+        // Пауза гасит таймер совсем — не опрашивает поле. Текст остаётся как был:
+        // блок схлопывается плавно, и пустым он уходить не должен; чистится при возобновлении.
+        const pause = () => {
+            clearTimeout(timer);
+            element.classList.remove("is-typing");
+        };
+
+        hintControl = { pause, resume: start };
+
+        if (!paused)
+            start();
+    }
+
+    /** Подсказка стоит, пока в поле есть текст, и печатает с начала, когда оно пусто (D16). */
+    function hintPaused(element, paused) {
+        if (hintControl)
+            paused ? hintControl.pause() : hintControl.resume();
     }
 
     /** Поле растёт по тексту до потолка из CSS, дальше прокручивается. */
@@ -328,7 +355,7 @@ window.page = (() => {
     }
 
     return {
-        typewriter, autosize, resize, copy, guard, guardToken, guardReset, guardRemove,
+        typewriter, hintPaused, autosize, resize, copy, guard, guardToken, guardReset, guardRemove,
         load, save, storageSet, storageRemove, storageKeys,
         browserLanguages, sessionSave, sessionTake, reload, setDocument,
     };
