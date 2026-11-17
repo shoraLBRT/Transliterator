@@ -241,6 +241,9 @@
   <data name="Preview.Label" xml:space="preserve">
     <value>Output</value>
   </data>
+  <data name="Output.Unchanged" xml:space="preserve">
+    <value>Output unchanged: this setting changes nothing in the text</value>
+  </data>
   <data name="Preview.Empty" xml:space="preserve">
     <value>Type text in the field — you will see here how it is written</value>
   </data>

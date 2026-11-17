@@ -113,12 +113,14 @@
                 @if (_catalog is not null)
                 {
                     <ReadingPicker Catalog="_catalog" Choice="_reading" ChoiceChanged="ChangeReadingAsync"
-                                   Transliterate="TransliterateExample" Preview="@_result" @ref="_readingPicker" />
+                                   Transliterate="TransliterateExample" Preview="@_result" Changes="_changes"
+                                   ChangeKey="_changeKey" Unchanged="_unchangedNote" @ref="_readingPicker" />
                 }
 
                 @if (_profile is not null)
                 {
                     <ProfilePicker Profile="_profile" DefaultProfile="@DefaultProfile" Preview="@_result"
+                                   Changes="_changes" ChangeKey="_changeKey" Unchanged="_unchangedNote"
                                    ProfileChanged="ChangeProfileAsync" ProfileDeleted="ResetProfileAsync" @ref="_profilePicker" />
                 }
 
@@ -141,6 +143,11 @@
                 <div class="result-head">
                     <h2 id="result-title" class="result-title">@L["Result.Title"]</h2>
 
+                    @* Метки и подпись «Вывод не изменился» (D19) делят одно место в шапке:
+                       с 64rem, где панель стоит рядом с выводом, подпись на время сменяет
+                       метки — шапка не растёт, строки вывода не сдвигаются. Уже 64rem
+                       подпись стоит в шапке панели, а здесь скрыта. *@
+                    <div class="result-meta @(_unchangedNote ? "has-note" : null)">
                     <div class="result-chips">
                         @if (_catalog is not null)
                         {
@@ -152,6 +159,8 @@
                             <button type="button" class="result-chip" title="@L["Result.ProfileChipTitle"]"
                                     aria-label="@L["Result.ProfileChip", _profile.Name]" @onclick="OpenProfileAsync">@_profile.Name</button>
                         }
+                    </div>
+                    <p class="result-note" role="status">@(_unchangedNote ? L["Output.Unchanged"].Value : null)</p>
                     </div>
 
                     @* Значок и подпись — одни и те же узлы во всех состояниях: галочка
@@ -169,17 +178,21 @@
                 @* Аят на строке, номер — круглым знаком, как в мусхафе. Пробел перед
                    номером остаётся в тексте строки, а знак держит саму цифру: выделенное
                    мышью копируется тем же текстом, что и кнопкой. Знак держится вместе
-                   с последним словом, у слова через дефис — с его последней частью (ayah-tail), и не переносится на строку один. *@
-                <div class="result-text">
-                    @foreach (var line in ResultLine.Split(_result))
+                   с последним словом, у слова через дефис — с его последней частью (ayah-tail), и не переносится на строку один.
+                   Изменённые сменой настройки слова — в mark (D19); новый ключ при каждой
+                   смене пересоздаёт строки, и подсветка проигрывается заново. *@
+                <div class="result-text" @key="_changeKey">
+                    @{ var lines = ResultLine.Split(_result); }
+                    @for (var i = 0; i < lines.Count; i++)
                     {
+                        var line = lines[i];
                         if (line.Ayah is null)
                         {
-                            <div class="result-line">@line.Text</div>
+                            <div class="result-line"><ChangedText Segments="Part(i, 0, line.Text)" /></div>
                         }
                         else
                         {
-                            <div class="result-line">@line.Lead<span class="ayah-tail">@(line.Word)@(line.Gap)<span class="ayah-mark">@line.Ayah</span></span></div>
+                            <div class="result-line"><ChangedText Segments="Part(i, 0, line.Lead)" /><span class="ayah-tail"><ChangedText Segments="Part(i, line.Lead.Length, line.Word)" />@(line.Gap)<span class="ayah-mark">@line.Ayah</span></span></div>
                         }
                     }
                 </div>
@@ -269,6 +282,23 @@
     private string _arabic = string.Empty;
     private string _result = string.Empty;
     private string? _error;
+
+    // Подсветка изменённого (D19): что изменила последняя смена настройки, ключ
+    // строк вывода (новый — подсветка проигрывается заново) и подпись «не изменился».
+    private OutputDiff? _changes;
+    private int _changeKey;
+    private bool _unchangedNote;
+    private int _unchangedStamp;
+
+    /// <summary>
+    /// Сколько повтор вывода в панели держится на строке первого изменения (D19).
+    /// Вспышка слов короче (--motion-highlight в app.css) и гаснет сама; по этому
+    /// сроку снимаются отметки, и повтор снова начинается с начала текста.
+    /// </summary>
+    private static readonly TimeSpan PreviewHoldDuration = TimeSpan.FromSeconds(3);
+
+    /// <summary>Сколько держится подпись «Вывод не изменился» (D19).</summary>
+    private static readonly TimeSpan UnchangedNoteDuration = TimeSpan.FromSeconds(3);
 
     private ElementReference _hint;
     private ElementReference _input;
@@ -504,7 +534,7 @@
             return;
 
         _profile = profile;
-        Calculate();
+        RecalculateSetting();
 
         try
         {
@@ -518,8 +548,18 @@
 
     private async Task ChangeProfileAsync(TransliterationProfile profile)
     {
+        // Копия и переименование приходят тем же путём, но графем не меняют —
+        // это не смена настройки вывода, и подписи «не изменился» у них нет. Правка
+        // графемы приходит тем же объектом, что уже выбран.
+        var sameRules = _profile is not null && !ReferenceEquals(profile, _profile)
+                        && profile.Rules.Count == _profile.Rules.Count
+                        && profile.Rules.All(r => _profile.Rules.TryGetValue(r.Key, out var v) && v == r.Value);
+
         _profile = profile;
-        Calculate();
+        if (sameRules)
+            Calculate();
+        else
+            RecalculateSetting();
 
         try
         {
@@ -534,7 +574,7 @@
     private async Task ChangeReadingAsync(ReadingChoice reading)
     {
         _reading = reading;
-        Calculate();
+        RecalculateSetting();
 
         try
         {
@@ -753,6 +793,8 @@
             return;
 
         _copyState = CopyState.Idle;
+        _changes = null;
+        _unchangedNote = false;
 
         try
         {
@@ -769,4 +811,63 @@
             _error = ex.Message;
         }
     }
+
+    /// <summary>
+    /// Пересчёт после смены настройки (D19): ступени, правила, счёта, профиля или
+    /// его графемы. Изменившиеся слова подсвечиваются; не изменилось ничего — на
+    /// несколько секунд подпись, почему настройка не видна. Набор текста, сура и
+    /// восстановление из хранилища идут через Calculate — без подсветки.
+    /// </summary>
+    private void RecalculateSetting()
+    {
+        var before = _error is null ? _result : string.Empty;
+        Calculate();
+
+        if (_error is not null || before.Length == 0 || _result.Length == 0)
+            return;
+
+        var diff = OutputDiff.Compare(before, _result);
+        if (diff.HasChanges)
+        {
+            _changes = diff;
+            _ = ExpireChangesAsync(++_changeKey);
+        }
+        else if (before == _result)
+        {
+            _ = ShowUnchangedNoteAsync();
+        }
+    }
+
+    /// <summary>
+    /// Срок повтора с места изменения вышел — отметки снимаются, если новой смены
+    /// за это время не было: новая смена меняет ключ и начинает срок заново.
+    /// </summary>
+    private async Task ExpireChangesAsync(int key)
+    {
+        await Task.Delay(PreviewHoldDuration);
+
+        if (key != _changeKey || _changes is null)
+            return;
+
+        _changes = null;
+        StateHasChanged();
+    }
+
+    /// <summary>Подпись «не изменился» гаснет сама; новая смена начинает срок заново.</summary>
+    private async Task ShowUnchangedNoteAsync()
+    {
+        _unchangedNote = true;
+        var stamp = ++_unchangedStamp;
+        await Task.Delay(UnchangedNoteDuration);
+
+        if (stamp != _unchangedStamp)
+            return;
+
+        _unchangedNote = false;
+        StateHasChanged();
+    }
+
+    /// <summary>Кусок строки вывода по отрезкам подсветки; без неё — одним отрезком.</summary>
+    private IReadOnlyList<DiffSegment> Part(int line, int start, string text) =>
+        ChangedText.Of(_changes, _result, line, start, text);
 }

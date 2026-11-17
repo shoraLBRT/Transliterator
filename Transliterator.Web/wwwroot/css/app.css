@@ -15,6 +15,8 @@
     --foam-100: #def0e9;
     --foam-300: #a3d6c5;
     --foam-700: #2e7363;
+    /* Вспышка изменённого слова (D19): светлее пены-300, текст на ней читается. */
+    --highlight: #bfe5d7;
     --ink: #1f2d2a;
     --ink-muted: #5d6a66;
     --error: #b3261e;
@@ -70,6 +72,7 @@
     --motion-blink: 1s;
     --motion-pulse: 1.2s;
     --motion-hint-delay: 0.3s; /* подсказка у значка ждёт, пока курсор не задержится (D23) */
+    --motion-highlight: 1.2s; /* вспышка изменённого слова гаснет (D19) */
     --motion-ease: cubic-bezier(0.2, 0, 0, 1);
     --ease-soft: ease;
     --ease-in-out: ease-in-out;
@@ -115,6 +118,7 @@
         --foam-100: #21392f;
         --foam-300: #4f9583;
         --foam-700: #7fd0b8;
+        --highlight: #2f6556;
         --ink: #e7ece9;
         --ink-muted: #a5b2ad;
         --error: #ff9a8f;
@@ -654,6 +658,33 @@ svg {
     margin: 0;
     font-size: 0.95rem;
     font-weight: 600;
+}
+
+/* «Вывод не изменился» (D19) — тихо, между именем и крестиком, до двух строк:
+   шапка листа своей высоты не меняет. С 64rem подпись — в шапке вывода. */
+.panel-head-note {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    flex: 1;
+    min-width: 0;
+    margin: 0;
+    overflow: hidden;
+    font-size: var(--text-xs);
+    line-height: 1.3;
+    color: var(--foam-700);
+    text-align: end;
+}
+
+.panel-head-note:not(:empty) {
+    animation: note-in var(--motion-duration) var(--motion-ease);
+}
+
+/* Подпись проявляется на месте, без сдвига (D19). */
+@keyframes note-in {
+    from {
+        opacity: 0;
+    }
 }
 
 /* ---- Кнопки сбоку: ступень чтения, профиль и «?» (D6, D8) ---- */
@@ -1800,6 +1831,34 @@ html.is-sheet-open {
     border-radius: var(--radius-2xl) var(--radius-2xl) 0 0;
 }
 
+/* Метки и подпись «Вывод не изменился» (D19) — в одной ячейке шапки: подпись
+   на время сменяет метки, шапка не растёт, и строки вывода не сдвигаются. Длинная
+   подпись обрезается многоточием, диктору она читается целиком. Уже 64rem подпись
+   стоит в шапке панели (лист закрывает вывод), и здесь скрыта; живая область в
+   разметке всегда. */
+.result-meta {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    flex: 1 1 0;
+    min-width: 0;
+}
+
+.result-meta > * {
+    grid-area: 1 / 1;
+}
+
+.result-note {
+    display: none;
+    align-self: center;
+    min-width: 0;
+    margin: 0;
+    overflow: hidden;
+    font-size: var(--text-sm);
+    color: var(--foam-700);
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
 /* Подпись — в стиле подписи повтора в панелях: мелко, заглавными. */
 .result-title {
     margin: 0;
@@ -1855,6 +1914,40 @@ html.is-sheet-open {
     white-space: pre-wrap;
     overflow-wrap: anywhere;
     transition: background-color var(--motion-fast) var(--ease-soft);
+}
+
+/* Изменённое сменой настройки (D19): фон вспыхивает и гаснет, текст и его
+   места не меняются — mark только обёртка. Тень того же цвета даёт фону воздух
+   у букв, не сдвигая строку. Класс остаётся после вспышки: фон уже прозрачный. */
+mark.changed {
+    background: transparent;
+    color: inherit;
+    border-radius: var(--radius-sm);
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+    animation: change-flash var(--motion-highlight) var(--ease-soft);
+}
+
+@keyframes change-flash {
+    0%,
+    25% {
+        background-color: var(--highlight);
+        box-shadow: 0 0 0 0.12em var(--highlight);
+    }
+
+    100% {
+        background-color: transparent;
+        box-shadow: 0 0 0 0.12em transparent;
+    }
+}
+
+/* Ровный фон без затухания — для prefers-reduced-motion (D19). */
+@keyframes change-hold {
+    from,
+    to {
+        background-color: var(--highlight);
+        box-shadow: 0 0 0 0.12em var(--highlight);
+    }
 }
 
 .result-line + .result-line {
@@ -2283,6 +2376,33 @@ html.is-sheet-open {
    уже — нижний лист с подложкой (D14). Отступы считаются от края колонки
    страницы (у .shell свой отступ 1.25rem). */
 @media (min-width: 64rem) {
+    .result-note {
+        display: block;
+        opacity: 0;
+        transition: opacity var(--motion-duration) var(--ease-soft);
+    }
+
+    .result-chips {
+        transition: opacity var(--motion-duration) var(--ease-soft),
+                    visibility var(--motion-instant) linear;
+    }
+
+    .result-meta.has-note .result-note {
+        opacity: 1;
+    }
+
+    /* Скрытые метки и из порядка Tab уходят: visibility, а не только прозрачность. */
+    .result-meta.has-note .result-chips {
+        visibility: hidden;
+        opacity: 0;
+        transition: opacity var(--motion-duration) var(--ease-soft),
+                    visibility var(--motion-instant) linear var(--motion-duration);
+    }
+
+    .panel-head-note {
+        display: none;
+    }
+
     .shell {
         --panel-left: 4.75rem;
         --panel-width: 25rem;
@@ -2594,7 +2714,7 @@ html.is-sheet-open {
 
     /* На телефоне метки не помещаются между подписью и кнопкой: подпись и
        «Копировать» — первой строкой шапки, метки — второй (D17). */
-    .result-chips {
+    .result-meta {
         order: 1;
         flex-basis: 100%;
     }
@@ -2621,5 +2741,10 @@ html.is-sheet-open {
 
     .hint-text.is-typing::after {
         animation: caret var(--motion-blink) steps(1) infinite !important;
+    }
+
+    /* Изменённое (D19) подсвечено ровным фоном и снимается разом, без затухания. */
+    mark.changed {
+        animation: change-hold var(--motion-highlight) steps(1) !important;
     }
 }

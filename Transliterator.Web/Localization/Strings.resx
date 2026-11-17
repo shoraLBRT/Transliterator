@@ -252,6 +252,9 @@
   <data name="Preview.Label" xml:space="preserve">
     <value>Вывод</value>
   </data>
+  <data name="Output.Unchanged" xml:space="preserve">
+    <value>Вывод не изменился: этой настройке нечего менять в тексте</value>
+  </data>
   <data name="Preview.Empty" xml:space="preserve">
     <value>Введите текст в поле — здесь будет видно, как он пишется</value>
   </data>

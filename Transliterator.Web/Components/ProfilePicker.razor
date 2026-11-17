@@ -42,7 +42,8 @@
 
         <div id="profile-menu" class="picker-panel profile-panel @Closing.CssClass" inert="@Closing.IsClosing" aria-hidden="@Closing.AriaHidden" role="dialog" aria-labelledby="profile-menu-title"
              tabindex="-1" @ref="PanelElement" @onkeydown="OnPanelKeyDownAsync">
-            <PanelHead Id="profile-menu-title" Title="@L["Profile.Title"]" Close="CloseToToggleAsync" />
+            <PanelHead Id="profile-menu-title" Title="@L["Profile.Title"]" Close="CloseToToggleAsync"
+                       Note="@(Unchanged ? L["Output.Unchanged"].Value : null)" />
             <p class="picker-caption">@L["Profile.Caption"]</p>
 
             <div class="reading-modes" role="radiogroup" aria-label="@L["Profile.ListLabel"]">
@@ -108,7 +109,13 @@
 
             <div class="panel-preview profile-preview" aria-live="polite">
                 <span class="panel-preview-label">@L["Preview.Label"]</span>
-                <span class="panel-preview-text">@(string.IsNullOrEmpty(Preview) ? L["Preview.Empty"] : Preview)</span>
+                @* Изменённое сменой настройки подсвечено и здесь (D19): на телефоне
+                   вывод под листом не виден. Ключ — тот же, что у строк вывода; пока
+                   подсветка идёт, повтор начинается со строки первого изменения. *@
+                <span class="panel-preview-text" @key="ChangeKey">@if (string.IsNullOrEmpty(Preview))
+                {@L["Preview.Empty"]}
+                else
+                {<ChangedText Segments="ChangedText.Of(Changes, Preview)" />}</span>
             </div>
 
             @* Графемы — под стрелкой «Настройки профиля» (E9): профиль выбирают чаще,
@@ -225,6 +232,18 @@
     /// <summary>Вывод страницы: на телефоне панель закрывает результат и повторяет его в себе.</summary>
     [Parameter]
     public string Preview { get; set; } = string.Empty;
+
+    /// <summary>Что изменила последняя смена настройки (D19); <c>null</c> — подсветки нет.</summary>
+    [Parameter]
+    public OutputDiff? Changes { get; set; }
+
+    /// <summary>Новый при каждой смене настройки — подсветка проигрывается заново.</summary>
+    [Parameter]
+    public int ChangeKey { get; set; }
+
+    /// <summary>Смена настройки не изменила вывод — подпись в шапке панели (D19).</summary>
+    [Parameter]
+    public bool Unchanged { get; set; }
 
     /// <summary>
     /// Выбран другой профиль или изменён этот. Страница пересчитывает вывод
