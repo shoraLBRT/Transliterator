@@ -112,6 +112,60 @@ namespace Transliterator.Tests.DocsTests
             Assert.Contains("<span class=\"picker-toggle-text\">@ModeName(Choice.Mode)</span>", toggle.Groups[1].Value);
         }
 
+        /// <summary>
+        /// D23: с 64rem кнопки сбоку — одна капсула на высоте поля, открытая кнопка
+        /// залита акцентом и отмечена чертой. Пока открыта колонка, подпись — подсказка
+        /// справа от значка при наведении и фокусе: с задержкой, на токенах движения,
+        /// поверх колонки и по-прежнему имя кнопки для диктора (opacity, не visibility).
+        /// Нативного title у кнопок нет — подсказка не двоится.
+        /// </summary>
+        [Fact]
+        public void RailIcons_ShowTheirNameAsATooltip_WhileThePanelIsOpen()
+        {
+            var css = Regex.Replace(Web("wwwroot", "css", "app.css"), @"\s+", " ");
+            var wide = Regex.Match(css, @"@media \(min-width: 64rem\) \{(.*?)\} /\* ---- Загрузка");
+            Assert.True(wide.Success, "the wide-screen layout is not found");
+            var rules = wide.Groups[1].Value;
+
+            var rail = Regex.Match(rules, @"\.side-rail \{([^}]*)\}");
+            Assert.True(rail.Success, "the rail rule is not found");
+            foreach (var declaration in new[]
+            {
+                "position: fixed;", "top: calc(max(var(--space-3) + var(--topbar-height) + var(--space-6), 24vh) + 2.8 * var(--hint-size) + var(--space-5));",
+                "background: var(--paper);", "border: 1px solid var(--line);", "box-shadow: var(--shadow-md);",
+            })
+                Assert.Contains(declaration, rail.Groups[1].Value);
+            Assert.DoesNotContain("justify-content: center", rail.Groups[1].Value);
+            Assert.Contains(".shell.is-active .side-rail { top: max(var(--space-3) + var(--topbar-height) + var(--space-4), 7vh); }", rules);
+
+            Assert.Contains(".side-rail .picker-toggle[aria-expanded=\"true\"] svg { background: var(--foam-700); border-color: var(--foam-700); color: var(--paper); }", css);
+            Assert.Matches(@"\.side-rail \.picker-toggle\[aria-expanded=""true""\]::before \{[^}]*background: var\(--foam-700\);", rules);
+
+            var tip = Regex.Match(rules, @"\.shell\.has-panel \.side-rail \.picker-toggle-text \{([^}]*)\}");
+            Assert.True(tip.Success, "the tooltip rule is not found");
+            foreach (var declaration in new[]
+            {
+                "position: absolute;", "left: calc(100% + var(--space-3));", "z-index: 12;", "opacity: 0;", "pointer-events: none;",
+            })
+                Assert.Contains(declaration, tip.Groups[1].Value);
+            Assert.DoesNotContain("visibility", tip.Groups[1].Value);
+            Assert.DoesNotContain("clip", tip.Groups[1].Value);
+            // Поверх колонки: подсказка выше её z-index.
+            Assert.Matches(@"\.picker-panel \{ right: auto; bottom: auto; z-index: 11;", rules);
+            Assert.Contains(".shell.has-panel .side-rail .picker-toggle:hover .picker-toggle-text, "
+                            + ".shell.has-panel .side-rail .picker-toggle:focus-visible .picker-toggle-text "
+                            + "{ opacity: 1; transform: translate(0, -50%); transition-delay: var(--motion-hint-delay); }", rules);
+            Assert.Matches(@":root \{[^}]*--motion-hint-delay: 0\.3s;", css);
+
+            foreach (var (file, panel) in new[] { ("ReadingPicker.razor", "reading-menu"), ("ProfilePicker.razor", "profile-menu"), ("AboutPicker.razor", "about-menu") })
+            {
+                var picker = Regex.Replace(Web("Components", file), @"\s+", " ");
+                var button = Regex.Match(picker, $"<button [^>]*aria-controls=\"{panel}\"[^>]*>");
+                Assert.True(button.Success, $"the {panel} button is not found");
+                Assert.DoesNotContain("title=", button.Value);
+            }
+        }
+
         [Fact]
         public void ReadingRules_AreTwoCollapsedBlocks_WithTheControlsInTheirRows()
         {
@@ -292,7 +346,7 @@ namespace Transliterator.Tests.DocsTests
 
         /// <summary>
         /// «О приложении» (D8): круглая кнопка «?» сбоку с видимой подписью «О чём проект?»
-        /// (D9) — она же имя для диктора и title, в панели —
+        /// (D9) — она же имя для диктора и подсказка у значка (D23), в панели —
         /// подзаголовки, пример «как пишут обычно» и «как пишет страница» (её считает
         /// конвейер, а не текст), имена кнопок профиля из тех же строк, что на кнопках,
         /// и кнопка, открывающая форму отзыва.
@@ -304,7 +358,8 @@ namespace Transliterator.Tests.DocsTests
 
             var toggle = Regex.Match(about, "<button [^>]*aria-controls=\"about-menu\"[^>]*>(.*?)</button>");
             Assert.True(toggle.Success, "the about button is not found");
-            Assert.Contains("title=\"@L[\"About.Toggle\"]\"", toggle.Value);
+            // D23: имя у значка показывает подсказка, title её бы двоил.
+            Assert.DoesNotContain("title=", toggle.Value);
             Assert.Contains("<span class=\"picker-toggle-text\">@L[\"About.Toggle\"]</span>", toggle.Groups[1].Value);
             Assert.DoesNotContain("visually-hidden", toggle.Groups[1].Value);
             Assert.Contains("class=\"picker-panel about-panel @Closing.CssClass\"", about);
@@ -656,7 +711,9 @@ namespace Transliterator.Tests.DocsTests
             Assert.Matches(@"\.toast-region \{[^}]*position: fixed;[^}]*bottom: calc\(var\(--space-4\) \+ env\(safe-area-inset-bottom, 0px\)\);[^}]*justify-content: center;", css);
             Assert.Matches(@"\.toast \{[^}]*animation: toast-in var\(--motion-duration\) var\(--motion-ease\);", css);
             Assert.Matches(@"\.toast\.is-closing \{ animation: toast-out var\(--motion-duration\) var\(--motion-ease\) forwards; \}", css);
-            Assert.Matches(@"@media \(min-width: 56rem\) \{ \.toast-region \{[^}]*padding: 0 calc\(var\(--space-5\) \+ 2\.75rem \+ var\(--space-4\)\);", css);
+            // D23: значок отзыва раскрывается подписью до 9rem — поля плашки шире раскрытой капсулы.
+            Assert.Matches(@"@media \(min-width: 56rem\) \{ \.toast-region \{[^}]*padding: 0 calc\(var\(--space-5\) \+ 2\.75rem \+ 9rem \+ var\(--space-6\) \+ var\(--space-4\)\);", css);
+            Assert.Matches(@"\.feedback-toggle\[aria-expanded=""true""\] \.feedback-label \{ max-width: 9rem;", css);
         }
     }
 }

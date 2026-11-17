@@ -69,6 +69,7 @@
     --motion-instant: 0s; /* шаг без хода: visibility свёрнутого блока (D21) */
     --motion-blink: 1s;
     --motion-pulse: 1.2s;
+    --motion-hint-delay: 0.3s; /* подсказка у значка ждёт, пока курсор не задержится (D23) */
     --motion-ease: cubic-bezier(0.2, 0, 0, 1);
     --ease-soft: ease;
     --ease-in-out: ease-in-out;
@@ -175,6 +176,10 @@ button {
     min-height: 100vh;
     min-height: 100dvh;
     padding: var(--space-3) 1.25rem 1.25rem;
+    /* Высота шапки и кегль подсказки — по ним с 64rem кнопки сбоку встают
+       вровень с полем (D23). */
+    --topbar-height: 2.5rem;
+    --hint-size: clamp(1.25rem, 1rem + 1.2vw, 1.75rem);
 }
 
 /* ---- Шапка (D13) ----
@@ -185,7 +190,6 @@ button {
    прежнего места поля: 24vh от верха пустой страницы и 7vh — активной. */
 
 .topbar {
-    --topbar-height: 2.5rem;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -282,7 +286,7 @@ button {
     justify-content: center;
     min-height: 2.8em; /* две строки: текст печатается, а вёрстка не прыгает */
     margin: 0 0 var(--space-5);
-    font-size: clamp(1.25rem, 1rem + 1.2vw, 1.75rem);
+    font-size: var(--hint-size);
     font-weight: 500;
     line-height: 1.4;
     letter-spacing: -0.01em;
@@ -389,8 +393,9 @@ button {
 
 /* Внизу по центру, над краем экрана с учётом выреза телефона. Область — во всю
    ширину и не ловит нажатий, сама плашка — ловит. С 56rem в правом нижнем углу
-   стоит значок отзыва (2.75rem в 1.25rem от края): плашка уже, чем место между
-   такими полями слева и справа, и на него не наезжает. */
+   стоит значок отзыва (2.75rem в 1.25rem от края), при наведении он раскрывается
+   подписью до 9rem с отступами (D23): плашка уже, чем место между такими полями
+   слева и справа, и на раскрытую капсулу не наезжает. */
 .toast-region {
     position: fixed;
     right: 0;
@@ -453,7 +458,7 @@ button {
 @media (min-width: 56rem) {
     .toast-region {
         bottom: calc(var(--space-5) + env(safe-area-inset-bottom, 0px));
-        padding: 0 calc(var(--space-5) + 2.75rem + var(--space-4));
+        padding: 0 calc(var(--space-5) + 2.75rem + 9rem + var(--space-6) + var(--space-4));
     }
 }
 
@@ -693,10 +698,21 @@ svg {
     color: var(--ink);
 }
 
-.side-rail .picker-toggle:hover svg,
-.side-rail .picker-toggle[aria-expanded="true"] svg {
+.side-rail .picker-toggle:hover svg {
     background: var(--foam-50);
     border-color: var(--foam-300);
+}
+
+/* Открытая кнопка (D23) видна с первого взгляда: значок залит акцентом,
+   подпись — основным цветом и плотнее. */
+.side-rail .picker-toggle[aria-expanded="true"] svg {
+    background: var(--foam-700);
+    border-color: var(--foam-700);
+    color: var(--paper);
+}
+
+.side-rail .picker-toggle[aria-expanded="true"] .picker-toggle-text {
+    font-weight: 600;
 }
 
 .side-rail .picker-toggle:focus-visible {
@@ -2130,35 +2146,53 @@ html.is-sheet-open {
         z-index: 11;
     }
 
+    /* Значок в углу — капсула (D23): наведение или фокус раскрывают её подписью
+       «Обратная связь» — ширина подписи растёт от нуля, капсула вместе с ней.
+       Свёрнутая подпись нулевой ширины остаётся именем кнопки для диктора. */
     .feedback-label {
-        position: absolute;
-        width: 1px;
-        height: 1px;
+        max-width: 0;
         overflow: hidden;
-        clip: rect(0 0 0 0);
         white-space: nowrap;
+        opacity: 0;
+        transition: max-width var(--motion-duration) var(--motion-ease),
+                    margin var(--motion-duration) var(--motion-ease),
+                    opacity var(--motion-duration) var(--ease-soft);
     }
 
     .feedback-toggle {
-        display: inline-grid;
-        place-items: center;
-        width: 2.75rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0; /* промежуток даёт отступ раскрытой подписи */
+        min-width: 2.75rem;
         height: 2.75rem;
+        padding: 0 calc((2.75rem - 1.2rem) / 2 - 1px);
         border: 1px solid var(--line);
-        border-radius: 50%;
+        border-radius: var(--radius-pill);
         background: var(--paper);
         box-shadow: var(--shadow-md);
         color: var(--ink-muted);
+        font-size: var(--text-md);
+        font-weight: 500;
         text-decoration: none;
     }
 
     .feedback-toggle:hover,
+    .feedback-toggle:focus-visible,
     .feedback-toggle[aria-expanded="true"] {
         border-color: var(--foam-300);
         color: var(--foam-700);
     }
 
+    .feedback-toggle:hover .feedback-label,
+    .feedback-toggle:focus-visible .feedback-label,
+    .feedback-toggle[aria-expanded="true"] .feedback-label {
+        max-width: 9rem; /* то же число держит поля плашки (.toast-region) */
+        margin-inline: var(--space-2) var(--space-1);
+        opacity: 1;
+    }
+
     .feedback-toggle svg {
+        flex: none;
         width: 1.2rem;
         height: 1.2rem;
     }
@@ -2275,39 +2309,104 @@ html.is-sheet-open {
                     margin-bottom var(--motion-slow) var(--ease-soft);
     }
 
+    /* Кнопки сбоку — одна капсула (D23) вровень с верхом поля: верх страницы,
+       шапка и её отступ — те же числа, что у .topbar, у пустой страницы ещё
+       подсказка (.hint: две строки и отступ), и капсула едет вместе с полем,
+       когда в нём появляется текст и подсказка схлопывается. Она закреплена (fixed): при прокрутке
+       длинного вывода кнопки остаются под рукой. Шапка начинается правее
+       --rail-space, колонка панели — правее --panel-left, и капсула не задевает
+       ни ту, ни другую. */
     .side-rail {
         position: fixed;
-        top: 0;
-        bottom: 0;
+        top: calc(max(var(--space-3) + var(--topbar-height) + var(--space-6), 24vh) + 2.8 * var(--hint-size) + var(--space-5));
         left: 1.25rem;
         z-index: 11;
         flex-direction: column;
         flex-wrap: nowrap;
-        align-items: flex-start;
-        justify-content: center;
-        gap: var(--space-3);
+        align-items: stretch;
+        gap: var(--space-1);
         margin: 0;
-        padding: 0;
-        pointer-events: none; /* полоса во всю высоту не ловит щелчки мимо кнопок */
+        padding: var(--space-2) var(--space-4) var(--space-2) var(--space-2);
+        border: 1px solid var(--line);
+        border-radius: var(--radius-card);
+        background: var(--paper);
+        box-shadow: var(--shadow-md);
+        transition: top var(--motion-slow) var(--ease-soft);
     }
 
-    .side-rail .picker {
-        pointer-events: auto;
+    .shell.is-active .side-rail {
+        top: max(var(--space-3) + var(--topbar-height) + var(--space-4), 7vh);
+    }
+
+    /* Пока открыта колонка, в капсуле одни значки — она сужается до столбика. */
+    .shell.has-panel .side-rail {
+        padding: var(--space-1);
+        border-radius: var(--radius-pill);
+    }
+
+    .side-rail .picker-toggle {
+        position: relative;
+        width: 100%;
+    }
+
+    /* Значки уже в карточке со своей тенью — своя им не нужна. */
+    .side-rail .picker-toggle svg {
+        box-shadow: none;
     }
 
     .side-rail .picker-toggle-text {
-        max-width: 10rem;
+        max-width: 8rem;
+        color: var(--ink);
         font-size: var(--text-sm);
+        font-weight: 500;
     }
 
-    /* Пока открыта колонка, подписи ушли бы под неё: они прячутся с экрана,
-       но остаются именем кнопки для диктора. Выбор виден в самой панели. */
+    /* Индикатор открытой кнопки (D23) — черта у левого края капсулы. */
+    .side-rail .picker-toggle[aria-expanded="true"]::before {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: calc(-1 * var(--space-2));
+        width: 3px;
+        height: 1.25rem;
+        border-radius: var(--radius-pill);
+        background: var(--foam-700);
+        transform: translateY(-50%);
+    }
+
+    .shell.has-panel .side-rail .picker-toggle[aria-expanded="true"]::before {
+        left: calc(-1 * var(--space-1));
+    }
+
+    /* Пока открыта колонка, подписи ушли бы под неё: они прячутся с экрана, но
+       остаются именем кнопки для диктора (opacity, не visibility — иначе имя
+       пропадёт). Наведение или фокус с клавиатуры показывают ту же подпись
+       подсказкой справа от значка (D23) — поверх колонки: она в той же капсуле,
+       и z-index подсказки выше, чем у колонки. Появляется с задержкой, уходит сразу. */
     .shell.has-panel .side-rail .picker-toggle-text {
         position: absolute;
-        width: 1px;
-        height: 1px;
-        overflow: hidden;
-        clip: rect(0 0 0 0);
+        top: 50%;
+        left: calc(100% + var(--space-3));
+        z-index: 12;
+        max-width: 18rem;
+        padding: var(--space-1) var(--space-3);
+        border-radius: var(--radius-sm);
+        background: var(--ink);
+        box-shadow: var(--shadow-md);
+        color: var(--paper);
+        font-weight: 500;
+        opacity: 0;
+        pointer-events: none;
+        transform: translate(calc(-1 * var(--space-1)), -50%);
+        transition: opacity var(--motion-fast) var(--ease-soft),
+                    transform var(--motion-fast) var(--motion-ease);
+    }
+
+    .shell.has-panel .side-rail .picker-toggle:hover .picker-toggle-text,
+    .shell.has-panel .side-rail .picker-toggle:focus-visible .picker-toggle-text {
+        opacity: 1;
+        transform: translate(0, -50%);
+        transition-delay: var(--motion-hint-delay);
     }
 
     .picker-panel,
