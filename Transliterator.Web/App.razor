@@ -163,6 +163,17 @@
                     <p class="result-note" role="status">@(_unchangedNote ? L["Output.Unchanged"].Value : null)</p>
                     </div>
 
+                    @* «С арабским» (D18): над каждой строкой вывода — её арабская строка
+                       поля. Тумблер — aria-pressed; на телефоне видна только иконка, подпись
+                       остаётся имени кнопки. *@
+                    <button type="button" class="arabic-toggle" aria-pressed="@(_arabicLines ? "true" : "false")"
+                            title="@L["Result.ArabicTitle"]" @onclick="ToggleArabicLinesAsync">
+                        <svg class="arabic-toggle-icon" viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M20 6H10M20 10h-6" /><path d="M4 15h16M4 19h11" />
+                        </svg>
+                        <span class="arabic-toggle-label">@L["Result.Arabic"]</span>
+                    </button>
+
                     @* Значок и подпись — одни и те же узлы во всех состояниях: галочка
                        дорисовывается поверх листов, а живая область объявляет новую
                        подпись, а не появление новой кнопки. *@
@@ -180,12 +191,20 @@
                    мышью копируется тем же текстом, что и кнопкой. Знак держится вместе
                    с последним словом, у слова через дефис — с его последней частью (ayah-tail), и не переносится на строку один.
                    Изменённые сменой настройки слова — в mark (D19); новый ключ при каждой
-                   смене пересоздаёт строки, и подсветка проигрывается заново. *@
+                   смене пересоздаёт строки, и подсветка проигрывается заново.
+                   Над строкой — её арабская строка поля (D18), свёрнутая, пока тумблер
+                   выключен: включение раскрывает её плавно (.fold, D21). Строке без пары в
+                   поле арабской строки нет. Копирование кнопкой — только _result, а
+                   мышью арабское не выделяется (user-select: none). *@
                 <div class="result-text" @key="_changeKey">
-                    @{ var lines = ResultLine.Split(_result); }
+                    @{ var lines = ResultLine.Split(_result); var sources = ResultLine.Sources(_arabic, lines.Count); }
                     @for (var i = 0; i < lines.Count; i++)
                     {
                         var line = lines[i];
+                        if (sources[i] is { } source)
+                        {
+                            <div class="fold result-source @(_arabicLines ? "is-open" : null)" inert="@(!_arabicLines)"><div class="fold-inner"><p class="result-source-text" dir="rtl" lang="ar">@source</p></div></div>
+                        }
                         if (line.Ayah is null)
                         {
                             <div class="result-line"><ChangedText Segments="Part(i, 0, line.Text)" /></div>
@@ -273,6 +292,12 @@
 
     /// <summary>Ключ хранилища браузера, под которым живёт выбранная ступень чтения (I2).</summary>
     private const string ReadingKey = "transliterator.reading";
+
+    /// <summary>Ключ хранилища браузера для тумблера «С арабским» (D18).</summary>
+    private const string ArabicLinesKey = "transliterator.arabicLines";
+
+    /// <summary>Показывать ли над строками вывода их арабские строки (D18).</summary>
+    private bool _arabicLines;
 
     private IReadOnlyList<CorpusSurah> _surahs = Array.Empty<CorpusSurah>();
     private TransliterationProfile? _profile;
@@ -396,6 +421,7 @@
                 if (_canPaste)
                     StateHasChanged();
                 await RestoreReadingAsync();
+                await RestoreArabicLinesAsync();
                 await RestoreProfileAsync();
             }
 
@@ -457,6 +483,33 @@
         _reading = reading;
         Calculate();
         StateHasChanged();
+    }
+
+    /// <summary>
+    /// Тумблер «С арабским» помнится в браузере (D18) и, как ступень чтения,
+    /// читается после первой отрисовки.
+    /// </summary>
+    private async Task RestoreArabicLinesAsync()
+    {
+        if (await JS.InvokeAsync<string?>("page.load", ArabicLinesKey) != "1" || _arabicLines)
+            return;
+
+        _arabicLines = true;
+        StateHasChanged();
+    }
+
+    private async Task ToggleArabicLinesAsync()
+    {
+        _arabicLines = !_arabicLines;
+
+        try
+        {
+            await JS.InvokeVoidAsync("page.save", ArabicLinesKey, _arabicLines ? "1" : string.Empty);
+        }
+        catch (JSException ex)
+        {
+            Logger.LogWarning(ex, "Arabic lines choice could not be saved");
+        }
     }
 
     /// <summary>

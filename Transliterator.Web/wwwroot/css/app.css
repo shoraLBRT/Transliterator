@@ -1967,7 +1967,8 @@ html.is-sheet-open {
     border-radius: var(--radius-sm);
     white-space: pre-wrap;
     overflow-wrap: anywhere;
-    transition: background-color var(--motion-fast) var(--ease-soft);
+    transition: background-color var(--motion-fast) var(--ease-soft),
+                margin-top var(--motion-duration) var(--motion-ease);
 }
 
 /* Изменённое сменой настройки (D19): фон вспыхивает и гаснет, текст и его
@@ -2004,8 +2005,35 @@ mark.changed {
     }
 }
 
-.result-line + .result-line {
+/* Между строками — воздух; перед строкой может стоять свёрнутая арабская (D18),
+   поэтому сосед — любой предыдущий, а не только соседний. */
+.result-line ~ .result-line {
     margin-top: var(--space-1);
+}
+
+/* Арабская строка над строкой вывода (D18) — .fold (D21): тумблер раскрывает и
+   сворачивает её плавно. Пара «арабская — транслит» держится вместе, пары
+   разделены воздухом. Арабское тише вывода, справа налево, шрифтом поля; мышью
+   не выделяется — выделенный вывод копируется тем же текстом, что и кнопкой. */
+.result-line + .result-source.is-open {
+    margin-top: var(--space-3);
+}
+
+.result-source.is-open + .result-line {
+    margin-top: 0;
+}
+
+.result-source-text {
+    margin: 0;
+    padding: var(--space-1) 0 0;
+    font-family: var(--font-arabic);
+    font-size: 1.4rem;
+    line-height: 1.9;
+    color: var(--ink-muted);
+    text-align: right;
+    overflow-wrap: anywhere;
+    -webkit-user-select: none;
+    user-select: none;
 }
 
 .result-line:not(:only-child):hover {
@@ -2037,6 +2065,48 @@ mark.changed {
     font-variant-numeric: tabular-nums;
     line-height: 1;
     vertical-align: 0.15em;
+}
+
+/* Тумблер «С арабским» (D18) — тихая кнопка рядом с «Копировать»: включённый
+   стоит на подложке, как нажатый. Обе кнопки — у правого края шапки. */
+.arabic-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-left: auto;
+    padding: 0.35rem 0.6rem;
+    border: 1px solid transparent;
+    border-radius: var(--radius-pill);
+    background: transparent;
+    color: var(--ink-muted);
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.arabic-toggle:hover {
+    background: var(--foam-100);
+    color: var(--foam-700);
+}
+
+.arabic-toggle[aria-pressed="true"] {
+    border-color: var(--foam-300);
+    background: var(--foam-100);
+    color: var(--foam-700);
+}
+
+.arabic-toggle-icon {
+    width: 1rem;
+    height: 1rem;
+    flex: none;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+}
+
+.arabic-toggle + .copy-button {
+    margin-left: 0;
 }
 
 .copy-button {
@@ -2361,6 +2431,7 @@ mark.changed {
 .picker-toggle,
 .side-rail .picker-toggle svg,
 .copy-button,
+.arabic-toggle,
 .result-chip,
 .language-option,
 .picker-item,
@@ -2381,6 +2452,7 @@ mark.changed {
 .icon-button:active:not(:disabled),
 .picker-toggle:active:not(:disabled),
 .copy-button:active:not(:disabled),
+.arabic-toggle:active,
 .result-chip:active,
 .language-option:active:not([aria-pressed="true"]),
 .reading-count:active:not(:disabled),
@@ -2771,6 +2843,21 @@ mark.changed {
     .result-meta {
         order: 1;
         flex-basis: 100%;
+    }
+
+    /* Тумблер «С арабским» (D18) рядом с подписью и «Копировать» — одной иконкой:
+       подпись остаётся имени кнопки, диктору, и подсказкой title. */
+    .arabic-toggle {
+        padding-inline: 0.5rem;
+    }
+
+    .arabic-toggle-label {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+        white-space: nowrap;
     }
 }
 
