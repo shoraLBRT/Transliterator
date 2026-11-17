@@ -157,13 +157,27 @@
     <value>Without tajweed</value>
   </data>
   <data name="ModeNote.Full" xml:space="preserve">
-    <value>As tajweed requires</value>
+    <value>All tajweed rules</value>
   </data>
   <data name="ModeNote.Variants" xml:space="preserve">
-    <value>Tajweed your way: below, under Tajweed rules, choose how long to hold madd and what to skip</value>
+    <value>You choose the rules below</value>
   </data>
   <data name="ModeNote.Plain" xml:space="preserve">
-    <value>Ordinary Arabic reading</value>
+    <value>Plain reading, no tajweed</value>
+  </data>
+  <data name="Reading.CountsLead" xml:space="preserve">
+    <value>A count is how long to hold a vowel.</value>
+  </data>
+  <data name="Reading.SwitchableLead" xml:space="preserve">
+    <value>A switch turns a rule off.</value>
+  </data>
+  <data name="Reading.More" xml:space="preserve">
+    <value>More</value>
+    <comment>Link that opens the details of a note (I14)</comment>
+  </data>
+  <data name="Reading.Less" xml:space="preserve">
+    <value>Less</value>
+    <comment>Link that closes the details of a note (I14)</comment>
   </data>
   <data name="Reading.CountsNote" xml:space="preserve">
     <value>A count is how long a long vowel is held: two is an ordinary long vowel, four and six are twice and three times as long. In writing, length is a repeated letter, but there are not as many letters as counts: two counts — two letters, four — three, five — four, six — five. The writing does not count harakat as letters: it puts the lengths in order, and each count looks different.</value>

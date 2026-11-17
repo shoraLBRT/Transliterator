@@ -60,13 +60,11 @@ namespace Transliterator.Tests.DocsTests
         }
 
         [Fact]
-        public void SecondTier_IsCalledPartialTajweed_AndItsNoteNamesBothChoicesAndWhereToMakeThem()
+        public void SecondTier_IsCalledPartialTajweed_AndEachTierHasOneShortDistinctNote()
         {
             // Решение владельца к I5: вторая ступень — «Неполный таджвид» и под полем,
-            // и в панели (оба места берут имя из ModeName), а пояснение говорит и про
-            // счёт мадда, и про правила, которые можно не читать (I4). I11: оно же
-            // говорит, где это выбрать — ниже, в блоке «Правила таджвида», — и слово
-            // «правила» в нём одно, без тавтологии.
+            // и в панели (оба места берут имя из ModeName). I14: пояснение каждой ступени —
+            // одна короткая различимая фраза.
             var picker = Regex.Replace(File.ReadAllText(Path.Combine(ReadmeTests.RepositoryRoot(),
                                                                      "Transliterator.Web", "Components", "ReadingPicker.razor")), @"\s+", " ");
 
@@ -76,23 +74,17 @@ namespace Transliterator.Tests.DocsTests
             var russian = PageStrings.Web("ru");
             Assert.Equal("Неполный таджвид", russian["Mode.Variants"]);
             Assert.DoesNotContain(russian.Values, value => value.Contains("Свои варианты"));
-            Assert.Contains("мадд", russian["ModeNote.Variants"]);
-            Assert.Contains("можно не читать", russian["ModeNote.Variants"]);
-            Assert.Contains("ниже", russian["ModeNote.Variants"]);
-            Assert.Contains("«Правилах таджвида»", russian["ModeNote.Variants"]);
-            Assert.Single(Regex.Matches(russian["ModeNote.Variants"], "правил", RegexOptions.IgnoreCase));
-            Assert.Equal("Как требует таджвид", russian["ModeNote.Full"]);
-            Assert.Equal("Обычное арабское чтение", russian["ModeNote.Plain"]);
+            // I14: пояснения ступеней — одна короткая различимая фраза; мадд и «можно не
+            // читать» ушли в «Подробнее» над правилами (Reading.*Lead / *Note).
+            Assert.Equal("Сами выбираете правила ниже", russian["ModeNote.Variants"]);
+            Assert.Equal("Все правила таджвида", russian["ModeNote.Full"]);
+            Assert.Equal("Обычное чтение, без таджвида", russian["ModeNote.Plain"]);
 
             var english = PageStrings.Web("en");
             Assert.Equal("Partial tajweed", english["Mode.Variants"]);
-            Assert.Contains("madd", english["ModeNote.Variants"]);
-            Assert.Contains("skip", english["ModeNote.Variants"]);
-            Assert.Contains("below", english["ModeNote.Variants"]);
-            Assert.Contains(english["Group.Tajweed"], english["ModeNote.Variants"]);
-            Assert.Single(Regex.Matches(english["ModeNote.Variants"], "rule", RegexOptions.IgnoreCase));
-            Assert.Equal("As tajweed requires", english["ModeNote.Full"]);
-            Assert.Equal("Ordinary Arabic reading", english["ModeNote.Plain"]);
+            Assert.Equal("You choose the rules below", english["ModeNote.Variants"]);
+            Assert.Equal("All tajweed rules", english["ModeNote.Full"]);
+            Assert.Equal("Plain reading, no tajweed", english["ModeNote.Plain"]);
         }
 
         [Fact]
@@ -146,13 +138,32 @@ namespace Transliterator.Tests.DocsTests
 
         [Theory]
         [MemberData(nameof(Languages))]
+        public void RulesNotes_AreOneShortPhraseWithDetailsBehindAMoreLink(string language)
+        {
+            // I14: над правилами стоят короткие фразы, длинные пояснения — под «Подробнее»
+            // (aria-expanded, тело свёрнуто inert + aria-hidden, как описания правил).
+            var picker = File.ReadAllText(Path.Combine(ReadmeTests.RepositoryRoot(),
+                                                       "Transliterator.Web", "Components", "ReadingPicker.razor"));
+            Assert.Contains("NoteWithDetails(\"counts\", \"Reading.CountsLead\", \"Reading.CountsNote\")", picker);
+            Assert.Contains("NoteWithDetails(\"switchable\", \"Reading.SwitchableLead\", \"Reading.SwitchableNote\")", picker);
+            Assert.Contains("class=\"reading-note-more\" aria-expanded=", picker);
+            Assert.Contains("inert=\"@(!open)\" aria-hidden=\"@(open ? null : \"true\")\"", picker);
+
+            var strings = PageStrings.Web(language);
+            foreach (var lead in new[] { "Reading.CountsLead", "Reading.SwitchableLead" })
+                Assert.True(strings[lead].Length <= 50, $"{lead} is not a short phrase");
+            Assert.NotEqual(strings["Reading.More"], strings["Reading.Less"]);
+        }
+
+        [Theory]
+        [MemberData(nameof(Languages))]
         public void CountHint_ExplainsTheLengthScale_AsThePipelineWritesIt(string language)
         {
             // Условие владельца к G7: там, где выбирают счёт, сказано, почему букв
             // не столько, сколько харакатов, — и шкала в пояснении та же, что у рендерера.
             var picker = File.ReadAllText(Path.Combine(ReadmeTests.RepositoryRoot(),
                                                        "Transliterator.Web", "Components", "ReadingPicker.razor"));
-            Assert.Contains("@L[\"Reading.CountsNote\"]", picker);
+            Assert.Contains("\"Reading.CountsLead\", \"Reading.CountsNote\")", picker);
 
             var note = PageStrings.Web(language)["Reading.CountsNote"];
             var numbers = NumberWords[language];

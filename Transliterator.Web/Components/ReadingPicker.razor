@@ -94,8 +94,8 @@
                     <div class="reading-block-body">
                         @if (Variants && tier == TajweedTier.Tajweed)
                         {
-                            <p class="reading-variants-note">@L["Reading.CountsNote"]</p>
-                            <p class="reading-variants-note">@L["Reading.SwitchableNote"]</p>
+                            @NoteWithDetails("counts", "Reading.CountsLead", "Reading.CountsNote")
+                            @NoteWithDetails("switchable", "Reading.SwitchableLead", "Reading.SwitchableNote")
                         }
 
                         <ul class="reading-list">
@@ -225,13 +225,43 @@
     /// </summary>
     private readonly HashSet<string> _openDescriptions = new();
 
+    /// <summary>Пояснения над правилами с раскрытыми подробностями (I14).</summary>
+    private readonly HashSet<string> _openNotes = new();
+
     private bool Variants => Choice.Mode == ReadingMode.Variants;
 
     protected override Task BeforeOpenAsync()
     {
         _openBlocks.Clear();
         _openDescriptions.Clear();
+        _openNotes.Clear();
         return Task.CompletedTask;
+    }
+
+    /// <summary>
+    /// Пояснение из одной короткой фразы; подробности — под ссылкой «Подробнее» (I14).
+    /// Тело тот же приём, что у описаний правил: свёрнуто — inert и aria-hidden.
+    /// </summary>
+    private RenderFragment NoteWithDetails(string id, string leadKey, string detailsKey) => __builder =>
+    {
+        var open = _openNotes.Contains(id);
+        var detailsId = $"reading-note-{id}";
+        <p class="reading-variants-note">
+            @L[leadKey]
+            <button type="button" class="reading-note-more" aria-expanded="@(open ? "true" : "false")" aria-controls="@detailsId"
+                    @onclick="() => ToggleNote(id)">@L[open ? "Reading.Less" : "Reading.More"]</button>
+        </p>
+        <div id="@detailsId" class="fold @(open ? "is-open" : null)" inert="@(!open)" aria-hidden="@(open ? null : "true")">
+            <div class="fold-inner">
+                <p class="reading-variants-note">@L[detailsKey]</p>
+            </div>
+        </div>
+    };
+
+    private void ToggleNote(string id)
+    {
+        if (!_openNotes.Remove(id))
+            _openNotes.Add(id);
     }
 
     private void ToggleDescription(TajweedRule rule)

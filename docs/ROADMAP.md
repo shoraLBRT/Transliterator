@@ -180,7 +180,7 @@ Milestone «Итерация 3 · Отзывчивый интерфейс». П�
 | 11 | [D19](https://github.com/shoraLBRT/Transliterator/issues/183) — подсветка изменённого в выводе | D17 (сделано 2026-11-17; `OutputDiff` в ядре сравнивает прежний и новый вывод по словам — LCS внутри строки, строки по номеру; смена ступени, правила или профиля оборачивает изменённые слова в `mark.changed` со вспышкой `--highlight` за `--motion-highlight`, а без изменений показывает «Вывод не изменился» на 3 с) |
 | 12 | [D18](https://github.com/shoraLBRT/Transliterator/issues/182) — арабский текст над строками транслитерации | D17 |
 | 13 | [D22](https://github.com/shoraLBRT/Transliterator/issues/186) — экран загрузки: скелет и прогресс | — |
-| 14 | [I14](https://github.com/shoraLBRT/Transliterator/issues/190) — тексты панели «Как читать» короче | — |
+| 14 | [I14](https://github.com/shoraLBRT/Transliterator/issues/190) — тексты панели «Как читать» короче | — (сделано 2026-11-17; над правилами одна короткая фраза и ссылка «Подробнее» с `aria-expanded`, длинные пояснения в `.fold` под ней; пояснения ступеней короткие и разные) |
 | 15 | [D26](https://github.com/shoraLBRT/Transliterator/issues/191) — тексты страницы короче и понятнее | — |
 | 16 | [D25](https://github.com/shoraLBRT/Transliterator/issues/189) — доступность: цели, контраст, объявления | все пункты итерации 3 |
 
