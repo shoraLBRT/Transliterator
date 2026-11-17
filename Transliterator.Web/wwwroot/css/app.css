@@ -1446,29 +1446,135 @@ svg {
 
 /* ---- Результат ---- */
 
+/* Карточка вывода (D17): шапка сверху, под ней аяты строками. --result-pad —
+   боковой отступ карточки: шапка растягивается на всю её ширину, чтобы,
+   прилипнув, закрывать прокручиваемый под ней текст от края до края. */
 .result {
+    --result-pad: var(--space-6);
     position: relative;
     margin-top: var(--space-5);
-    padding: var(--space-5) var(--space-6) var(--space-3);
+    padding: 0 var(--result-pad) var(--space-5);
     background: var(--foam-50);
     border: 1px solid var(--foam-100);
     border-radius: var(--radius-2xl);
     animation: panel-in var(--motion-duration) var(--motion-ease);
 }
 
-.result-text {
+/* Шапка липнет к верху экрана, пока карточка прокручивается: кнопка
+   копирования видна у любого аята суры. Фон — фон карточки, скругление —
+   её верхних углов; тонкая черта снизу отделяет уходящий под шапку текст. */
+.result-head {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2) var(--space-3);
+    margin: 0 calc(-1 * var(--result-pad)) var(--space-3);
+    padding: var(--space-3) var(--result-pad);
+    background: var(--foam-50);
+    border-bottom: 1px solid var(--foam-100);
+    border-radius: var(--radius-2xl) var(--radius-2xl) 0 0;
+}
+
+/* Подпись — в стиле подписи повтора в панелях: мелко, заглавными. */
+.result-title {
     margin: 0;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: var(--foam-700);
+}
+
+.result-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1) var(--space-2);
+    min-width: 0;
+}
+
+/* Метки ступени и профиля — тихие: подсказывают, чем записан вывод, и не
+   спорят с ним. Нажатие открывает свою панель. */
+.result-chip {
+    max-width: 14rem;
+    padding: 0.15rem 0.6rem;
+    border: 1px solid var(--foam-100);
+    border-radius: var(--radius-pill);
+    background: var(--paper);
+    color: var(--ink-muted);
+    font: inherit;
+    font-size: var(--text-xs);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    cursor: pointer;
+}
+
+.result-chip:hover {
+    border-color: var(--foam-300);
+    color: var(--foam-700);
+}
+
+.result-text {
     font-size: 1.15rem;
     line-height: 1.75;
+}
+
+/* Строка — аят: отдельный блок с воздухом вокруг. Подсветка наведения выходит
+   чуть за край текста, чтобы не прилипать к буквам. Одна строка без соседей
+   (вставленный текст) не подсвечивается: выделять там нечего. */
+.result-line {
+    min-height: 1.75em; /* пустая строка вывода остаётся строкой */
+    margin-inline: calc(-1 * var(--space-2));
+    padding: var(--space-1) var(--space-2);
+    border-radius: var(--radius-sm);
     white-space: pre-wrap;
     overflow-wrap: anywhere;
+    transition: background-color var(--motion-fast) var(--ease-soft);
+}
+
+.result-line + .result-line {
+    margin-top: var(--space-1);
+}
+
+.result-line:not(:only-child):hover {
+    background: var(--foam-100);
+}
+
+/* Хвост строки — последнее слово (у слова через дефис — его последняя часть),
+   пробел и знак номера: внутри хвоста переноса нет, и знак не уходит на строку
+   один. Длинное слово переносится по дефису перед хвостом, а сам хвост короток
+   и помещается и на 320px. */
+.ayah-tail {
+    white-space: nowrap;
+}
+
+/* Номер аята — круглый знак, как в мусхафе: тонкое кольцо и цифра в нём.
+   Цифра — текст, а не content: выделенное мышью копируется прежним текстом. */
+.ayah-mark {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.75em;
+    height: 1.75em;
+    padding: 0 0.3em;
+    border: 1px solid var(--foam-300);
+    border-radius: var(--radius-pill);
+    color: var(--foam-700);
+    font-size: 0.7em;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+    vertical-align: 0.15em;
 }
 
 .copy-button {
     display: inline-flex;
     align-items: center;
     gap: 0.4rem;
-    margin: 0.5rem 0 0 -0.6rem;
+    margin: 0 -0.6rem 0 auto;
     padding: 0.35rem 0.6rem;
     border: 0;
     border-radius: var(--radius-pill);
@@ -1483,9 +1589,51 @@ svg {
     background: var(--foam-100);
 }
 
-.copy-button svg {
+.copy-icon {
     width: 1rem;
     height: 1rem;
+    flex: none;
+}
+
+/* Отклик копирования: листы сжимаются и гаснут, галочка дорисовывается
+   штрихом (pathLength="1": длина штриха — единица), кнопка коротко
+   подсвечивается. Не вышло — подпись просит выделить текст руками. */
+.copy-icon-sheets,
+.copy-icon-check {
+    transform-box: fill-box;
+    transform-origin: center;
+    transition: opacity var(--motion-fast) var(--ease-soft),
+                transform var(--motion-duration) var(--ease-spring),
+                stroke-dashoffset var(--motion-slow) var(--motion-ease);
+}
+
+.copy-icon-check {
+    opacity: 0;
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+}
+
+.copy-button.is-copied .copy-icon-sheets {
+    opacity: 0;
+    transform: scale(0.6);
+}
+
+.copy-button.is-copied .copy-icon-check {
+    opacity: 1;
+    stroke-dashoffset: 0;
+}
+
+.copy-button.is-copied {
+    animation: copy-flash var(--motion-slow) var(--motion-ease);
+}
+
+@keyframes copy-flash {
+    from { background: var(--foam-300); }
+    to { background: transparent; }
+}
+
+.copy-button.is-failed {
+    color: var(--ink-muted);
 }
 
 .error {
@@ -1726,6 +1874,7 @@ svg {
 .picker-toggle,
 .side-rail .picker-toggle svg,
 .copy-button,
+.result-chip,
 .language-option,
 .picker-item,
 .reading-mode,
@@ -1744,6 +1893,7 @@ svg {
 .icon-button:active:not(:disabled),
 .picker-toggle:active:not(:disabled),
 .copy-button:active:not(:disabled),
+.result-chip:active,
 .language-option:active:not([aria-pressed="true"]),
 .reading-count:active:not(:disabled),
 .reading-switch:active:not(:disabled),
@@ -1961,7 +2111,15 @@ svg {
     }
 
     .result {
-        padding: 1rem 1.15rem 0.6rem;
+        --result-pad: 1.15rem;
+        padding-bottom: 1rem;
+    }
+
+    /* На телефоне метки не помещаются между подписью и кнопкой: подпись и
+       «Копировать» — первой строкой шапки, метки — второй (D17). */
+    .result-chips {
+        order: 1;
+        flex-basis: 100%;
     }
 }
 

@@ -328,6 +328,61 @@ namespace Transliterator.Tests.DocsTests
         }
 
         /// <summary>
+        /// Карточка вывода (D17): видимая подпись, метки ступени и профиля, которые
+        /// открывают свои панели, и кнопка копирования в шапке, липнущей к верху
+        /// экрана. Аят — строкой, номер — круглым знаком с цифрой текстом, а кнопка
+        /// копирует прежний вывод целиком, не собранный из строк.
+        /// </summary>
+        [Fact]
+        public void TheOutputCard_HasAStickyHead_MarksAyahNumbers_AndCopiesTheWholeResult()
+        {
+            var app = Regex.Replace(Web("App.razor"), @"\s+", " ");
+            var css = Regex.Replace(Web("wwwroot", "css", "app.css"), @"\s+", " ");
+            var script = Web("wwwroot", "js", "page.js");
+
+            var card = Regex.Match(app, @"<section class=""result"" aria-labelledby=""result-title"">(.*?)</section>");
+            Assert.True(card.Success, "the output card is not found");
+            var head = Regex.Match(card.Groups[1].Value, @"<div class=""result-head"">(.*?)</div> (?:@\*(?:(?!\*@).)*\*@ )?<div class=""result-text"">");
+            Assert.True(head.Success, "the card head is not found before the lines");
+
+            Assert.Contains("<h2 id=\"result-title\" class=\"result-title\">@L[\"Result.Title\"]</h2>", head.Groups[1].Value);
+            Assert.DoesNotContain("visually-hidden", head.Groups[1].Value);
+            Assert.Matches(@"class=""result-chip""[^>]*aria-label=""@L\[""Result\.ReadingChip"", ReadingName\]"" @onclick=""OpenReadingAsync"">@ReadingName</button>", head.Groups[1].Value);
+            Assert.Matches(@"class=""result-chip""[^>]*aria-label=""@L\[""Result\.ProfileChip"", _profile\.Name\]"" @onclick=""OpenProfileAsync"">@_profile\.Name</button>", head.Groups[1].Value);
+            Assert.Matches(@"<button type=""button"" class=""copy-button @CopyClass"" @onclick=""CopyAsync"">.*<span class=""copy-label"" aria-live=""polite"">@CopyLabel</span> </button>", head.Groups[1].Value);
+
+            // Метки — та же ступень, что у кнопки сбоку, и та же панель.
+            Assert.Contains("private string ReadingName => ReadingPicker.ModeName(L, _reading.Mode);", app);
+            Assert.Contains("private Task OpenReadingAsync() => _readingPicker?.OpenAsync() ?? Task.CompletedTask;", app);
+            Assert.Contains("private Task OpenProfileAsync() => _profilePicker?.OpenAsync() ?? Task.CompletedTask;", app);
+            Assert.Matches(@"<ReadingPicker [^>]*@ref=""_readingPicker"" />", app);
+            Assert.Matches(@"<ProfilePicker [^>]*@ref=""_profilePicker"" />", app);
+
+            // Номер аята — знак с цифрой текстом, пробел перед ним — в тексте строки.
+            Assert.Contains("@foreach (var line in ResultLine.Split(_result))", card.Groups[1].Value);
+            Assert.Contains("<div class=\"result-line\">@line.Lead<span class=\"ayah-tail\">@(line.Word)@(line.Gap)<span class=\"ayah-mark\">@line.Ayah</span></span></div>", card.Groups[1].Value);
+            Assert.Matches(@"\.ayah-tail \{ white-space: nowrap; \}", css);
+            Assert.Contains("<div class=\"result-line\">@line.Text</div>", card.Groups[1].Value);
+            Assert.DoesNotMatch(@"\.ayah-mark[^{]*\{[^}]*(?<![\w-])content:", css);
+
+            // Кнопка копирует весь вывод, как и прежде.
+            Assert.Contains("copied = await JS.InvokeAsync<bool>(\"page.copy\", _result);", app);
+            Assert.Contains("copy(text)", script);
+
+            Assert.Matches(@"\.result-head \{ position: sticky; top: 0;", css);
+            Assert.Matches(@"\.result-line \{[^}]*white-space: pre-wrap; overflow-wrap: anywhere;", css);
+            Assert.Matches(@"\.ayah-mark \{[^}]*font-variant-numeric: tabular-nums;", css);
+            Assert.Matches(@"\.copy-button\.is-copied \.copy-icon-check \{ opacity: 1; stroke-dashoffset: 0; \}", css);
+
+            foreach (var language in new[] { "ru", "en" })
+            {
+                Assert.Contains("{0}", PageStrings.Web(language)["Result.ReadingChip"]);
+                Assert.Contains("{0}", PageStrings.Web(language)["Result.ProfileChip"]);
+            }
+            Assert.Equal("Транслитерация", PageStrings.Web("ru")["Result.Title"]);
+        }
+
+        /// <summary>
         /// D10: панели и вывод появляются и уходят коротко и плавно. Уходящая панель
         /// ещё миг в разметке, но inert и скрыта от диктора; подложки у неё уже нет.
         /// Одна пара анимаций и одна длительность на всё, и та же длительность —

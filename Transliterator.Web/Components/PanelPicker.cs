@@ -80,6 +80,26 @@ namespace Transliterator.Web.Components
             Panels.Open(Panel);
         }
 
+        /// <summary>
+        /// Открыть панель со стороны — меткой ступени или профиля в шапке вывода
+        /// (D17). Как и кнопка, переводит фокус в панель; уже открытую не
+        /// закрывает, а только возвращает в неё фокус. Escape потом вернёт фокус
+        /// на кнопку у края страницы — она и есть хозяйка панели.
+        /// </summary>
+        public async Task OpenAsync()
+        {
+            _focusPanel = true;
+
+            if (IsOpen)
+            {
+                StateHasChanged();
+                return;
+            }
+
+            await BeforeOpenAsync();
+            Panels.Open(Panel);
+        }
+
         protected void Close() => Panels.Close(Panel);
 
         protected async Task CloseToToggleAsync()

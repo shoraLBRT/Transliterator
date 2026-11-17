@@ -60,6 +60,18 @@
   <data name="Result.Title" xml:space="preserve">
     <value>Транслитерация</value>
   </data>
+  <data name="Result.ReadingChip" xml:space="preserve">
+    <value>Ступень чтения: {0}. Изменить</value>
+  </data>
+  <data name="Result.ReadingChipTitle" xml:space="preserve">
+    <value>Изменить ступень чтения</value>
+  </data>
+  <data name="Result.ProfileChip" xml:space="preserve">
+    <value>Профиль: {0}. Изменить</value>
+  </data>
+  <data name="Result.ProfileChipTitle" xml:space="preserve">
+    <value>Изменить профиль</value>
+  </data>
   <data name="Copy.Action" xml:space="preserve">
     <value>Копировать</value>
   </data>
