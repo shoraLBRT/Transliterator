@@ -123,6 +123,24 @@
   <data name="Surah.Caption" xml:space="preserve">
     <value>Their transliteration with the Cyrillic profile is checked by hand</value>
   </data>
+  <data name="Surah.SearchLabel" xml:space="preserve">
+    <value>Find a surah</value>
+  </data>
+  <data name="Surah.SearchPlaceholder" xml:space="preserve">
+    <value>Number or name</value>
+  </data>
+  <data name="Surah.NothingFound" xml:space="preserve">
+    <value>Nothing found</value>
+  </data>
+  <data name="Surah.AyahCount.One" xml:space="preserve">
+    <value>{0} ayah</value>
+  </data>
+  <data name="Surah.AyahCount.Few" xml:space="preserve">
+    <value>{0} ayahs</value>
+  </data>
+  <data name="Surah.AyahCount.Many" xml:space="preserve">
+    <value>{0} ayahs</value>
+  </data>
   <data name="Reading.Title" xml:space="preserve">
     <value>How to read</value>
   </data>

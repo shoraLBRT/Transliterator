@@ -127,6 +127,24 @@
   <data name="Surah.Caption" xml:space="preserve">
     <value>Транслитерация этих сур сверена вручную</value>
   </data>
+  <data name="Surah.SearchLabel" xml:space="preserve">
+    <value>Найти суру</value>
+  </data>
+  <data name="Surah.SearchPlaceholder" xml:space="preserve">
+    <value>Номер или название</value>
+  </data>
+  <data name="Surah.NothingFound" xml:space="preserve">
+    <value>Ничего не найдено</value>
+  </data>
+  <data name="Surah.AyahCount.One" xml:space="preserve">
+    <value>{0} аят</value>
+  </data>
+  <data name="Surah.AyahCount.Few" xml:space="preserve">
+    <value>{0} аята</value>
+  </data>
+  <data name="Surah.AyahCount.Many" xml:space="preserve">
+    <value>{0} аятов</value>
+  </data>
   <data name="Reading.Title" xml:space="preserve">
     <value>Как читать</value>
   </data>

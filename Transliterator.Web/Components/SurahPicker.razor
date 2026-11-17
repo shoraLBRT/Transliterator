@@ -1,12 +1,17 @@
+@using Transliterator.Core.Services
 @inherits PanelPicker
+@inject IJSRuntime JS
 
 @* Готовые суры одной кнопкой под полем ввода — единственная настройка, что
    осталась под полем (D6): сура меняет сам текст, а не то, как он пишется.
-   Список открывается так же, как панели ступени и профиля: на широком экране
-   колонкой сбоку. Список не перечисляет суры в разметке: сура, добавленная
-   в корпус, появляется здесь сама. *@
+   На широком экране список выпадает прямо под своей кнопкой (D15), а не
+   колонкой у края страницы, как «Как читать» и профиль: взгляд ищет его там,
+   где нажал, и поле с выводом не сдвигаются. Щелчок мимо списка его закрывает
+   (прозрачная подложка). Уже 64rem — нижний лист, как у всех панелей (D14).
+   Список не перечисляет суры в разметке: сура, добавленная в корпус,
+   появляется здесь сама. *@
 
-<div class="picker">
+<div class="picker surah-picker">
     <button type="button" class="picker-toggle" aria-expanded="@(IsOpen ? "true" : "false")"
             aria-controls="surah-menu" @onclick="ToggleAsync" @ref="ToggleButton">
         <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -19,26 +24,52 @@
     @if (IsShown)
     {
         @* Подложка листа (D14) гаснет вместе с ним; щелчок по ней закрывает лист
-           и возвращает фокус на кнопку — как крестик и Escape. *@
+           и возвращает фокус на кнопку — как крестик и Escape. На широком экране
+           она прозрачная: выпадающий список закрывается щелчком мимо (D15). *@
         <div class="picker-backdrop @Closing.CssClass" @onclick="CloseToToggleAsync"></div>
 
-        <div id="surah-menu" class="picker-panel @Closing.CssClass" inert="@Closing.IsClosing" aria-hidden="@Closing.AriaHidden" role="dialog" aria-labelledby="surah-menu-title"
+        <div id="surah-menu" class="picker-panel surah-panel @Closing.CssClass" inert="@Closing.IsClosing" aria-hidden="@Closing.AriaHidden" role="dialog" aria-labelledby="surah-menu-title"
              tabindex="-1" @ref="PanelElement" @onkeydown="OnPanelKeyDownAsync">
             <PanelHead Id="surah-menu-title" Title="@L["Surah.Title"]" Close="CloseToToggleAsync" />
             <p class="picker-caption">@L["Surah.Caption"]</p>
 
-            <ul class="picker-list">
-                @foreach (var surah in Surahs)
-                {
-                    <li>
-                        <button type="button" class="picker-item" @onclick="() => ChooseAsync(surah)">
+            @* Поиск (D15) — по номеру, имени на любом языке страницы и арабскому имени
+               (SurahSearch). Поле — combobox: стрелки ведут выбор по списку
+               (aria-activedescendant), Enter выбирает, Escape закрывает список. *@
+            <div class="surah-search">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5" /><path d="m16 16 4.5 4.5" /></svg>
+                <input type="search" class="surah-search-input" role="combobox" aria-label="@L["Surah.SearchLabel"]"
+                       placeholder="@L["Surah.SearchPlaceholder"]" autocomplete="off" spellcheck="false"
+                       aria-autocomplete="list" aria-expanded="@(Found.Count > 0 ? "true" : "false")" aria-controls="surah-list"
+                       aria-activedescendant="@ActiveId" value="@_query" @oninput="OnSearch" @onkeydown="OnSearchKeyDownAsync" @ref="_search" />
+            </div>
+
+            @if (Found.Count == 0)
+            {
+                <p class="surah-empty" role="status">@L["Surah.NothingFound"]</p>
+            }
+            else
+            {
+                <ul id="surah-list" class="picker-list" role="listbox" aria-labelledby="surah-menu-title">
+                    @for (var i = 0; i < Found.Count; i++)
+                    {
+                        var surah = Found[i];
+                        var index = i;
+                        var current = surah.Number == Current;
+                        <li id="@OptionId(surah)" role="option" aria-selected="@(current ? "true" : "false")"
+                            class="picker-item @(index == _active ? "is-active" : null) @(current ? "is-current" : null)"
+                            @onclick="() => ChooseAsync(surah)" @onmouseenter="() => _active = index">
                             <span class="picker-number">@surah.Number</span>
-                            <span class="picker-name">@surah.Name.Current</span>
+                            <span class="surah-names">
+                                <span class="picker-name">@surah.Name.Current</span>
+                                <span class="surah-ayahs">@L.Count("Surah.AyahCount", surah.Ayahs.Count)</span>
+                            </span>
                             <span class="picker-arabic" dir="rtl" lang="ar">@surah.ArabicName</span>
-                        </button>
-                    </li>
-                }
-            </ul>
+                            <svg class="surah-check" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5" /></svg>
+                        </li>
+                    }
+                </ul>
+            }
         </div>
     }
 </div>
@@ -50,7 +81,97 @@
     [Parameter]
     public EventCallback<CorpusSurah> Chosen { get; set; }
 
+    /// <summary>
+    /// Номер суры, чей текст сейчас в поле (D15): она отмечена в списке. Поле
+    /// правили — отметки нет.
+    /// </summary>
+    [Parameter]
+    public int? Current { get; set; }
+
     protected override string Panel => "surah";
+
+    private ElementReference _search;
+    private string _query = string.Empty;
+    private int _active;
+    private bool _keysBound;
+
+    /// <summary>Суры, подходящие к поиску: пересчитываются, когда меняется поиск или список.</summary>
+    private IReadOnlyList<CorpusSurah> Found { get; set; } = Array.Empty<CorpusSurah>();
+
+    protected override void OnParametersSet() => Found = SurahSearch.Filter(Surahs, _query);
+
+    private string? ActiveId => _active < Found.Count ? OptionId(Found[_active]) : null;
+
+    private static string OptionId(CorpusSurah surah) => $"surah-option-{surah.Number}";
+
+    /// <summary>Каждое открытие — с пустым поиском, выбор стоит на текущей суре.</summary>
+    protected override Task BeforeOpenAsync()
+    {
+        _query = string.Empty;
+        Found = Surahs;
+        _active = Math.Max(0, Surahs.ToList().FindIndex(surah => surah.Number == Current));
+        return Task.CompletedTask;
+    }
+
+    protected override void OnClosed() => _keysBound = false;
+
+    /// <summary>
+    /// На широком экране фокус — сразу в поле поиска: печатай и выбирай. На
+    /// телефоне — в саму панель, как у остальных: клавиатура не выскакивает,
+    /// пока поиск не тронут.
+    /// </summary>
+    protected override async Task FocusOpenedAsync()
+    {
+        if (await JS.InvokeAsync<bool>("page.wide"))
+            await _search.FocusAsync();
+        else
+            await base.FocusOpenedAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (IsOpen && !_keysBound)
+        {
+            _keysBound = true;
+            await JS.InvokeVoidAsync("page.listKeys", _search);
+        }
+
+        await base.OnAfterRenderAsync(firstRender);
+    }
+
+    private void OnSearch(ChangeEventArgs e)
+    {
+        _query = e.Value?.ToString() ?? string.Empty;
+        Found = SurahSearch.Filter(Surahs, _query);
+        _active = 0;
+    }
+
+    private async Task OnSearchKeyDownAsync(KeyboardEventArgs e)
+    {
+        var found = Found;
+        if (found.Count == 0)
+            return;
+
+        switch (e.Key)
+        {
+            case "ArrowDown":
+                _active = Math.Min(_active + 1, found.Count - 1);
+                break;
+            case "ArrowUp":
+                _active = Math.Max(_active - 1, 0);
+                break;
+            case "Enter":
+                // Выбор с клавиатуры возвращает фокус на кнопку, как Escape:
+                // список закрылся, и фокус не теряется на странице.
+                await ChooseAsync(found[Math.Min(_active, found.Count - 1)]);
+                await ToggleButton.FocusAsync();
+                return;
+            default:
+                return;
+        }
+
+        await JS.InvokeVoidAsync("page.reveal", OptionId(found[_active]));
+    }
 
     /// <summary>Сура выбрана — список закрывается: текст в поле уже другой, и вывод рядом.</summary>
     private async Task ChooseAsync(CorpusSurah surah)

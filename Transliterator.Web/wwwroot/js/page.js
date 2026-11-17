@@ -407,8 +407,36 @@ window.page = (() => {
         document.documentElement.classList.toggle("is-sheet-open", open);
     }
 
+    /**
+     * Широкий ли экран (D15): с 64rem список сур — выпадающий у кнопки, и фокус
+     * сразу уходит в поле поиска. Уже — нижний лист, и поле поиска без фокуса:
+     * на телефоне иначе сама выскочит клавиатура и закроет половину списка.
+     */
+    function wide() {
+        return window.matchMedia("(min-width: 64rem)").matches;
+    }
+
+    /**
+     * Стрелки в поле поиска сур (D15) двигают выбор по списку, а не курсор
+     * в начало и конец строки: их действие по умолчанию снимается здесь,
+     * до Blazor, у которого нет отмены только для части клавиш. У Enter — тоже:
+     * выбор возвращает фокус на кнопку «Выбрать суру», и без отмены тот же
+     * Enter нажал бы её и открыл список снова.
+     */
+    function listKeys(input) {
+        input?.addEventListener("keydown", event => {
+            if (event.key === "ArrowDown" || event.key === "ArrowUp" || event.key === "Enter")
+                event.preventDefault();
+        });
+    }
+
+    /** Выбранный стрелками пункт списка остаётся на виду (D15). */
+    function reveal(id) {
+        document.getElementById(id)?.scrollIntoView({ block: "nearest" });
+    }
+
     return {
-        typewriter, hintPaused, autosize, resize, sheetOpen, canPaste, paste, copy, guard, guardToken, guardReset, guardRemove,
+        typewriter, hintPaused, autosize, resize, sheetOpen, wide, listKeys, reveal, canPaste, paste, copy, guard, guardToken, guardReset, guardRemove,
         load, save, storageSet, storageRemove, storageKeys,
         browserLanguages, sessionSave, sessionTake, reload, setDocument,
     };
