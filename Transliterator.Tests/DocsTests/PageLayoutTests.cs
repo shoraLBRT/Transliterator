@@ -7,6 +7,7 @@ namespace Transliterator.Tests.DocsTests
     /// Раскладка страницы (D6), решение владельца 2026-11-12: под полем остаётся
     /// только выбор суры, ступень чтения и профиль — круглые кнопки сбоку, и на
     /// широком экране их панель открывается колонкой, не закрывая поле и вывод.
+    /// Список сур с D15 на широком экране — выпадающий под своей кнопкой.
     /// Тест читает разметку и стили страницы, а не их пересказ.
     /// </summary>
     public class PageLayoutTests
@@ -504,6 +505,71 @@ namespace Transliterator.Tests.DocsTests
             Assert.Contains("html.is-sheet-open { overflow: visible;", rules);
             Assert.Contains(".picker-panel.is-closing { animation-name: panel-out; }", rules);
             Assert.Matches(@"\.picker-panel \{[^}]*border-radius: var\(--radius-xl\);[^}]*animation-name: panel-in;", rules);
+        }
+
+        /// <summary>
+        /// D15, пересмотр D6 только для сур: на широком экране список сур — не колонка
+        /// у края страницы, а выпадающий под своей кнопкой. Он ничего не сдвигает
+        /// (страница не ставит has-panel для сур), закрывается щелчком мимо по
+        /// прозрачной подложке, а «Как читать» и профиль остаются колонкой.
+        /// </summary>
+        [Fact]
+        public void OnAWideScreen_TheSurahListDropsDownUnderItsButton_AndMovesNothing()
+        {
+            var css = Regex.Replace(Web("wwwroot", "css", "app.css"), @"\s+", " ");
+            var wide = Regex.Match(css, @"@media \(min-width: 64rem\) \{(.*?)\} /\* ---- Загрузка");
+            Assert.True(wide.Success, "the wide-screen layout is not found");
+            var rules = wide.Groups[1].Value;
+
+            Assert.Contains(".surah-picker { position: relative; }", rules);
+            var dropdown = Regex.Match(rules, @"\.picker-panel\.surah-panel \{([^}]*)\}");
+            Assert.True(dropdown.Success, "the surah dropdown rule is not found");
+            foreach (var declaration in new[]
+            {
+                "position: absolute;", "top: calc(100% + var(--space-2));", "left: 0;",
+                "max-height: 60dvh;", "box-shadow: var(--shadow-lg);", "--panel-shift-x: 0;",
+            })
+                Assert.Contains(declaration, dropdown.Groups[1].Value);
+            Assert.Contains(".surah-picker .picker-backdrop { display: block; background: transparent;", rules);
+            // Колонкой по-прежнему открываются остальные панели.
+            Assert.Matches(@"\.picker-panel, \.reading-panel, \.profile-panel \{[^}]*position: fixed", rules);
+
+            var app = Regex.Replace(Web("App.razor"), @"\s+", " ");
+            Assert.Contains("@(Panels.Current is not (null or \"surah\") ? \"has-panel\" : null)", app);
+
+            var picker = Regex.Replace(Web("Components", "SurahPicker.razor"), @"\s+", " ");
+            Assert.Contains("protected override string Panel => \"surah\";", picker);
+            Assert.Contains("<div class=\"picker surah-picker\">", picker);
+            Assert.Contains("class=\"picker-panel surah-panel @Closing.CssClass\"", picker);
+        }
+
+        /// <summary>
+        /// D15: в списке сур — поиск (combobox с aria-activedescendant над listbox),
+        /// стрелки и Enter; Escape закрывает, как у всех панелей. Фокус в поиск —
+        /// только на широком экране: на телефоне клавиатура не выскакивает сама.
+        /// Под именем — число аятов, текущая сура отмечена.
+        /// </summary>
+        [Fact]
+        public void TheSurahList_HasASearch_KeyboardChoice_AyahCounts_AndTheCurrentMark()
+        {
+            var picker = Regex.Replace(Web("Components", "SurahPicker.razor"), @"\s+", " ");
+
+            Assert.Matches(@"<input type=""search"" class=""surah-search-input"" role=""combobox"" aria-label=""@L\[""Surah\.SearchLabel""\]""(?:(?!/>).)*aria-controls=""surah-list""(?:(?!/>).)*aria-activedescendant=""@ActiveId""", picker);
+            Assert.Contains("<ul id=\"surah-list\" class=\"picker-list\" role=\"listbox\"", picker);
+            Assert.Matches(@"<li id=""@OptionId\(surah\)"" role=""option"" aria-selected=""@\(current \? ""true"" : ""false""\)""", picker);
+            Assert.Contains("SurahSearch.Filter(Surahs, _query)", picker);
+            Assert.Contains("<p class=\"surah-empty\" role=\"status\">@L[\"Surah.NothingFound\"]</p>", picker);
+            foreach (var key in new[] { "case \"ArrowDown\":", "case \"ArrowUp\":", "case \"Enter\":" })
+                Assert.Contains(key, picker);
+            Assert.Contains("@L.Count(\"Surah.AyahCount\", surah.Ayahs.Count)", picker);
+            Assert.Contains("surah.Number == Current", picker);
+
+            Assert.Contains("if (await JS.InvokeAsync<bool>(\"page.wide\")) await _search.FocusAsync(); else await base.FocusOpenedAsync();", picker);
+            var script = Web("wwwroot", "js", "page.js");
+            Assert.Contains("return window.matchMedia(\"(min-width: 64rem)\").matches;", script);
+
+            var app = Regex.Replace(Web("App.razor"), @"\s+", " ");
+            Assert.Contains("<SurahPicker Surahs=\"_surahs\" Chosen=\"ChooseAsync\" Current=\"CurrentSurah\" />", app);
         }
 
         /// <summary>

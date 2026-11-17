@@ -8,7 +8,7 @@
 @inject PagePanels Panels
 @implements IDisposable
 
-<div class="shell @(HasText ? "is-active" : null) @(Panels.Current is not null ? "has-panel" : null)">
+<div class="shell @(HasText ? "is-active" : null) @(Panels.Current is not (null or "surah") ? "has-panel" : null)">
     @* Шапка (D13): знак и короткое имя страницы слева, язык интерфейса (D7) справа.
        Она в потоке, над полем, и ничего не перекрывает: прежде переключатель стоял
        в углу поверх страницы и на телефоне наезжал на подсказку. Знак — буква «нун»
@@ -50,7 +50,7 @@
                 <div class="composer-tools">
                     @if (_surahs.Count > 0)
                     {
-                        <SurahPicker Surahs="_surahs" Chosen="ChooseAsync" />
+                        <SurahPicker Surahs="_surahs" Chosen="ChooseAsync" Current="CurrentSurah" />
                     }
                 </div>
 
@@ -294,8 +294,18 @@
     private bool HasText => !string.IsNullOrWhiteSpace(_arabic);
 
     /// <summary>
-    /// Открытая панель на широком экране отодвигает поле и вывод (D6) — для этого
-    /// странице нужно знать, открыта ли какая-нибудь. Уже 64rem панель — нижний
+    /// Сура, выбранная последней, и её текст (D15): пока поле держит именно его,
+    /// сура отмечена в списке; поле правили — отметки нет.
+    /// </summary>
+    private int? _chosenSurah;
+    private string? _chosenText;
+
+    private int? CurrentSurah => _arabic == _chosenText ? _chosenSurah : null;
+
+    /// <summary>
+    /// Открытая панель на широком экране отодвигает поле и вывод (D6) — кроме
+    /// списка сур: он выпадает под своей кнопкой и места не просит (D15). Для
+    /// этого странице нужно знать, какая панель открыта. Уже 64rem панель — нижний
     /// лист (D14), и пока он открыт, страница под ним не прокручивается.
     /// </summary>
     private void OnPanelsChanged()
@@ -550,6 +560,8 @@
     private void ChooseAsync(CorpusSurah surah)
     {
         _arabic = CorpusText.Arabic(surah);
+        _chosenSurah = surah.Number;
+        _chosenText = _arabic;
         _resizePending = true;
         Calculate();
         _ = HideToastAsync();
