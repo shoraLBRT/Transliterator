@@ -1756,6 +1756,43 @@ html.is-sheet-open {
     font-weight: 600;
 }
 
+/* Заголовок раскрывающегося раздела «О приложении» (D26): кнопка на всю ширину,
+   стрелка поворачивается в такт раскрытию, как у блоков правил (D21). */
+.about-fold-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+    width: 100%;
+    padding: 0.2rem 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    text-align: start;
+    cursor: pointer;
+}
+
+.about-fold-toggle:hover {
+    color: var(--foam-700);
+}
+
+.about-fold-chevron {
+    flex: none;
+    width: 1rem;
+    height: 1rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transition: transform var(--motion-duration) var(--motion-ease);
+}
+
+.about-fold-toggle[aria-expanded="true"] .about-fold-chevron {
+    transform: rotate(180deg);
+}
+
 .about-arabic {
     font-family: var(--font-arabic);
     font-size: 1.35rem;

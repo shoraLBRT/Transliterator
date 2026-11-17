@@ -217,7 +217,7 @@
     <value>Writing profile</value>
   </data>
   <data name="Profile.Caption" xml:space="preserve">
-    <value>The profile decides which letters write each sound</value>
+    <value>The profile chooses letters for each sound</value>
   </data>
   <data name="Profile.ListLabel" xml:space="preserve">
     <value>Profile</value>
@@ -250,13 +250,13 @@
     <value>Rename</value>
   </data>
   <data name="Profile.Conflicts" xml:space="preserve">
-    <value>Ambiguous graphemes: {0}. The profile is saved, but some letters cannot be told apart in the output — see the letters below.</value>
+    <value>Clashing spellings: {0}. The profile is saved, but these letters look the same in the output; details are below, at the letters.</value>
   </data>
   <data name="Preview.Label" xml:space="preserve">
     <value>Output</value>
   </data>
   <data name="Output.Unchanged" xml:space="preserve">
-    <value>Output unchanged: this setting changes nothing in the text</value>
+    <value>Output unchanged: this setting changes nothing here</value>
   </data>
   <data name="Preview.Empty" xml:space="preserve">
     <value>Type text in the field — you will see here how it is written</value>
@@ -301,16 +301,16 @@
     <value>Grapheme for {0}</value>
   </data>
   <data name="Conflict.Composed" xml:space="preserve">
-    <value>“{0}” for {1} = “{2}” for {3} + “{4}” for {5}: in the output {1} cannot be told apart from {3} followed by {5}.</value>
+    <value>“{0}” for {1} = “{2}” for {3} + “{4}” for {5}: in the output {1} looks the same as {3} then {5}.</value>
   </data>
   <data name="Conflict.Same" xml:space="preserve">
-    <value>“{0}” — {1} is written the same way: in the output {2} and {1} cannot be told apart.</value>
+    <value>“{0}” is also how {1} is written: {2} and {1} look the same in the output.</value>
   </data>
   <data name="Feedback.Toggle" xml:space="preserve">
     <value>Feedback</value>
   </data>
   <data name="Feedback.Title" xml:space="preserve">
-    <value>A transliteration error or feedback</value>
+    <value>Feedback or a mistake</value>
   </data>
   <data name="Feedback.MessageLabel" xml:space="preserve">
     <value>Message</value>
@@ -319,16 +319,16 @@
     <value>What did you like, what is wrong?</value>
   </data>
   <data name="Feedback.Attach" xml:space="preserve">
-    <value>Attach the text from the field and its transliteration — this makes the error easier to reproduce</value>
+    <value>Attach the text and its transliteration to help reproduce the error</value>
   </data>
   <data name="Feedback.Saved" xml:space="preserve">
-    <value>What you wrote is kept.</value>
+    <value>Your text is kept.</value>
   </data>
   <data name="Feedback.ViaGitHub" xml:space="preserve">
-    <value>Send it through the form on GitHub</value>
+    <value>Send through GitHub</value>
   </data>
   <data name="Feedback.NeedsAccount" xml:space="preserve">
-    <value>— it needs an account.</value>
+    <value>— an account is needed.</value>
   </data>
   <data name="Feedback.ViewOnGitHub" xml:space="preserve">
     <value>View on GitHub</value>
@@ -340,13 +340,13 @@
     <value>Send</value>
   </data>
   <data name="Feedback.Truncated" xml:space="preserve">
-    <value>The text is long, and only its beginning will get into the form. Leave only the part with the error in the field.</value>
+    <value>The text is long, so only its start goes into the form. Keep just the part with the error.</value>
   </data>
   <data name="Feedback.Opened" xml:space="preserve">
-    <value>The form opened in a new tab — send it there. What you wrote here stays while the page is open.</value>
+    <value>The form opened in a new tab: send it there. Your text here is kept while the page is open.</value>
   </data>
   <data name="Feedback.WillOpen" xml:space="preserve">
-    <value>A form on GitHub will open: there you can edit and send the message. A GitHub account is needed.</value>
+    <value>A GitHub form will open: edit and send your message there (an account is needed).</value>
   </data>
   <data name="Feedback.OpenForm" xml:space="preserve">
     <value>Open the form on GitHub</value>
@@ -355,7 +355,7 @@
     <value>Thank you, the message has been received.</value>
   </data>
   <data name="Feedback.GuardFailed" xml:space="preserve">
-    <value>The “not a robot” check did not load — a browser extension may be blocking it.</value>
+    <value>The “not a robot” check did not load: a browser extension may be blocking it.</value>
   </data>
   <data name="Feedback.NotVerified" xml:space="preserve">
     <value>The “not a robot” check failed. Try sending again.</value>
@@ -379,7 +379,7 @@
     <value>Why this page</value>
   </data>
   <data name="About.Why" xml:space="preserve">
-    <value>The page writes the Arabic text of the Quran in letters that people who don't read Arabic can follow. On many sites this writing — transliteration — has mistakes: different Arabic sounds merge into one letter, and the rules of recitation get lost.</value>
+    <value>The Quran in letters you can read without Arabic. Different sounds get different letters.</value>
   </data>
   <data name="About.ExampleTitle" xml:space="preserve">
     <value>An example</value>
@@ -394,25 +394,25 @@
     <value>As this page writes it</value>
   </data>
   <data name="About.ExampleNote" xml:space="preserve">
-    <value>The usual spelling uses one “h” for both ح and ه, though they sound different, and does not show which vowel is long. Here different sounds get different letters, and long vowels are visible.</value>
+    <value>Usually ح and ه are one “h” and length is hidden. Here the letters differ and length shows.</value>
   </data>
   <data name="About.HowTitle" xml:space="preserve">
     <value>How it works</value>
   </data>
   <data name="About.How" xml:space="preserve">
-    <value>The text goes through a pipeline of {0}. It applies the tajweed rules in order — pauses, merging sounds, nasal sounds, heavy and light letters, vowel length, the echo — and only then turns into letters.</value>
+    <value>First the tajweed rules are applied, then the text is written in letters. That takes {0}.</value>
   </data>
   <data name="About.ProfilesTitle" xml:space="preserve">
     <value>Your own spelling</value>
   </data>
   <data name="About.Profiles" xml:space="preserve">
-    <value>If you are used to other letters, you can change them: in the profile panel, press “{0}” and edit the letters under “{1}”.</value>
+    <value>Used to other letters? In the profile panel, press “{0}” and edit the letters under “{1}”.</value>
   </data>
   <data name="About.ThanksTitle" xml:space="preserve">
     <value>Thank you</value>
   </data>
   <data name="About.Thanks" xml:space="preserve">
-    <value>Thank you to everyone who sends feedback: it makes the page more accurate. And thank you for sharing the page with those who may need it.</value>
+    <value>Thank you for the feedback: it makes the page more accurate. And for sharing it.</value>
   </data>
   <data name="About.FeedbackAction" xml:space="preserve">
     <value>Send feedback</value>
