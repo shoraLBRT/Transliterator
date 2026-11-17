@@ -370,4 +370,10 @@
   <data name="StageCount.Many" xml:space="preserve">
     <value>{0} stages</value>
   </data>
+  <data name="QuickStart.Label" xml:space="preserve">
+    <value>Try:</value>
+  </data>
+  <data name="QuickStart.Note" xml:space="preserve">
+    <value>Paste Arabic text with vowel marks — the transliteration appears at once</value>
+  </data>
 </root>

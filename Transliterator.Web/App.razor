@@ -63,6 +63,27 @@
             </div>
         </div>
 
+        @* Быстрый старт (D24): в пустом состоянии три готовые суры одним щелчком.
+           Тот же .fold, что у подсказки (D16): с текстом блок схлопывается и возвращается
+           при очистке. Это тот же выбор суры, что под полем, — ChooseAsync. *@
+        @if (_quickSurahs.Count > 0)
+        {
+            <div class="fold quick-start @(HasText ? null : "is-open")" inert="@HasText" aria-hidden="@(HasText ? "true" : null)">
+            <div class="fold-inner">
+                <div class="quick-start-body">
+                    <div class="quick-start-chips" role="group" aria-label="@L["QuickStart.Label"]">
+                        <span class="quick-start-label">@L["QuickStart.Label"]</span>
+                        @foreach (var surah in _quickSurahs)
+                        {
+                            <button type="button" class="picker-toggle quick-chip" @onclick="() => ChooseAsync(surah)">@surah.Name.Current</button>
+                        }
+                    </div>
+                    <p class="quick-start-note">@L["QuickStart.Note"]</p>
+                </div>
+            </div>
+            </div>
+        }
+
         @* Ступень чтения и профиль (D6). На широком экране — круглые кнопки у края
            страницы, и панель открывается колонкой рядом с полем и выводом, отодвигая
            их, а не закрывая. На телефоне двум колонкам нет места: кнопки стоят строкой
@@ -221,6 +242,11 @@
     private ElementReference _input;
     private bool _resizePending;
     private bool _hintPaused;
+
+    /// <summary>Суры быстрого старта (D24); которых нет в корпусе — пропускаются.</summary>
+    private static readonly int[] QuickSurahNumbers = { 1, 112, 114 };
+
+    private IReadOnlyList<CorpusSurah> _quickSurahs = Array.Empty<CorpusSurah>();
     private CopyState _copyState;
     private int _copyStamp;
 
@@ -239,6 +265,7 @@
         Panels.Changed += OnPanelsChanged;
 
         _surahs = await LoadSurahsAsync();
+        _quickSurahs = QuickSurahNumbers.Select(n => _surahs.FirstOrDefault(s => s.Number == n)).OfType<CorpusSurah>().ToList();
         _placeholder = _surahs.FirstOrDefault(s => s.Number == 1)?.Ayahs.FirstOrDefault()?.Arabic ?? FallbackPlaceholder;
 
         _profile = await Profiles.GetProfileAsync(DefaultProfile);
