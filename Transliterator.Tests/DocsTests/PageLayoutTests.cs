@@ -45,6 +45,39 @@ namespace Transliterator.Tests.DocsTests
             Assert.Single(Regex.Matches(app, "<AboutPicker"));
         }
 
+        [Fact]
+        public void TheHeader_NamesThePage_AndHoldsTheLanguage_InTheFlow()
+        {
+            // D13: шапка над полем — знак и видимое имя (единственный h1) слева,
+            // язык справа. Она в потоке: переключатель языка больше не стоит
+            // поверх страницы и не наезжает на подсказку; с 64rem шапка сдвигается
+            // вместе с полем, и колонка панели её не накрывает.
+            var app = Web("App.razor");
+            var css = Web("wwwroot", "css", "app.css");
+            var index = Web("wwwroot", "index.html");
+
+            var header = Regex.Match(app, "<header class=\"topbar\">(.*?)</header>", RegexOptions.Singleline);
+            Assert.True(header.Success, "the header is not found");
+            Assert.True(header.Index < app.IndexOf("<main class=\"stage\">", StringComparison.Ordinal), "the header is not above the field");
+
+            Assert.Contains("<svg class=\"topbar-mark\"", header.Groups[1].Value);
+            Assert.Contains("<h1 class=\"topbar-name\">@L[\"Page.Heading\"]</h1>", header.Groups[1].Value);
+            Assert.True(header.Groups[1].Value.IndexOf("<h1", StringComparison.Ordinal)
+                        < header.Groups[1].Value.IndexOf("<LanguagePicker", StringComparison.Ordinal), "the language is not on the right");
+            Assert.Single(Regex.Matches(app, "<h1"));
+            Assert.Single(Regex.Matches(app, "<LanguagePicker"));
+
+            var languageSwitch = Regex.Match(css, @"\.language-switch \{([^}]*)\}");
+            Assert.True(languageSwitch.Success, "the language switch style is not found");
+            Assert.DoesNotContain("position", languageSwitch.Groups[1].Value);
+            Assert.Matches(@"\.topbar,\s*\.stage,\s*\.footer \{", css);
+
+            Assert.Contains("<link rel=\"icon\" href=\"favicon.svg\" type=\"image/svg+xml\" />", index);
+            Assert.Contains("<link rel=\"apple-touch-icon\" href=\"apple-touch-icon.png\" />", index);
+            Assert.True(File.Exists(Path.Combine(ReadmeTests.RepositoryRoot(), "Transliterator.Web", "wwwroot", "favicon.svg")));
+            Assert.True(File.Exists(Path.Combine(ReadmeTests.RepositoryRoot(), "Transliterator.Web", "wwwroot", "apple-touch-icon.png")));
+        }
+
         [Theory]
         [InlineData("SurahPicker.razor", "surah-menu")]
         [InlineData("ReadingPicker.razor", "reading-menu")]

@@ -38,7 +38,7 @@ namespace Transliterator.Tests.DocsTests
 
             Assert.Contains("private const string HintPrefix = \"Hint.\";", app);
             Assert.Contains("await JS.InvokeVoidAsync(\"page.typewriter\", _hint, Hints(), _input);", app);
-            Assert.Contains("<h1 class=\"visually-hidden\">@L[\"Page.Heading\"]</h1>", app);
+            Assert.Contains("<h1 class=\"topbar-name\">@L[\"Page.Heading\"]</h1>", app);
             Assert.Contains("L[\"Page.Title\"].Value", app);
         }
 

@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- Знак страницы (D13): буква «нун» — чаша пером и точка в ней, как в шапке
+       (App.razor). Цвета — --foam-100 и --foam-700 из app.css, светлой и тёмной
+       темы; apple-touch-icon.png — тот же знак в светлой теме. -->
+  <style>
+    .tile { fill: #def0e9; }
+    .mark { fill: #2e7363; }
+    @media (prefers-color-scheme: dark) {
+      .tile { fill: #21392f; }
+      .mark { fill: #7fd0b8; }
+    }
+  </style>
+  <rect class="tile" width="32" height="32" rx="8" />
+  <path class="mark" d="M6.5 8.5C6.5 18 10.5 23.5 16 23.5C21.5 23.5 25.5 18.5 25.5 11C24.2 17.1 20.8 20.7 16 20.7C11.2 20.7 7.6 16.1 6.5 8.5Z" />
+  <circle class="mark" cx="16" cy="11" r="2.2" />
+</svg>
