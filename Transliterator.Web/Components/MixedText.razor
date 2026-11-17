@@ -1,0 +1,39 @@
+@using System.Text.RegularExpressions
+
+@* Русский или английский текст со вставками арабских букв — описания правил
+   («перед гортанной буквой (ء ه ع ح غ خ)»). Арабские отрезки — в span с lang="ar"
+   и dir="rtl" (D25): диктор читает их арабским голосом, а не пропускает, и
+   порядок букв в строке не путается. Пробелов вокруг узлов нет — их нет в тексте. *@
+@foreach (var (text, arabic) in Split(Text))
+{
+    if (arabic)
+    {<span lang="ar" dir="rtl">@text</span>}
+    else
+    {@text}
+}
+
+@code {
+    [Parameter, EditorRequired]
+    public string Text { get; set; } = string.Empty;
+
+    // Отрезок — арабские буквы и знаки, между ними могут стоять пробелы: «ء ه ع» — один отрезок.
+    private static readonly Regex ArabicRun = new(
+        @"[؀-ۿݐ-ݿࢠ-ࣿﭐ-﷿ﹰ-﻿]+(?:\s+[؀-ۿݐ-ݿࢠ-ࣿﭐ-﷿ﹰ-﻿]+)*",
+        RegexOptions.CultureInvariant);
+
+    /// <summary>Текст по отрезкам: арабский или нет. Склеенные отрезки дают исходный текст.</summary>
+    public static IEnumerable<(string Text, bool Arabic)> Split(string text)
+    {
+        var at = 0;
+        foreach (Match match in ArabicRun.Matches(text))
+        {
+            if (match.Index > at)
+                yield return (text[at..match.Index], false);
+            yield return (match.Value, true);
+            at = match.Index + match.Length;
+        }
+
+        if (at < text.Length)
+            yield return (text[at..], false);
+    }
+}

@@ -30,7 +30,11 @@ namespace Transliterator.Web.Components
         /// </summary>
         protected PanelClosing Closing { get; } = new();
 
-        /// <summary>Панель в разметке: открыта или ещё уходит.</summary>
+        /// <summary>
+        /// Панель в разметке: открыта или ещё уходит. По нему же у кнопки панели
+        /// <c>aria-controls</c> (D25): ссылка на id, которого в разметке нет, —
+        /// ошибка ARIA, поэтому у закрытой панели атрибута нет.
+        /// </summary>
         protected bool IsShown => IsOpen || Closing.IsClosing;
 
         protected ElementReference ToggleButton;

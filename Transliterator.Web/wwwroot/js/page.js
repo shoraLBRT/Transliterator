@@ -203,6 +203,45 @@ window.page = (() => {
     }
 
     /**
+     * Кнопки под полем в одну строку (D25): подписи не переносятся, и если «Выбрать
+     * суру» и «Вставить» вместе не помещаются, строке ставится .is-compact —
+     * «Вставить» остаётся значком. Решает ширина, а не медиазапрос: подписи
+     * разной длины на разных языках и шрифтах. Строку меняет и Blazor (кнопка
+     * вставки появляется и уходит, список сур приходит позже), поэтому следит
+     * ещё и MutationObserver.
+     */
+    function fitBar(bar) {
+        if (!bar)
+            return;
+
+        // Считаются сами кнопки, а не scrollWidth строки: выпадающий список сур
+        // (D15) стоит внутри неё и шире её не делает, но в scrollWidth попал бы.
+        const fit = () => {
+            bar.classList.remove("is-compact");
+            const buttons = bar.querySelectorAll(".picker-toggle");
+            const style = getComputedStyle(bar);
+            const room = bar.getBoundingClientRect().width - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight)
+                - parseFloat(style.borderLeftWidth) - parseFloat(style.borderRightWidth);
+            const gap = parseFloat(style.columnGap) || 0;
+            let need = gap * (buttons.length - 1);
+            // Кнопка, сжатая уже своей подписи, отдаёт полную ширину в scrollWidth.
+            for (const button of buttons)
+                need += Math.max(button.getBoundingClientRect().width, button.scrollWidth);
+            if (need > room)
+                bar.classList.add("is-compact");
+        };
+
+        if (window.ResizeObserver)
+            new ResizeObserver(fit).observe(bar);
+        else
+            window.addEventListener("resize", fit);
+
+        new MutationObserver(fit).observe(bar, { childList: true, subtree: true });
+        document.fonts?.ready.then(fit);
+        fit();
+    }
+
+    /**
      * Вставка из буфера (D20). Кнопка «Вставить» показывается, только если
      * браузер умеет читать буфер; читать его он может и не дать — запрет
      * разрешения, страница не в фокусе. Тогда null, и страница скажет об этом.
@@ -429,7 +468,55 @@ window.page = (() => {
      */
     function sheetOpen(open) {
         document.documentElement.classList.toggle("is-sheet-open", open);
+        requestAnimationFrame(markModal);
     }
+
+    /**
+     * Лист уже 64rem модален (D25): подложка закрывает страницу, и диктору
+     * говорится aria-modal="true" — читать за листом нечего. С 64rem колонка
+     * рядом с полем не модальна, атрибута нет. Та же граница, что у фокуса ниже;
+     * ширина меняется — атрибут переставляется.
+     */
+    function markModal() {
+        for (const panel of document.querySelectorAll(".picker-panel")) {
+            if (!wide() && !panel.classList.contains("is-closing"))
+                panel.setAttribute("aria-modal", "true");
+            else
+                panel.removeAttribute("aria-modal");
+        }
+    }
+
+    window.matchMedia("(min-width: 64rem)").addEventListener?.("change", markModal);
+
+    /**
+     * Фокус в нижнем листе (D25). Уже 64rem лист закрывает страницу подложкой, и Tab
+     * не должен уходить за неё — к кнопкам, которых не видно: с последней цели листа
+     * фокус переходит на первую, с первой по Shift+Tab — на последнюю. С 64rem
+     * панель — колонка рядом с полем, страница рабочая, и Tab идёт дальше по ней.
+     */
+    document.addEventListener("keydown", event => {
+        if (event.key !== "Tab" || wide() || !document.documentElement.classList.contains("is-sheet-open"))
+            return;
+
+        const sheet = document.querySelector(".picker-panel:not(.is-closing)");
+        if (!sheet)
+            return;
+
+        const targets = [...sheet.querySelectorAll("button, a[href], input, select, textarea, [tabindex]:not([tabindex='-1'])")]
+            .filter(element => !element.disabled && !element.closest("[inert]") && element.getClientRects().length > 0);
+        if (targets.length === 0)
+            return;
+
+        const first = targets[0];
+        const last = targets[targets.length - 1];
+        const active = document.activeElement;
+        const outside = !sheet.contains(active) || active === sheet;
+
+        if (event.shiftKey ? outside || active === first : outside || active === last) {
+            event.preventDefault();
+            (event.shiftKey ? last : first).focus();
+        }
+    });
 
     /**
      * Широкий ли экран (D15): с 64rem список сур — выпадающий у кнопки, и фокус
@@ -460,7 +547,7 @@ window.page = (() => {
     }
 
     return {
-        typewriter, hintPaused, autosize, resize, sheetOpen, wide, listKeys, reveal, canPaste, paste, copy, guard, guardToken, guardReset, guardRemove,
+        typewriter, hintPaused, autosize, fitBar, resize, sheetOpen, wide, listKeys, reveal, canPaste, paste, copy, guard, guardToken, guardReset, guardRemove,
         load, save, storageSet, storageRemove, storageKeys,
         browserLanguages, sessionSave, sessionTake, reload, setDocument,
     };

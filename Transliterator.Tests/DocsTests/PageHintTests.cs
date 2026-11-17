@@ -102,7 +102,7 @@ namespace Transliterator.Tests.DocsTests
             Assert.Equal("Профиль: {0}", PageStrings.Web("ru")["Profile.Toggle"]);
             Assert.Equal("Profile: {0}", PageStrings.Web("en")["Profile.Toggle"]);
 
-            var toggle = Regex.Match(picker, "<button [^>]*aria-controls=\"profile-menu\"[^>]*>(.*?)</button>");
+            var toggle = Regex.Match(picker, "<button [^>]*aria-controls=\"@\\(IsShown \\? \"profile-menu\" : null\\)\"[^>]*>(.*?)</button>");
             Assert.True(toggle.Success, "the profile button is not found");
             Assert.Contains("<span class=\"picker-toggle-text\">@ToggleText</span>", toggle.Groups[1].Value);
             Assert.DoesNotContain("@Profile.Name", toggle.Groups[1].Value);

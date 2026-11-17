@@ -272,6 +272,9 @@
   <data name="Preview.Label" xml:space="preserve">
     <value>Вывод</value>
   </data>
+  <data name="Output.Updated" xml:space="preserve">
+    <value>Вывод обновлён</value>
+  </data>
   <data name="Output.Unchanged" xml:space="preserve">
     <value>Вывод не изменился: настройка здесь ничего не меняет</value>
   </data>

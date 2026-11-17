@@ -46,7 +46,7 @@
 
             @* Под полем — только выбор суры (D6): он меняет сам текст. Как этот текст
                читать и писать — круглые кнопки сбоку, ниже. *@
-            <div class="composer-bar">
+            <div class="composer-bar" @ref="_composerBar">
                 <div class="composer-tools">
                     @if (_surahs.Count > 0)
                     {
@@ -152,12 +152,12 @@
                         @if (_catalog is not null)
                         {
                             <button type="button" class="result-chip" title="@L["Result.ReadingChipTitle"]"
-                                    aria-label="@L["Result.ReadingChip", ReadingName]" @onclick="OpenReadingAsync">@ReadingName</button>
+                                    aria-label="@L["Result.ReadingChip", ReadingName]" @onclick="OpenReadingAsync"><span class="result-chip-text">@ReadingName</span></button>
                         }
                         @if (_profile is not null)
                         {
                             <button type="button" class="result-chip" title="@L["Result.ProfileChipTitle"]"
-                                    aria-label="@L["Result.ProfileChip", _profile.Name]" @onclick="OpenProfileAsync">@_profile.Name</button>
+                                    aria-label="@L["Result.ProfileChip", _profile.Name]" @onclick="OpenProfileAsync"><span class="result-chip-text">@_profile.Name</span></button>
                         }
                     </div>
                     <p class="result-note" role="status">@(_unchangedNote ? L["Output.Unchanged"].Value : null)</p>
@@ -232,6 +232,12 @@
        держится несколько секунд; живая область в разметке всегда — иначе диктор
        не заметил бы появления плашки. Между краями она уже, чем до значка отзыва
        в правом нижнем углу, и не наезжает на него. *@
+    @* «Вывод обновлён» (D25): вывод меняется на каждую правку, и диктору об этом
+       говорится одной фразой через секунду после последней, а не на каждый символ.
+       Сам вывод не зачитывается — его читают, дойдя до карточки. Своя живая
+       область: «не изменился» (D19), копирование и плашка говорят о другом. *@
+    <p class="visually-hidden" role="status">@_outputNote</p>
+
     <div class="toast-region" role="status" aria-live="polite">
         @if (_cleared is not null)
         {
@@ -325,8 +331,17 @@
     /// <summary>Сколько держится подпись «Вывод не изменился» (D19).</summary>
     private static readonly TimeSpan UnchangedNoteDuration = TimeSpan.FromSeconds(3);
 
+    // Объявление «Вывод обновлён» (D25): пауза после последней правки, срок фразы
+    // в живой области, её текст и вывод, о котором уже сказано.
+    private static readonly TimeSpan OutputNoteDelay = TimeSpan.FromSeconds(1);
+    private static readonly TimeSpan OutputNoteDuration = TimeSpan.FromSeconds(3);
+    private string? _outputNote;
+    private int _outputNoteStamp;
+    private string _announcedResult = string.Empty;
+
     private ElementReference _hint;
     private ElementReference _input;
+    private ElementReference _composerBar;
     private bool _resizePending;
     private bool _hintPaused;
 
@@ -417,6 +432,7 @@
                 await JS.InvokeVoidAsync("page.typewriter", _hint, Hints(), _input);
                 _hintPaused = false;
                 await JS.InvokeVoidAsync("page.autosize", _input);
+                await JS.InvokeVoidAsync("page.fitBar", _composerBar);
                 _canPaste = await JS.InvokeAsync<bool>("page.canPaste");
                 if (_canPaste)
                     StateHasChanged();
@@ -643,6 +659,7 @@
     {
         _arabic = e.Value?.ToString() ?? string.Empty;
         Calculate();
+        AnnounceOutput();
         _ = HideToastAsync();
     }
 
@@ -657,6 +674,7 @@
         _chosenText = _arabic;
         _resizePending = true;
         Calculate();
+        AnnounceOutput();
         _ = HideToastAsync();
     }
 
@@ -696,6 +714,7 @@
         _arabic = _cleared;
         _resizePending = true;
         Calculate();
+        AnnounceOutput();
         _ = HideToastAsync();
 
         await _input.FocusAsync();
@@ -746,6 +765,7 @@
             _arabic = text;
             _resizePending = true;
             Calculate();
+            AnnounceOutput();
             _ = HideToastAsync();
             await _input.FocusAsync();
             return;
@@ -884,6 +904,7 @@
         {
             _changes = diff;
             _ = ExpireChangesAsync(++_changeKey);
+            AnnounceOutput();
         }
         else if (before == _result)
         {
@@ -917,6 +938,38 @@
             return;
 
         _unchangedNote = false;
+        StateHasChanged();
+    }
+
+    /// <summary>
+    /// Объявление «Вывод обновлён» (D25) откладывается: каждая новая правка сбрасывает
+    /// срок, и фраза звучит раз — через <see cref="OutputNoteDelay"/> после последней.
+    /// Пустая область между объявлениями нужна, чтобы диктор прочитал ту же фразу снова.
+    /// </summary>
+    private void AnnounceOutput()
+    {
+        _outputNote = null;
+        _ = ShowOutputNoteAsync(++_outputNoteStamp);
+    }
+
+    private async Task ShowOutputNoteAsync(int stamp)
+    {
+        await Task.Delay(OutputNoteDelay);
+
+        // Ошибку объявляет role="alert", очистку — плашка; вывод, вернувшийся к
+        // прежнему (набрали и стёрли), не обновился.
+        if (stamp != _outputNoteStamp || _error is not null || _result.Length == 0 || _result == _announcedResult)
+            return;
+
+        _announcedResult = _result;
+        _outputNote = L["Output.Updated"];
+        StateHasChanged();
+        await Task.Delay(OutputNoteDuration);
+
+        if (stamp != _outputNoteStamp)
+            return;
+
+        _outputNote = null;
         StateHasChanged();
     }
 

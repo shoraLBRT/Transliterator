@@ -137,6 +137,9 @@ namespace Transliterator.Tests.DocsTests
             Assert.Contains("@inherits PanelPicker", picker);
             Assert.Contains($"aria-labelledby=\"{panel}-title\"", picker);
             Assert.Contains($"<PanelHead Id=\"{panel}-title\"", picker);
+            // aria-controls — только пока панель в разметке (D25): ссылка на id,
+            // которого нет, — ошибка ARIA.
+            Assert.Contains($"aria-controls=\"@(IsShown ? \"{panel}\" : null)\"", picker);
             Assert.Contains("@onkeydown=\"OnPanelKeyDownAsync\"", picker);
         }
 
@@ -145,7 +148,7 @@ namespace Transliterator.Tests.DocsTests
         {
             // Условие E6 в новой раскладке: у круглой кнопки видно, что выбрано.
             var reading = Regex.Replace(Web("Components", "ReadingPicker.razor"), @"\s+", " ");
-            var toggle = Regex.Match(reading, "<button [^>]*aria-controls=\"reading-menu\"[^>]*>(.*?)</button>");
+            var toggle = Regex.Match(reading, "<button [^>]*aria-controls=\"@\\(IsShown \\? \"reading-menu\" : null\\)\"[^>]*>(.*?)</button>");
 
             Assert.True(toggle.Success, "the reading button is not found");
             Assert.Contains("<span class=\"picker-toggle-text\">@ModeName(Choice.Mode)</span>", toggle.Groups[1].Value);
@@ -199,7 +202,7 @@ namespace Transliterator.Tests.DocsTests
             foreach (var (file, panel) in new[] { ("ReadingPicker.razor", "reading-menu"), ("ProfilePicker.razor", "profile-menu"), ("AboutPicker.razor", "about-menu") })
             {
                 var picker = Regex.Replace(Web("Components", file), @"\s+", " ");
-                var button = Regex.Match(picker, $"<button [^>]*aria-controls=\"{panel}\"[^>]*>");
+                var button = Regex.Match(picker, $"<button [^>]*aria-controls=\"@\\(IsShown \\? \"{panel}\" : null\\)\"[^>]*>");
                 Assert.True(button.Success, $"the {panel} button is not found");
                 Assert.DoesNotContain("title=", button.Value);
             }
@@ -395,7 +398,7 @@ namespace Transliterator.Tests.DocsTests
         {
             var about = Regex.Replace(Web("Components", "AboutPicker.razor"), @"\s+", " ");
 
-            var toggle = Regex.Match(about, "<button [^>]*aria-controls=\"about-menu\"[^>]*>(.*?)</button>");
+            var toggle = Regex.Match(about, "<button [^>]*aria-controls=\"@\\(IsShown \\? \"about-menu\" : null\\)\"[^>]*>(.*?)</button>");
             Assert.True(toggle.Success, "the about button is not found");
             // D23: имя у значка показывает подсказка, title её бы двоил.
             Assert.DoesNotContain("title=", toggle.Value);
@@ -498,8 +501,8 @@ namespace Transliterator.Tests.DocsTests
 
             Assert.Contains("<h2 id=\"result-title\" class=\"result-title\">@L[\"Result.Title\"]</h2>", head.Groups[1].Value);
             Assert.DoesNotContain("visually-hidden", head.Groups[1].Value);
-            Assert.Matches(@"class=""result-chip""[^>]*aria-label=""@L\[""Result\.ReadingChip"", ReadingName\]"" @onclick=""OpenReadingAsync"">@ReadingName</button>", head.Groups[1].Value);
-            Assert.Matches(@"class=""result-chip""[^>]*aria-label=""@L\[""Result\.ProfileChip"", _profile\.Name\]"" @onclick=""OpenProfileAsync"">@_profile\.Name</button>", head.Groups[1].Value);
+            Assert.Matches(@"class=""result-chip""[^>]*aria-label=""@L\[""Result\.ReadingChip"", ReadingName\]"" @onclick=""OpenReadingAsync""><span class=""result-chip-text"">@ReadingName</span></button>", head.Groups[1].Value);
+            Assert.Matches(@"class=""result-chip""[^>]*aria-label=""@L\[""Result\.ProfileChip"", _profile\.Name\]"" @onclick=""OpenProfileAsync""><span class=""result-chip-text"">@_profile\.Name</span></button>", head.Groups[1].Value);
             Assert.Matches(@"<button type=""button"" class=""copy-button @CopyClass"" @onclick=""CopyAsync"">.*<span class=""copy-label"" aria-live=""polite"">@CopyLabel</span> </button>", head.Groups[1].Value);
 
             // Метки — та же ступень, что у кнопки сбоку, и та же панель.
@@ -823,7 +826,7 @@ namespace Transliterator.Tests.DocsTests
             Assert.Matches(@"private async Task RestoreReadingAsync\(\) \{.*?_reading = reading; Calculate\(\);", app);
             Assert.Matches(@"private void Calculate\(\) \{.*?_changes = null; _unchangedNote = false;", app);
             Assert.Contains("var diff = OutputDiff.Compare(before, _result);", app);
-            Assert.Matches(@"if \(diff\.HasChanges\) \{ _changes = diff; _ = ExpireChangesAsync\(\+\+_changeKey\); \} else if \(before == _result\) \{ _ = ShowUnchangedNoteAsync\(\); \}", app);
+            Assert.Matches(@"if \(diff\.HasChanges\) \{ _changes = diff; _ = ExpireChangesAsync\(\+\+_changeKey\); AnnounceOutput\(\); \} else if \(before == _result\) \{ _ = ShowUnchangedNoteAsync\(\); \}", app);
 
             // Подсветка проигрывается заново: новый ключ пересоздаёт строки и повтор в панелях.
             Assert.Contains("<div class=\"result-text\" @key=\"_changeKey\">", app);
@@ -870,6 +873,66 @@ namespace Transliterator.Tests.DocsTests
             // Без движения — ровный фон столько же и снимается разом.
             Assert.Matches(@"@media \(prefers-reduced-motion: reduce\) \{.*mark\.changed \{ animation: change-hold var\(--motion-highlight\) steps\(1\) !important; \}", css);
             Assert.Matches(@"@keyframes change-hold \{ from, to \{ background-color: var\(--highlight\);", css);
+        }
+            [Fact]
+        public void Targets_AreAtLeast44Px_AndTheOutputUpdateIsAnnounced()
+        {
+            // D25: мелкие кнопки видны прежнего размера, а нажатие ловят в квадрате
+            // не меньше 44px — прозрачный ::after по центру кнопки.
+            var css = Regex.Replace(Web("wwwroot", "css", "app.css"), @"\s+", " ");
+            Assert.Matches(@":root \{[^}]*--target-min: 2\.75rem;", css);
+            var area = Regex.Match(css, @"((?:\.[a-z-]+(?: a)?::after, )+\.[a-z-]+::after) \{ content: """"; position: absolute; top: 50%; left: 50%; width: max\(100%, var\(--target-min\)\); height: max\(100%, var\(--target-min\)\); transform: translate\(-50%, -50%\); \}");
+            Assert.True(area.Success, "the enlarged tap area is not found");
+            var relative = Regex.Match(css, @"((?:\.[a-z-]+(?: a)?, )+\.[a-z-]+(?: a)?) \{ position: relative; \} \.language-option::after,");
+            Assert.True(relative.Success, "the anchor of the tap area is not found");
+            foreach (var target in new[] { ".language-option", ".reading-rule-toggle", ".reading-count", ".icon-button", ".result-chip", ".arabic-toggle", ".copy-button", ".reading-note-more", ".footer a", ".feedback-toggle", ".toast-action", ".picker-toggle" })
+            {
+                Assert.Contains(target + "::after", area.Groups[1].Value);
+                Assert.Contains(target + ",", relative.Groups[1].Value + ",");
+            }
+
+            // Обрезающий overflow — не у самой метки, а у её подписи: иначе он срезал бы область.
+            Assert.DoesNotMatch(@"\.result-chip \{[^}]*overflow: hidden", css);
+            Assert.Matches(@"\.result-chip-text \{ display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; \}", css);
+
+            // Рамка фокуса — токеном акцента: пена-300 на светлом давала 1.5:1.
+            Assert.Matches(@":root \{[^}]*--focus-ring: var\(--foam-700\);", css);
+            Assert.Contains(":focus-visible { outline: 3px solid var(--focus-ring);", css);
+
+            // Подписи кнопок под полем не переносятся; не помещаются обе — «Вставить» значком.
+            Assert.Matches(@"\.composer-bar \.picker-toggle, \.composer-bar \.composer-tools \{ flex: none; white-space: nowrap; \}", css);
+            Assert.Matches(@"\.composer-bar\.is-compact \.paste-button span \{ position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect\(0 0 0 0\);", css);
+            var app = Regex.Replace(Web("App.razor"), @"\s+", " ");
+            Assert.Contains("<div class=\"composer-bar\" @ref=\"_composerBar\">", app);
+            Assert.Contains("await JS.InvokeVoidAsync(\"page.fitBar\", _composerBar);", app);
+            var script = Web("wwwroot", "js", "page.js");
+            Assert.Contains("function fitBar(bar)", script);
+            Assert.Contains("bar.classList.add(\"is-compact\");", script);
+
+            // «Вывод обновлён» — своя вежливая живая область, всегда в разметке, через
+            // секунду после последней правки, а не на каждый символ.
+            Assert.Contains("<p class=\"visually-hidden\" role=\"status\">@_outputNote</p>", app);
+            Assert.Contains("private static readonly TimeSpan OutputNoteDelay = TimeSpan.FromSeconds(1);", app);
+            Assert.Matches(@"private void AnnounceOutput\(\) \{ _outputNote = null; _ = ShowOutputNoteAsync\(\+\+_outputNoteStamp\); \}", app);
+            Assert.Matches(@"await Task\.Delay\(OutputNoteDelay\);[^}]*if \(stamp != _outputNoteStamp", app);
+            Assert.Matches(@"private void OnInput\(ChangeEventArgs e\) \{[^}]*Calculate\(\); AnnounceOutput\(\);", app);
+            Assert.Single(Regex.Matches(app, @"_outputNote</p>"));
+            Assert.Equal("Вывод обновлён", PageStrings.Web("ru")["Output.Updated"]);
+            Assert.Equal("Output updated", PageStrings.Web("en")["Output.Updated"]);
+
+            // Арабские буквы в русском описании правила — с lang="ar": диктор читает их арабским голосом.
+            Assert.Contains("<span class=\"reading-rule-text\"><MixedText Text=\"@rule.Description.Current\" /></span>", Web("Components", "ReadingPicker.razor"));
+            Assert.Contains("{<span lang=\"ar\" dir=\"rtl\">@text</span>}", Web("Components", "MixedText.razor"));
+
+            // Лист на телефоне держит Tab в себе: за подложкой кнопок не видно.
+            Assert.Contains("const sheet = document.querySelector(\".picker-panel:not(.is-closing)\");", script);
+            // Лист модален только листом: aria-modal ставится уже 64rem и снимается в колонке.
+            Assert.Contains("panel.setAttribute(\"aria-modal\", \"true\");", script);
+            Assert.Contains("requestAnimationFrame(markModal);", script);
+
+            // Поле в фокусе — рамкой карточки цвета --focus-ring; Tab не прячет цель под липкими шапками.
+            Assert.Matches(@"\.composer:focus-within \{ border-color: var\(--focus-ring\);", css);
+            Assert.Contains("scroll-padding-top: calc(var(--panel-head-height) + var(--target-min));", css);
         }
     }
 }
