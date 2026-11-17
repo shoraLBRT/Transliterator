@@ -70,7 +70,7 @@
     --motion-slow: 0.4s;
     --motion-instant: 0s; /* шаг без хода: visibility свёрнутого блока (D21) */
     --motion-blink: 1s;
-    --motion-pulse: 1.2s;
+    --motion-shimmer: 1.4s; /* проход блика по заглушке скелета загрузки (D22) */
     --motion-hint-delay: 0.3s; /* подсказка у значка ждёт, пока курсор не задержится (D23) */
     --motion-highlight: 1.2s; /* вспышка изменённого слова гаснет (D19) */
     --motion-ease: cubic-bezier(0.2, 0, 0, 1);
@@ -2755,26 +2755,127 @@ mark.changed {
 
 /* ---- Загрузка и сбой среды ---- */
 
+/* Экран загрузки (D22) — скелет страницы: каркас (.shell, .topbar, .hint,
+   .composer, .side-rail) берёт размеры у настоящих правил выше, здесь только
+   заглушки вместо содержимого. Нажимать на скелете нечего. */
 .boot {
+    pointer-events: none;
+}
+
+/* Готовая страница проявляется (D22): скелет сменяется ею на том же месте. */
+.shell:not(.boot) {
+    animation: shell-in var(--motion-slow) var(--motion-ease) backwards;
+}
+
+@keyframes shell-in {
+    from { opacity: 0; }
+}
+
+/* Брусок-заглушка с мерцанием: светлая полоса проходит по нему слева направо. */
+.boot-block {
+    display: block;
+    border-radius: var(--radius-pill);
+    background: linear-gradient(90deg, var(--line) 30%, var(--variant-bg) 50%, var(--line) 70%);
+    background-size: 300% 100%;
+    animation: shimmer var(--motion-shimmer) linear infinite;
+}
+
+@keyframes shimmer {
+    from { background-position: 100% 0; }
+    to { background-position: 0 0; }
+}
+
+/* Язык — по размеру .language-switch: две кнопки по 2.5rem на 2rem, поля 0.15rem
+   и рамка. */
+.boot-language {
+    flex: none;
+    width: calc(5.3rem + 2px);
+    height: calc(2.3rem + 2px);
+}
+
+/* Подсказка — две строки бруском; высоту держит сам .hint (2.8em). */
+.boot-hint {
     display: grid;
-    place-items: center;
-    gap: var(--space-4);
-    min-height: 100vh;
-    min-height: 100dvh;
+    justify-items: center;
+    gap: 0.5em;
+    width: 100%;
+}
+
+.boot-hint .boot-block {
+    width: min(30rem, 90%);
+    height: 0.6em;
+}
+
+.boot-hint .boot-block + .boot-block {
+    width: min(18rem, 55%);
+}
+
+/* Строка в поле — брусок по середине строки .composer-input (справа: поле RTL). */
+.boot-text {
+    display: inline-block;
+    width: min(20rem, 70%);
+    height: 0.6em;
+    vertical-align: middle;
+}
+
+.boot .composer-input {
+    text-align: right;
+}
+
+/* Кнопка суры под полем: высоту задаёт значок (1.15rem), как у настоящей. */
+.boot-icon {
+    width: 1.15rem;
+    height: 1.15rem;
+}
+
+.boot-label {
+    width: 6.5rem;
+    height: 0.6rem;
+}
+
+.boot-toggle .boot-label {
+    width: 4.5rem;
+}
+
+/* Значки кнопок сбоку — пустые круги той же рамки, залитые как заглушка. */
+.boot .side-rail svg {
+    background: var(--line);
+}
+
+/* Быстрый старт — подпись бруском и пустые капсулы той же высоты (внутри
+   неразрывный пробел); ширины — как у «Попробовать:» и имён сур, чтобы на
+   телефоне ряд переносился так же. */
+.boot-chip {
+    width: 6.75rem;
+}
+
+.boot-status {
     color: var(--ink-muted);
-    font-size: 0.95rem;
 }
 
-.boot-dot {
-    width: 0.75rem;
-    height: 0.75rem;
-    border-radius: 50%;
-    background: var(--foam-300);
-    animation: pulse var(--motion-pulse) var(--ease-in-out) infinite;
+/* Проценты — строка, которую Blazor кладёт в --blazor-load-percentage-text. */
+.boot-percent::before {
+    content: " " var(--blazor-load-percentage-text, "");
 }
 
-@keyframes pulse {
-    50% { transform: scale(1.6); opacity: 0.4; }
+/* Полоса прогресса — тонкая, по верху экрана, ширина — доля загруженного. */
+.boot-progress {
+    position: fixed;
+    top: 0;
+    right: 0;
+    left: 0;
+    z-index: 20;
+    height: 3px;
+    background: var(--foam-50);
+}
+
+.boot-progress-bar {
+    display: block;
+    width: var(--blazor-load-percentage, 0%);
+    height: 100%;
+    border-radius: 0 var(--radius-pill) var(--radius-pill) 0;
+    background: var(--foam-700);
+    transition: width var(--motion-duration) var(--motion-ease);
 }
 
 #blazor-error-ui {
@@ -2867,7 +2968,7 @@ mark.changed {
     }
 }
 
-/* Движение — сдвиг поля, всплытие карточек, пульс загрузки — снимается.
+/* Движение — сдвиг поля, всплытие карточек, мерцание скелета загрузки — снимается.
    Мигание курсора подсказки остаётся: оно ничего не двигает, а без него печать
    читается как застывший текст. */
 @media (prefers-reduced-motion: reduce) {
@@ -2888,6 +2989,11 @@ mark.changed {
 
     .hint-text.is-typing::after {
         animation: caret var(--motion-blink) steps(1) infinite !important;
+    }
+
+    /* Заглушки скелета (D22) без мерцания — ровные, без застывшего блика. */
+    .boot-block {
+        background: var(--line);
     }
 
     /* Изменённое (D19) подсвечено ровным фоном и снимается разом, без затухания. */
