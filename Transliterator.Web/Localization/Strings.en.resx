@@ -441,4 +441,28 @@
   <data name="QuickStart.Note" xml:space="preserve">
     <value>Paste Arabic text with vowel marks — the transliteration appears at once</value>
   </data>
+  <data name="Sounds.Toggle" xml:space="preserve">
+    <value>How to say the letters</value>
+  </data>
+  <data name="Sounds.ToggleTitle" xml:space="preserve">
+    <value>Sound table: how to say each letter and how it is written</value>
+  </data>
+  <data name="Sounds.Title" xml:space="preserve">
+    <value>How to say the letters</value>
+  </data>
+  <data name="Sounds.Caption" xml:space="preserve">
+    <value>Next to each letter — how the “{0}” profile writes it.</value>
+  </data>
+  <data name="Sounds.Unfamiliar" xml:space="preserve">
+    <value>Sounds to learn first</value>
+  </data>
+  <data name="Sounds.Rest" xml:space="preserve">
+    <value>Other letters</value>
+  </data>
+  <data name="Sounds.RecordLabel" xml:space="preserve">
+    <value>Written:</value>
+  </data>
+  <data name="Sounds.NotWritten" xml:space="preserve">
+    <value>not written</value>
+  </data>
 </root>

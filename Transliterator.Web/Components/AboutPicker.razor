@@ -55,6 +55,11 @@
                     </dl>
                     @* Буквы ح и ه в подписи — арабские отрезки с lang="ar" (D25). *@
                     <p><MixedText Text="@L["About.ExampleNote"]" /></p>
+                    @* Как читать сами буквы — таблица звуков (D11): своя панель, эта уступает ей место. *@
+                    @if (OpenSounds is not null)
+                    {
+                        <button type="button" class="about-feedback about-sounds" @onclick="OpenSoundsAsync">@L["Sounds.Toggle"]</button>
+                    }
                 </section>
 
                 @* Остальные разделы свёрнуты (D26): лид и пример читаются сразу, подробности — по нажатию. *@
@@ -84,6 +89,15 @@
     /// <summary>Открыть форму отзыва (H1, H3) — она у подвала страницы.</summary>
     [Parameter]
     public EventCallback OpenFeedback { get; set; }
+
+    /// <summary>
+    /// Открыть таблицу звуков (D11). Одна панель на страницу: открывшись, она
+    /// закрывает эту. <c>null</c> — таблицы нет, нет и кнопки.
+    /// </summary>
+    [Parameter]
+    public Func<Task>? OpenSounds { get; set; }
+
+    private Task OpenSoundsAsync() => OpenSounds?.Invoke() ?? Task.CompletedTask;
 
     protected override string Panel => "about";
 

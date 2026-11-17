@@ -1,5 +1,6 @@
 @using Transliterator.Core.Repositories
 @using Transliterator.Core.Services
+@using Microsoft.AspNetCore.Components.Sections
 @inject UserProfileRepository Profiles
 @inject ICorpusRepository Corpus
 @inject ITransliterationService Transliteration
@@ -125,8 +126,17 @@
                 }
 
                 @* «?» — что это за страница (D8). Последней: она ничего не выбирает. *@
-                <AboutPicker Transliterate="TransliterateExample" OpenFeedback="OpenFeedbackAsync" />
+                <AboutPicker Transliterate="TransliterateExample" OpenFeedback="OpenFeedbackAsync"
+                             OpenSounds="SoundsOpener" />
             </aside>
+        }
+
+        @* Таблица звуков (D11): панель не зависит от вывода — её открывает и «О чём
+           проект?» при пустом поле. Кнопка панели — в шапке вывода (SectionOutlet ниже).
+           Сама панель — fixed-колонка или лист, место в потоке ей не нужно. *@
+        @if (_sounds is not null)
+        {
+            <SoundsPicker Table="_sounds" Profile="_profile" FocusFallback="FocusInputAsync" @ref="_soundsPicker" />
         }
 
         @if (_error is not null)
@@ -162,6 +172,9 @@
                     </div>
                     <p class="result-note" role="status">@(_unchangedNote ? L["Output.Unchanged"].Value : null)</p>
                     </div>
+
+                    @* «Как читать буквы» (D11) — кнопка таблицы звуков; разметку ставит SoundsPicker. *@
+                    <SectionOutlet SectionName="@SoundsPicker.ToggleSection" />
 
                     @* «С арабским» (D18): над каждой строкой вывода — её арабская строка
                        поля. Тумблер — aria-pressed; на телефоне видна только иконка, подпись
@@ -308,6 +321,7 @@
     private IReadOnlyList<CorpusSurah> _surahs = Array.Empty<CorpusSurah>();
     private TransliterationProfile? _profile;
     private TajweedRuleCatalog? _catalog;
+    private SoundTable? _sounds;
     private ReadingChoice _reading = ReadingChoice.Default;
     private string _placeholder = FallbackPlaceholder;
     private string _arabic = string.Empty;
@@ -399,6 +413,21 @@
             _error = L["Error.ProfileNotLoaded", DefaultProfile];
 
         _catalog = LoadCatalog();
+        _sounds = LoadSounds();
+    }
+
+    /// <summary>Таблица звуков (D11) — ресурс, как каталог; не прочиталась — страница без неё.</summary>
+    private SoundTable? LoadSounds()
+    {
+        try
+        {
+            return EmbeddedSoundTable.Table;
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Sound table could not be read");
+            return null;
+        }
     }
 
     /// <summary>
@@ -829,6 +858,16 @@
     private Task OpenReadingAsync() => _readingPicker?.OpenAsync() ?? Task.CompletedTask;
 
     private Task OpenProfileAsync() => _profilePicker?.OpenAsync() ?? Task.CompletedTask;
+
+    private SoundsPicker? _soundsPicker;
+
+    /// <summary>«Как читать буквы» из «О чём проект?» (D11) — та же панель, что у кнопки в шапке вывода.</summary>
+    private Task OpenSoundsAsync() => _soundsPicker?.OpenAsync() ?? Task.CompletedTask;
+
+    /// <summary>Таблица не прочиталась — в «О чём проект?» кнопки к ней нет.</summary>
+    private Func<Task>? SoundsOpener => _sounds is null ? null : OpenSoundsAsync;
+
+    private Task FocusInputAsync() => _input.FocusAsync().AsTask();
 
     private FeedbackButton? _feedback;
 

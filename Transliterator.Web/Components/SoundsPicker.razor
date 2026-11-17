@@ -1,0 +1,142 @@
+@inherits PanelPicker
+@using Microsoft.AspNetCore.Components.Sections
+
+@* «Как читать буквы» (D11): таблица звуков — арабская буква, как её пишет выбранный
+   профиль, название и как произносить. Подсказок у знаков вывода нет (решение
+   владельца: вариант Б), таблица отвечает на тот же вопрос и работает на телефоне.
+   Панель ведёт себя, как остальные (D6): одна на страницу, шапка с крестиком,
+   Escape возвращает фокус на кнопку; на телефоне — нижний лист (D14), с 64rem —
+   колонка, как «Как читать».
+   Кнопка — в шапке карточки вывода, рядом с «С арабским» и «Копировать»: туда
+   её ставит SectionOutlet страницы. Сама панель от вывода не зависит — её
+   открывает и «О чём проект?», когда текста ещё нет. *@
+
+<SectionContent SectionName="@ToggleSection">
+    @* На телефоне видна только иконка (как у «С арабским», D18): подпись остаётся
+       именем кнопки для диктора и подсказкой title. *@
+    <button type="button" class="sounds-toggle" aria-expanded="@(IsOpen ? "true" : "false")"
+            aria-controls="@(IsShown ? "sounds-menu" : null)" title="@L["Sounds.ToggleTitle"]"
+            @onclick="ToggleAsync" @ref="ToggleButton">
+        <svg class="sounds-toggle-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 5.5h7v13H4zM13 5.5h7v13h-7z" />
+            <path d="M6.5 9h2M15.5 9h2M15.5 12.5h2" />
+        </svg>
+        <span class="sounds-toggle-label">@L["Sounds.Toggle"]</span>
+    </button>
+</SectionContent>
+
+@if (IsShown)
+{
+    @* Подложка листа (D14) гаснет вместе с ним; щелчок по ней закрывает лист
+       и возвращает фокус на кнопку — как крестик и Escape. *@
+    <div class="picker-backdrop @Closing.CssClass" @onclick="CloseToToggleAsync"></div>
+
+    <div id="sounds-menu" class="picker-panel sounds-panel @Closing.CssClass" inert="@Closing.IsClosing" aria-hidden="@Closing.AriaHidden" role="dialog" aria-labelledby="sounds-menu-title"
+         tabindex="-1" @ref="PanelElement" @onkeydown="OnPanelKeyDownAsync">
+        <PanelHead Id="sounds-menu-title" Title="@L["Sounds.Title"]" Close="CloseToToggleAsync" />
+
+        <div class="sounds-body">
+            @if (Profile is not null)
+            {
+                <p class="sounds-caption">@L["Sounds.Caption", Profile.Name]</p>
+            }
+
+            @* Сначала звуки, которых нет в русском: их и нужно выучить. Остальные
+               читаются как привычные буквы и свёрнуты (.fold, как разделы «О чём проект?», D26). *@
+            <section class="sounds-section">
+                <h3 class="sounds-heading">@L["Sounds.Unfamiliar"]</h3>
+                @List(Table.Sounds.Where(s => s.NotInRussian))
+            </section>
+
+            <section class="sounds-section">
+                <h3 class="sounds-heading">
+                    <button type="button" class="sounds-fold-toggle" aria-expanded="@(_restOpen ? "true" : "false")" aria-controls="sounds-rest"
+                            @onclick="() => _restOpen = !_restOpen">
+                        <span>@L["Sounds.Rest"]</span>
+                        <svg class="about-fold-chevron" viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M6 9l6 6 6-6" />
+                        </svg>
+                    </button>
+                </h3>
+                <div id="sounds-rest" class="fold @(_restOpen ? "is-open" : null)" inert="@(!_restOpen)" aria-hidden="@(_restOpen ? null : "true")">
+                    <div class="fold-inner">@List(Table.Sounds.Where(s => !s.NotInRussian))</div>
+                </div>
+            </section>
+        </div>
+    </div>
+}
+
+@code {
+    /// <summary>Имя места в шапке вывода, куда страница ставит кнопку таблицы.</summary>
+    public const string ToggleSection = "sounds-toggle";
+
+    [Parameter, EditorRequired]
+    public SoundTable Table { get; set; } = default!;
+
+    /// <summary>
+    /// Профиль страницы: запись буквы в таблице — его основная графема, у своего
+    /// профиля — своя. Так таблица не расходится с выводом.
+    /// </summary>
+    [Parameter]
+    public TransliterationProfile? Profile { get; set; }
+
+    /// <summary>
+    /// Куда вернуть фокус, если кнопки в шапке вывода нет: панель открыли из
+    /// «О чём проект?», пока поле пустое.
+    /// </summary>
+    [Parameter]
+    public Func<Task>? FocusFallback { get; set; }
+
+    protected override string Panel => "sounds";
+
+    /// <summary>«Остальные буквы» при открытии панели свёрнуты.</summary>
+    private bool _restOpen;
+
+    protected override Task BeforeOpenAsync()
+    {
+        _restOpen = false;
+        return Task.CompletedTask;
+    }
+
+    protected override async Task FocusToggleAsync()
+    {
+        try
+        {
+            await ToggleButton.FocusAsync();
+        }
+        catch (Exception ex) when (ex is JSException or InvalidOperationException)
+        {
+            // Кнопки нет в разметке — шапки вывода без текста нет.
+            if (FocusFallback is not null)
+                await FocusFallback();
+        }
+    }
+
+    /// <summary>Графема профиля для буквы; пустая — буква не пишется (алиф).</summary>
+    private string? Record(ArabicSound sound) => Profile?.Rules.GetValueOrDefault(sound.Letter);
+
+    private RenderFragment List(IEnumerable<ArabicSound> sounds) => __builder =>
+    {
+        <ul class="sounds-list">
+            @foreach (var sound in sounds)
+            {
+                var record = Record(sound);
+                <li class="sound">
+                    <span class="sound-letter" lang="ar" dir="rtl">@sound.Letter</span>
+                    @if (string.IsNullOrEmpty(record))
+                    {
+                        <span class="sound-record is-empty"><span aria-hidden="true">—</span><span class="visually-hidden">@L["Sounds.NotWritten"]</span></span>
+                    }
+                    else
+                    {
+                        <span class="sound-record"><span class="visually-hidden">@L["Sounds.RecordLabel"] </span>@record</span>
+                    }
+                    <span class="sound-text">
+                        <span class="sound-name">@sound.Name.Current</span>
+                        <span class="sound-how"><MixedText Text="@sound.Pronunciation.Current" /></span>
+                    </span>
+                </li>
+            }
+        </ul>
+    };
+}

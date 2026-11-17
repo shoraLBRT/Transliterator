@@ -1864,6 +1864,109 @@ html.is-sheet-open {
     border-color: var(--foam-100);
 }
 
+/* ---- Таблица звуков (D11) ---- */
+
+/* Строка — арабская буква крупно, запись профиля акцентом (в цвет вывода, как
+   «как пишет страница» в примере «О чём проект?»), справа название и как
+   произносить. Колонки одной ширины во всех строках — буквы и записи стоят
+   столбцами, и таблицу легко пробежать глазами. */
+.sounds-body {
+    display: grid;
+    gap: var(--space-3);
+    padding: var(--space-1) var(--space-3) var(--space-3);
+    font-size: 0.88rem;
+    line-height: 1.45;
+}
+
+.sounds-caption {
+    margin: 0;
+    color: var(--ink-muted);
+    font-size: var(--text-sm);
+}
+
+.sounds-heading {
+    margin: 0;
+    font-size: 0.88rem;
+    font-weight: 600;
+}
+
+.sounds-list {
+    display: grid;
+    margin: var(--space-1) 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.sound {
+    display: grid;
+    grid-template-columns: 2.5rem 2.75rem minmax(0, 1fr);
+    align-items: baseline;
+    gap: var(--space-2);
+    padding: var(--space-2) 0;
+    border-top: 1px solid var(--line);
+}
+
+.sound:first-child {
+    border-top: 0;
+}
+
+.sound-letter {
+    font-family: var(--font-arabic);
+    font-size: 2.1rem;
+    line-height: 1;
+    text-align: center;
+}
+
+.sound-record {
+    color: var(--foam-700);
+    font-size: 1.05rem;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}
+
+.sound-record.is-empty {
+    color: var(--ink-muted);
+    font-weight: 400;
+}
+
+.sound-text {
+    display: grid;
+    gap: 0.1rem;
+    min-width: 0;
+}
+
+.sound-name {
+    font-weight: 600;
+}
+
+.sound-how {
+    color: var(--ink-muted);
+}
+
+/* Заголовок «Остальные буквы» — кнопка на всю ширину, как разделы «О чём проект?» (D26). */
+.sounds-fold-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+    width: 100%;
+    padding: 0.2rem 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    text-align: start;
+    cursor: pointer;
+}
+
+.sounds-fold-toggle:hover {
+    color: var(--foam-700);
+}
+
+.sounds-fold-toggle[aria-expanded="true"] .about-fold-chevron {
+    transform: rotate(180deg);
+}
+
 /* ---- Результат ---- */
 
 /* Карточка вывода (D17): шапка сверху, под ней аяты строками. --result-pad —
@@ -2132,6 +2235,49 @@ mark.changed {
 
 .arabic-toggle + .copy-button {
     margin-left: 0;
+}
+
+/* «Как читать буквы» (D11) — кнопка таблицы звуков, первой из кнопок шапки:
+   выглядит как «С арабским», открытая — как нажатый тумблер. */
+.sounds-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-left: auto;
+    padding: 0.35rem 0.6rem;
+    border: 1px solid transparent;
+    border-radius: var(--radius-pill);
+    background: transparent;
+    color: var(--ink-muted);
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.sounds-toggle:hover {
+    background: var(--foam-100);
+    color: var(--foam-700);
+}
+
+.sounds-toggle[aria-expanded="true"] {
+    border-color: var(--foam-300);
+    background: var(--foam-100);
+    color: var(--foam-700);
+}
+
+.sounds-toggle + .arabic-toggle {
+    margin-left: 0;
+}
+
+.sounds-toggle-icon {
+    width: 1rem;
+    height: 1rem;
+    flex: none;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
 }
 
 .copy-button {
@@ -2457,6 +2603,7 @@ mark.changed {
 .side-rail .picker-toggle svg,
 .copy-button,
 .arabic-toggle,
+.sounds-toggle,
 .result-chip,
 .language-option,
 .picker-item,
@@ -2478,6 +2625,7 @@ mark.changed {
 .picker-toggle:active:not(:disabled),
 .copy-button:active:not(:disabled),
 .arabic-toggle:active,
+.sounds-toggle:active,
 .result-chip:active,
 .language-option:active:not([aria-pressed="true"]),
 .reading-count:active:not(:disabled),
@@ -2937,10 +3085,12 @@ mark.changed {
 .toast-action,
 .result-chip,
 .arabic-toggle,
+.sounds-toggle,
 .copy-button,
 .picker-toggle,
 .about-feedback,
 .about-fold-toggle,
+.sounds-fold-toggle,
 .profile-button,
 .profile-settings-toggle,
 .footer a,
@@ -2958,10 +3108,12 @@ mark.changed {
 .toast-action::after,
 .result-chip::after,
 .arabic-toggle::after,
+.sounds-toggle::after,
 .copy-button::after,
 .picker-toggle::after,
 .about-feedback::after,
 .about-fold-toggle::after,
+.sounds-fold-toggle::after,
 .profile-button::after,
 .profile-settings-toggle::after,
 .footer a::after,
@@ -3058,10 +3210,22 @@ mark.changed {
     }
 
     /* На телефоне метки не помещаются между подписью и кнопкой: подпись и
-       «Копировать» — первой строкой шапки, метки — второй (D17). */
+       «Копировать» — первой строкой шапки, метки — второй (D17). Значки «Как читать
+       буквы» (D11) и «С арабским» (D18) — во второй строке справа от меток: в первой
+       рядом с «Копировать» им в 375px не хватает места. Основа меток (9rem) не даёт
+       им втиснуться в первую строку, а длинные метки обрезаются многоточием. */
     .result-meta {
         order: 1;
-        flex-basis: 100%;
+        flex: 1 1 9rem;
+    }
+
+    .sounds-toggle,
+    .arabic-toggle {
+        order: 2;
+    }
+
+    .arabic-toggle + .copy-button {
+        margin-left: auto;
     }
 
     /* Метки под пальцем выше, а между строками шапки — 1rem (D25): области
@@ -3088,6 +3252,20 @@ mark.changed {
     }
 
     .arabic-toggle-label {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+        white-space: nowrap;
+    }
+
+    /* «Как читать буквы» (D11) — так же одной иконкой с подписью для диктора. */
+    .sounds-toggle {
+        padding-inline: 0.5rem;
+    }
+
+    .sounds-toggle-label {
         position: absolute;
         width: 1px;
         height: 1px;
