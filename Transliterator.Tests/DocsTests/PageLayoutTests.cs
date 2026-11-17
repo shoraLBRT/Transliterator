@@ -82,7 +82,8 @@ namespace Transliterator.Tests.DocsTests
             Assert.Contains("root.style.getPropertyValue(\"--blazor-load-percentage\")", script);
             Assert.Contains("bar.setAttribute(\"aria-valuenow\"", script);
 
-            Assert.Contains(".shell:not(.boot) { animation: shell-in var(--motion-slow) var(--motion-ease) backwards; }", css);
+            Assert.Contains(".shell:not(.boot) { animation: shell-in var(--motion-duration) var(--motion-ease) backwards; }", css);
+            Assert.Contains("@keyframes shell-in { from { opacity: 0.6; } }", css);
             Assert.Matches(@"\.boot-block \{[^}]*animation: shimmer var\(--motion-shimmer\) linear infinite;", css);
             var reduced = Regex.Match(css, @"@media \(prefers-reduced-motion: reduce\) \{(.*)\}\s*$");
             Assert.True(reduced.Success, "the reduced-motion block is not found");

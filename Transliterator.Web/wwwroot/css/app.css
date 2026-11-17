@@ -2762,13 +2762,15 @@ mark.changed {
     pointer-events: none;
 }
 
-/* Готовая страница проявляется (D22): скелет сменяется ею на том же месте. */
+/* Готовая страница проявляется (D22): скелет сменяется ею на том же месте, и
+   она начинает не с пустоты, а с полупрозрачной — подмена читается как «скелет
+   ожил», без моргания. */
 .shell:not(.boot) {
-    animation: shell-in var(--motion-slow) var(--motion-ease) backwards;
+    animation: shell-in var(--motion-duration) var(--motion-ease) backwards;
 }
 
 @keyframes shell-in {
-    from { opacity: 0; }
+    from { opacity: 0.6; }
 }
 
 /* Брусок-заглушка с мерцанием: светлая полоса проходит по нему слева направо. */

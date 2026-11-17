@@ -16,7 +16,7 @@
     <!-- ?v= — первые 8 знаков SHA-256 файла (переводы строк как LF). Браузер не берёт
          из кеша прежний page.js или app.css к новой сборке: файл изменился — изменился
          и адрес. Сверяет PageAssetVersionTests и подсказывает новое значение. -->
-    <link rel="stylesheet" href="css/app.css?v=0efcb456" />
+    <link rel="stylesheet" href="css/app.css?v=1f8391a2" />
 </head>
 
 <body>
@@ -68,10 +68,12 @@
                     </p>
                 </div>
 
+                <!-- Кнопки в обёртке .picker, как в компонентах: высоту строки рейла
+                     даёт она. -->
                 <div class="side-rail" aria-hidden="true">
-                    <span class="picker-toggle"><svg viewBox="0 0 24 24"></svg><span class="picker-toggle-text boot-block boot-label"></span></span>
-                    <span class="picker-toggle"><svg viewBox="0 0 24 24"></svg><span class="picker-toggle-text boot-block boot-label"></span></span>
-                    <span class="picker-toggle"><svg viewBox="0 0 24 24"></svg><span class="picker-toggle-text boot-block boot-label"></span></span>
+                    <div class="picker"><span class="picker-toggle"><svg viewBox="0 0 24 24"></svg><span class="picker-toggle-text boot-block boot-label"></span></span></div>
+                    <div class="picker"><span class="picker-toggle"><svg viewBox="0 0 24 24"></svg><span class="picker-toggle-text boot-block boot-label"></span></span></div>
+                    <div class="picker"><span class="picker-toggle"><svg viewBox="0 0 24 24"></svg><span class="picker-toggle-text boot-block boot-label"></span></span></div>
                 </div>
             </div>
         </div>
