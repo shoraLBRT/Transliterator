@@ -15,7 +15,7 @@
 <div class="picker">
     @* Значок — звуковая волна: кнопка выбирает, как текст звучит. *@
     <button type="button" class="picker-toggle" aria-expanded="@(IsOpen ? "true" : "false")"
-            aria-controls="reading-menu" @onclick="ToggleAsync" @ref="ToggleButton">
+            aria-controls="@(IsShown ? "reading-menu" : null)" @onclick="ToggleAsync" @ref="ToggleButton">
         <svg viewBox="0 0 24 24" aria-hidden="true">
             <path d="M4 10v4M8 7v10M12 4v16M16 8v8M20 11v2" />
         </svg>
@@ -133,7 +133,7 @@
                                                 <span class="reading-example-text" aria-live="@(counts || switchable ? "polite" : null)">@ExampleOf(example)</span>
                                             </span>
                                         }
-                                        <span id="@descriptionId" class="fold @(described ? "is-open" : null)" inert="@(!described)" aria-hidden="@(described ? null : "true")"><span class="fold-inner"><span class="reading-rule-text">@rule.Description.Current</span></span></span>
+                                        <span id="@descriptionId" class="fold @(described ? "is-open" : null)" inert="@(!described)" aria-hidden="@(described ? null : "true")"><span class="fold-inner"><span class="reading-rule-text"><MixedText Text="@rule.Description.Current" /></span></span></span>
                                     </span>
                                     @if (counts || switchable)
                                     {

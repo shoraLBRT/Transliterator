@@ -54,6 +54,14 @@
     --radius-card: 1.75rem;
     --radius-pill: 999px;
 
+    /* Наименьшая цель нажатия (D25): 44×44 CSS-px, как требуют WCAG 2.5.5 и
+       руководства iOS и Android. Видимую кнопку можно оставить меньше — область
+       нажатия расширяет ::after, см. «Цели нажатия». */
+    --target-min: 2.75rem;
+    /* Рамка фокуса (D25): пена-300 на светлом фоне давала 1.5:1 — рамку было
+       не разглядеть. Акцент держит не меньше 4.7:1 на всех подложках обеих тем. */
+    --focus-ring: var(--foam-700);
+
     --text-xs: 0.75rem;
     --text-sm: 0.8rem;
     --text-md: 0.9rem;
@@ -155,7 +163,7 @@ button {
 }
 
 :focus-visible {
-    outline: 3px solid var(--foam-300);
+    outline: 3px solid var(--focus-ring);
     outline-offset: 2px;
 }
 
@@ -247,7 +255,7 @@ button {
 }
 
 .language-option {
-    min-width: 2.5rem;
+    min-width: var(--target-min); /* соседние области нажатия не заходят друг на друга (D25) */
     min-height: 2rem;
     padding: 0.2rem 0.6rem;
     border: 0;
@@ -272,7 +280,7 @@ button {
 }
 
 .language-option:focus-visible {
-    outline: 2px solid var(--foam-700);
+    outline: 2px solid var(--focus-ring);
     outline-offset: 1px;
 }
 
@@ -516,7 +524,8 @@ svg {
     flex-wrap: wrap;
     align-items: center;
     justify-content: center;
-    gap: var(--space-2);
+    /* Между строками меток — 0.6rem: с ней строка в 2.2rem даёт 44px на нажатие (D25). */
+    gap: 0.6rem var(--space-2);
 }
 
 .quick-start-label {
@@ -892,7 +901,7 @@ html.is-sheet-open {
 
 .surah-search-input:focus-visible {
     outline: none;
-    border-color: var(--foam-300);
+    border-color: var(--focus-ring);
     background: var(--paper);
     box-shadow: 0 0 0 3px var(--foam-50);
 }
@@ -1056,7 +1065,7 @@ html.is-sheet-open {
 }
 
 .reading-count {
-    min-width: 2.25rem;
+    min-width: var(--target-min); /* соседние счёты не заходят друг на друга (D25) */
     padding: 0.3rem 0.6rem;
     border: 1px solid var(--line);
     border-radius: var(--radius-pill);
@@ -1481,7 +1490,7 @@ html.is-sheet-open {
 
 .profile-input:focus-visible {
     outline: none;
-    border-color: var(--foam-300);
+    border-color: var(--focus-ring);
     box-shadow: 0 0 0 3px var(--foam-50);
 }
 
@@ -1941,10 +1950,16 @@ html.is-sheet-open {
     color: var(--ink-muted);
     font: inherit;
     font-size: var(--text-xs);
+    cursor: pointer;
+}
+
+/* Многоточие — на подписи внутри метки (D25): у самой метки overflow обрезал бы
+   её расширенную область нажатия. */
+.result-chip-text {
+    display: block;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    cursor: pointer;
 }
 
 .result-chip:hover {
@@ -2286,7 +2301,7 @@ mark.changed {
 
 .feedback-message:focus-visible {
     outline: none;
-    border-color: var(--foam-300);
+    border-color: var(--focus-ring);
     box-shadow: 0 0 0 3px var(--foam-50);
 }
 
@@ -2902,6 +2917,97 @@ mark.changed {
     color: var(--foam-700);
 }
 
+/* ---- Цели нажатия (D25) ---- */
+
+/* Мелкие кнопки и ссылки видны прежнего размера, а нажатие ловят в квадрате не
+   меньше --target-min (44px): область расширяет прозрачный ::after по центру
+   кнопки. Перекрыться с соседней областью он может лишь на долю пикселя: между
+   целями стоят отступы (см. .footer, .result-chips). */
+.language-option,
+.reading-rule-toggle,
+.reading-note-more,
+.reading-count,
+.reading-group-toggle,
+.reading-switch,
+.icon-button,
+.toast-action,
+.result-chip,
+.arabic-toggle,
+.copy-button,
+.picker-toggle,
+.about-feedback,
+.about-fold-toggle,
+.profile-button,
+.profile-settings-toggle,
+.footer a,
+.feedback-toggle {
+    position: relative;
+}
+
+.language-option::after,
+.reading-rule-toggle::after,
+.reading-note-more::after,
+.reading-count::after,
+.reading-group-toggle::after,
+.reading-switch::after,
+.icon-button::after,
+.toast-action::after,
+.result-chip::after,
+.arabic-toggle::after,
+.copy-button::after,
+.picker-toggle::after,
+.about-feedback::after,
+.about-fold-toggle::after,
+.profile-button::after,
+.profile-settings-toggle::after,
+.footer a::after,
+.feedback-toggle::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: max(100%, var(--target-min));
+    height: max(100%, var(--target-min));
+    transform: translate(-50%, -50%);
+}
+
+/* Свёрнутый блок обрезает всё, что за его краем (overflow у .fold-inner), — и
+   область нажатия стрелки правила у левого края и счёта у правого тоже. Край
+   обреза отодвинут на ширину отступа блока правил; содержимое на месте. */
+.reading-block > .fold > .fold-inner {
+    margin-inline: calc(-1 * var(--space-3));
+    padding-inline: var(--space-3);
+}
+
+/* Флажок «Приложить текст» ловит нажатие всей подписью; её область шире строки
+   на отступ сверху, снизу и слева от флажка, а место в форме — прежнее. */
+.feedback-attach {
+    margin: calc(-1 * var(--space-3)) 0 calc(-1 * var(--space-3)) calc(-1 * var(--space-4));
+    padding: var(--space-3) 0 var(--space-3) var(--space-4);
+}
+
+/* Подписи кнопок не переносятся (D25): «Выбрать суру» рядом с «Вставить» на
+   узком телефоне ломалась в две строки. Не помещаются обе — page.fitBar ставит
+   .is-compact, и «Вставить» остаётся значком; подпись остаётся имени кнопки. */
+.composer-bar .picker-toggle,
+.composer-bar .composer-tools {
+    flex: none;
+    white-space: nowrap;
+}
+
+.composer-bar.is-compact .paste-button {
+    padding-inline: 0.6rem;
+}
+
+.composer-bar.is-compact .paste-button span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+}
+
 /* ---- Телефон ---- */
 
 @media (max-width: 36rem) {
@@ -2952,6 +3058,23 @@ mark.changed {
     .result-meta {
         order: 1;
         flex-basis: 100%;
+    }
+
+    /* Метки под пальцем выше, а между строками шапки — 1rem (D25): области
+       нажатия «С арабским» сверху и меток снизу (по 44px) не заходят друг на друга. */
+    .result-head {
+        row-gap: var(--space-4);
+    }
+
+    .result-chip {
+        padding-block: 0.3rem;
+    }
+
+    /* Поля поиска и имени под палец — не ниже цели нажатия (D25). Поля графем в
+       таблице профиля остаются плотными: это строки таблицы, а не первые поля панели. */
+    .surah-search-input,
+    .profile-input:not(.profile-value-input) {
+        min-height: var(--target-min);
     }
 
     /* Тумблер «С арабским» (D18) рядом с подписью и «Копировать» — одной иконкой:
