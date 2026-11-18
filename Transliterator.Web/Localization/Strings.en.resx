@@ -73,7 +73,13 @@
     <value>Show the Arabic line above each line of the transliteration</value>
   </data>
   <data name="Result.ReadingChip" xml:space="preserve">
-    <value>Reading level: {0}. Change</value>
+    <value>Reading: {0}. Change</value>
+  </data>
+  <data name="Result.ReadingChipLabel" xml:space="preserve">
+    <value>Reading:</value>
+  </data>
+  <data name="Result.ProfileChipLabel" xml:space="preserve">
+    <value>Profile:</value>
   </data>
   <data name="Result.ReadingChipTitle" xml:space="preserve">
     <value>Change the reading level</value>

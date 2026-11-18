@@ -76,7 +76,13 @@
     <value>Показать над каждой строкой транслитерации её арабскую строку</value>
   </data>
   <data name="Result.ReadingChip" xml:space="preserve">
-    <value>Ступень чтения: {0}. Изменить</value>
+    <value>Чтение: {0}. Изменить</value>
+  </data>
+  <data name="Result.ReadingChipLabel" xml:space="preserve">
+    <value>Чтение:</value>
+  </data>
+  <data name="Result.ProfileChipLabel" xml:space="preserve">
+    <value>Профиль:</value>
   </data>
   <data name="Result.ReadingChipTitle" xml:space="preserve">
     <value>Изменить ступень чтения</value>

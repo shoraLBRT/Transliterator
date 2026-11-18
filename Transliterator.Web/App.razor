@@ -108,6 +108,8 @@
             @* Карточка вывода (D17). Шапка липнет к верху экрана, пока карточка
                прокручивается: у суры кнопка копирования видна у любого аята. Метки
                рядом с подписью — чем записан вывод; нажатие открывает свою панель.
+               У метки подпись и значение в одну строку («Чтение: Полный таджвид»,
+               D38): значение обрезается многоточием, подпись видна, как в E6.
                Кнопка копирует _result целиком: строки ниже — только вёрстка. *@
             <section class="result" aria-labelledby="result-title">
                 <div class="result-head">
@@ -122,12 +124,12 @@
                         @if (_catalog is not null)
                         {
                             <button type="button" class="result-chip" title="@L["Result.ReadingChipTitle"]"
-                                    aria-label="@L["Result.ReadingChip", ReadingName]" @onclick="OpenReadingAsync"><span class="result-chip-text">@ReadingName</span></button>
+                                    aria-label="@L["Result.ReadingChip", ReadingName]" @onclick="OpenReadingAsync"><span class="result-chip-label">@L["Result.ReadingChipLabel"]</span><span class="result-chip-text">@ReadingName</span></button>
                         }
                         @if (_profile is not null)
                         {
                             <button type="button" class="result-chip" title="@L["Result.ProfileChipTitle"]"
-                                    aria-label="@L["Result.ProfileChip", _profile.Name]" @onclick="OpenProfileAsync"><span class="result-chip-text">@_profile.Name</span></button>
+                                    aria-label="@L["Result.ProfileChip", _profile.Name]" @onclick="OpenProfileAsync"><span class="result-chip-label">@L["Result.ProfileChipLabel"]</span><span class="result-chip-text">@_profile.Name</span></button>
                         }
                     </div>
                     <p class="result-note" role="status">@(_unchangedNote ? L["Output.Unchanged"].Value : null)</p>

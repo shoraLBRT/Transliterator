@@ -70,6 +70,14 @@
     --text-lg: 1.2rem;
     --text-xl: 1.6rem;
 
+    /* Межстрочные поля и вывода (D38): плотнее прежних 1.9 / 1.75 / 1.6, но
+       огласовки арабского над и под буквой не заходят на соседнюю строку. */
+    --leading-arabic: 1.65;
+    --leading-arabic-line: 1.45;
+    --leading-output: 1.5;
+    /* Крестик под полем (D20) — ещё на ступень меньше (D38, после D36). */
+    --bar-icon-size: 1.75rem;
+
     /* Движение (D10): одна длительность и одна кривая на панели и вывод.
        Длительность повторена в PanelClosing.Duration — столько уходящая панель
        остаётся в разметке. Рядом — короткая (наведение, переключатели), долгая
@@ -273,7 +281,7 @@ button {
     align-items: center;
     justify-content: center;
     min-height: 2.8em; /* две строки: текст печатается, а вёрстка не прыгает */
-    margin: 0 0 var(--space-5);
+    margin: 0 0 var(--space-4);
     font-size: var(--hint-size);
     font-weight: 500;
     line-height: 1.4;
@@ -328,14 +336,14 @@ button {
     display: block;
     width: 100%;
     min-height: 3.5rem;
-    padding: 1.1rem 1.5rem 0.4rem;
+    padding: var(--space-4) var(--space-6) var(--space-1); /* плотнее (D38) */
     border: 0;
     border-radius: var(--radius-card) var(--radius-card) 0 0;
     background: transparent;
     color: var(--ink);
     font-family: var(--font-arabic);
     font-size: var(--text-xl);
-    line-height: 1.9;
+    line-height: var(--leading-arabic);
     resize: none;
     overflow-y: hidden;
 }
@@ -357,7 +365,7 @@ button {
     align-items: center;
     justify-content: space-between;
     gap: var(--space-2);
-    padding: var(--space-1) var(--space-3) var(--space-3);
+    padding: var(--space-1) var(--space-3) var(--space-2);
 }
 
 /* ---- Плашка отмены очистки (D20) ---- */
@@ -469,12 +477,12 @@ svg {
     display: inline-flex;
     align-items: center;
     gap: var(--space-2);
-    padding: 0.35rem 0.75rem;
+    padding: var(--space-1) var(--space-3);
     border: 1px solid var(--line);
     border-radius: var(--radius-pill);
     background: var(--paper);
     color: var(--foam-700);
-    font-size: var(--text-sm);
+    font-size: var(--text-xs);
     font-weight: 500;
     cursor: pointer;
 }
@@ -669,7 +677,7 @@ svg {
     flex-wrap: wrap;
     align-items: center;
     gap: var(--space-2) var(--space-5);
-    margin-top: var(--space-3);
+    margin-top: var(--space-2);
     padding-inline: var(--space-2);
 }
 
@@ -1910,8 +1918,8 @@ html.is-sheet-open {
 .result {
     --result-pad: var(--space-6);
     position: relative;
-    margin-top: var(--space-5);
-    padding: 0 var(--result-pad) var(--space-5);
+    margin-top: var(--space-4);
+    padding: 0 var(--result-pad) var(--space-4);
     background: var(--foam-50);
     border: 1px solid var(--foam-100);
     border-radius: var(--radius-2xl);
@@ -1929,8 +1937,8 @@ html.is-sheet-open {
     flex-wrap: wrap;
     align-items: center;
     gap: var(--space-2) var(--space-3);
-    margin: 0 calc(-1 * var(--result-pad)) var(--space-3);
-    padding: var(--space-3) var(--result-pad);
+    margin: 0 calc(-1 * var(--result-pad)) var(--space-2);
+    padding: var(--space-2) var(--result-pad);
     background: var(--foam-50);
     border-bottom: 1px solid var(--foam-100);
     border-radius: var(--radius-2xl) var(--radius-2xl) 0 0;
@@ -1941,11 +1949,19 @@ html.is-sheet-open {
    подпись обрезается многоточием, диктору она читается целиком. Уже 64rem подпись
    стоит в шапке панели (лист закрывает вывод), и здесь скрыта; живая область в
    разметке всегда. */
+/* Метки с подписями («Чтение: Полный таджвид», D38) рядом с тремя кнопками
+   шапки не помещаются даже на ширине поля: ячейка меток — второй строкой шапки
+   во всю её ширину, и метки стоят в одну строку, а не друг под другом. */
 .result-meta {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
-    flex: 1 1 0;
+    flex: 1 1 100%;
+    order: 1;
     min-width: 0;
+}
+
+.result-title {
+    margin-inline-end: auto;
 }
 
 .result-meta > * {
@@ -1974,16 +1990,26 @@ html.is-sheet-open {
     color: var(--foam-700);
 }
 
+/* Метки — одной строкой (D38): не переносятся друг под друга, а сжимаются;
+   значение обрезается многоточием, подпись перед ним видна (как E6). */
 .result-chips {
     display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-1) var(--space-2);
+    flex-wrap: nowrap;
+    gap: var(--space-2);
     min-width: 0;
 }
 
 /* Метки ступени и профиля — тихие: подсказывают, чем записан вывод, и не
-   спорят с ним. Нажатие открывает свою панель. */
+   спорят с ним. Нажатие открывает свою панель. Подпись и значение — в одну
+   строку («Чтение: Полный таджвид», D38). */
 .result-chip {
+    display: inline-flex;
+    align-items: baseline;
+    flex: 0 1 auto;
+    gap: var(--space-1);
+    /* Сжимаются обе метки, по своей ширине, но не уже подписи с парой букв
+       значения: на телефоне короткое «Cyrillic» не съедается до «C». */
+    min-width: min(8em, 50% - var(--space-1));
     max-width: 14rem;
     padding: 0.15rem 0.6rem;
     border: 1px solid var(--foam-100);
@@ -2004,6 +2030,12 @@ html.is-sheet-open {
     text-overflow: ellipsis;
 }
 
+/* Подпись не сжимается: метка уже подписи не становится (D38). */
+.result-chip-label {
+    flex: none;
+    white-space: nowrap;
+}
+
 .result-chip:hover {
     border-color: var(--foam-300);
     color: var(--foam-700);
@@ -2011,7 +2043,7 @@ html.is-sheet-open {
 
 .result-text {
     font-size: 1.15rem;
-    line-height: 1.75;
+    line-height: var(--leading-output);
     animation: text-in var(--motion-duration) var(--ease-soft);
 }
 
@@ -2025,9 +2057,9 @@ html.is-sheet-open {
    чуть за край текста, чтобы не прилипать к буквам. Одна строка без соседей
    (вставленный текст) не подсвечивается: выделять там нечего. */
 .result-line {
-    min-height: 1.75em; /* пустая строка вывода остаётся строкой */
+    min-height: calc(var(--leading-output) * 1em); /* пустая строка вывода остаётся строкой */
     margin-inline: calc(-1 * var(--space-2));
-    padding: var(--space-1) var(--space-2);
+    padding: 0.125rem var(--space-2); /* плотнее (D38): подсветке наведения хватает */
     border-radius: var(--radius-sm);
     white-space: pre-wrap;
     overflow-wrap: anywhere;
@@ -2082,15 +2114,17 @@ mark.changed {
 /* Близость: арабская строка вплотную к своей строке вывода, а пары разделены
    заметным воздухом и тонкой чертой — глаз сразу видит, что к чему относится.
    Без тумблера свёрнутый блок без отступов, и расстояния — как в D17. */
+/* Плотнее (D38): воздух между парами и черта — вдвое меньше прежнего, арабская
+   строка вплотную к своей. */
 .result-line + .result-source.is-open {
-    margin-top: var(--space-2);
-    padding-top: var(--space-3);
+    margin-top: var(--space-1);
+    padding-top: var(--space-2);
     border-top: 1px solid var(--foam-100);
 }
 
 .result-source.is-open + .result-line {
     margin-top: 0;
-    padding-top: 0.15rem;
+    padding-top: 0;
 }
 
 .result-source-text {
@@ -2098,7 +2132,7 @@ mark.changed {
     padding: 0;
     font-family: var(--font-arabic);
     font-size: 1.4rem;
-    line-height: 1.6;
+    line-height: var(--leading-arabic-line);
     color: var(--ink-muted);
     text-align: right;
     overflow-wrap: anywhere;
@@ -3127,8 +3161,8 @@ mark.changed {
 
 /* Крестик под полем (D20) — на ступень меньше, как «Выбрать суру» (D36). */
 .composer-bar .icon-button {
-    width: 2rem;
-    height: 2rem;
+    width: var(--bar-icon-size);
+    height: var(--bar-icon-size);
 }
 
 /* Подписи кнопок под полем не переносятся (D25): «Выбрать суру» на узком
@@ -3159,11 +3193,11 @@ mark.changed {
     }
 
     .hint {
-        margin-bottom: var(--space-4);
+        margin-bottom: var(--space-3);
     }
 
     .composer-input {
-        padding: 0.9rem 1.1rem 0.25rem;
+        padding: var(--space-3) 1.1rem var(--space-1);
         font-size: 1.4rem;
     }
 
