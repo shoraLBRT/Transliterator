@@ -895,9 +895,46 @@ namespace Transliterator.Tests.DocsTests
             Assert.Matches(@"\.toast-region \{[^}]*position: fixed;[^}]*bottom: calc\(var\(--space-4\) \+ env\(safe-area-inset-bottom, 0px\)\);[^}]*justify-content: center;", css);
             Assert.Matches(@"\.toast \{[^}]*animation: toast-in var\(--motion-duration\) var\(--motion-ease\);", css);
             Assert.Matches(@"\.toast\.is-closing \{ animation: toast-out var\(--motion-duration\) var\(--motion-ease\) forwards; \}", css);
-            // D23: значок отзыва раскрывается подписью до 9rem — поля плашки шире раскрытой капсулы.
+            // D33: слева от значка отзыва встаёт подсказка до 9rem — поля плашки шире значка с подсказкой.
             Assert.Matches(@"@media \(min-width: 56rem\) \{ \.toast-region \{[^}]*padding: 0 calc\(var\(--space-5\) \+ 2\.75rem \+ 9rem \+ var\(--space-6\) \+ var\(--space-4\)\);", css);
-            Assert.Matches(@"\.feedback-toggle\[aria-expanded=""true""\] \.feedback-label \{ max-width: 9rem;", css);
+            Assert.Matches(@"\.feedback-label \{ position: absolute;[^}]*max-width: 9rem;", css);
+        }
+
+        /// <summary>
+        /// Кнопка отзыва в углу (D33): при наведении и фокусе не меняет ширину и не
+        /// раскрывается подписью — только подсвечивается; подпись показывает подсказка
+        /// тем же видом, что у кнопок сбоку (D23), без title; имя для диктора — та же
+        /// подпись, спрятанная через opacity.
+        /// </summary>
+        [Fact]
+        public void FeedbackButton_HighlightsAndShowsATooltipInsteadOfExpanding()
+        {
+            var button = Regex.Replace(Web("Components", "FeedbackButton.razor"), @"\s+", " ");
+            var css = Regex.Replace(Web("wwwroot", "css", "app.css"), @"\s+", " ");
+
+            var toggle = Regex.Match(button, @"<button type=""button"" class=""feedback-toggle""[^>]*>(.*?)</button>");
+            Assert.True(toggle.Success, "the feedback button is not found");
+            Assert.DoesNotContain("title=", toggle.Value);
+            Assert.DoesNotContain("aria-label", toggle.Value);
+            Assert.Contains("<span class=\"feedback-label\">@L[\"Feedback.Toggle\"]</span>", toggle.Groups[1].Value);
+
+            var wide = Regex.Match(css, @"@media \(min-width: 56rem\) \{ \.feedback \{.*?\.feedback-panel \{");
+            Assert.True(wide.Success, "the wide-screen feedback block is not found");
+            var rules = wide.Value;
+
+            // Ширина постоянная, у подписи нет раскрытия по max-width.
+            Assert.Matches(@"\.feedback-toggle \{[^}]*width: 2\.75rem;[^}]*height: 2\.75rem;", rules);
+            Assert.DoesNotContain("max-width: 0", rules);
+            Assert.DoesNotMatch(@"\.feedback-toggle\[aria-expanded=""true""\] \.feedback-label", rules);
+
+            // Наведение и фокус — подсветка.
+            Assert.Matches(@"\.feedback-toggle:hover, \.feedback-toggle:focus-visible, \.feedback-toggle\[aria-expanded=""true""\] \{[^}]*border-color: var\(--foam-300\);[^}]*background: var\(--foam-50\);[^}]*color: var\(--foam-700\);", rules);
+
+            // Подсказка — как у кнопок сбоку: тёмная плашка рядом, скрыта через opacity,
+            // появляется с задержкой при наведении и фокусе.
+            Assert.Matches(@"\.feedback-label \{ position: absolute;[^}]*right: calc\(100% \+ var\(--space-3\)\);[^}]*background: var\(--ink\);[^}]*color: var\(--paper\);[^}]*opacity: 0;[^}]*pointer-events: none;", rules);
+            Assert.DoesNotMatch(@"\.feedback-label \{[^}]*visibility", rules);
+            Assert.Matches(@"\.feedback-toggle:hover \.feedback-label, \.feedback-toggle:focus-visible \.feedback-label \{ opacity: 1;[^}]*transition-delay: var\(--motion-hint-delay\);", rules);
         }
 
         [Fact]

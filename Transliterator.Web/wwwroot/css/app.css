@@ -373,9 +373,9 @@ button {
 
 /* Внизу по центру, над краем экрана с учётом выреза телефона. Область — во всю
    ширину и не ловит нажатий, сама плашка — ловит. С 56rem в правом нижнем углу
-   стоит значок отзыва (2.75rem в 1.25rem от края), при наведении он раскрывается
-   подписью до 9rem с отступами (D23): плашка уже, чем место между такими полями
-   слева и справа, и на раскрытую капсулу не наезжает. */
+   стоит значок отзыва (2.75rem в 1.25rem от края), при наведении слева от него
+   встаёт подсказка до 9rem (D33): плашка уже, чем место между такими полями
+   слева и справа, и ни на значок, ни на подсказку не наезжает. */
 .toast-region {
     position: fixed;
     right: 0;
@@ -2501,26 +2501,18 @@ mark.changed {
         z-index: 11;
     }
 
-    /* Значок в углу — капсула (D23): наведение или фокус раскрывают её подписью
-       «Обратная связь» — ширина подписи растёт от нуля, капсула вместе с ней.
-       Свёрнутая подпись нулевой ширины остаётся именем кнопки для диктора. */
-    .feedback-label {
-        max-width: 0;
-        overflow: hidden;
-        white-space: nowrap;
-        opacity: 0;
-        transition: max-width var(--motion-duration) var(--motion-ease),
-                    margin var(--motion-duration) var(--motion-ease),
-                    opacity var(--motion-duration) var(--ease-soft);
-    }
-
+    /* Значок в углу (D33) — круглая кнопка постоянной ширины: наведение и фокус
+       только подсвечивают её, подпись «Обратная связь» не раскрывается. Подпись
+       показывает подсказка слева от значка — тем же видом, что у кнопок сбоку
+       (D23): тёмная плашка, с задержкой появляется, уходит сразу. Скрыта подпись
+       через opacity, не visibility, — и остаётся именем кнопки для диктора. */
     .feedback-toggle {
         display: inline-flex;
         align-items: center;
-        gap: 0; /* промежуток даёт отступ раскрытой подписи */
-        min-width: 2.75rem;
+        justify-content: center;
+        width: 2.75rem;
         height: 2.75rem;
-        padding: 0 calc((2.75rem - 1.2rem) / 2 - 1px);
+        padding: 0;
         border: 1px solid var(--line);
         border-radius: var(--radius-pill);
         background: var(--paper);
@@ -2529,21 +2521,45 @@ mark.changed {
         font-size: var(--text-md);
         font-weight: 500;
         text-decoration: none;
+        transition: background-color var(--motion-fast) var(--ease-soft),
+                    border-color var(--motion-fast) var(--ease-soft),
+                    color var(--motion-fast) var(--ease-soft);
     }
 
     .feedback-toggle:hover,
     .feedback-toggle:focus-visible,
     .feedback-toggle[aria-expanded="true"] {
         border-color: var(--foam-300);
+        background: var(--foam-50);
         color: var(--foam-700);
     }
 
-    .feedback-toggle:hover .feedback-label,
-    .feedback-toggle:focus-visible .feedback-label,
-    .feedback-toggle[aria-expanded="true"] .feedback-label {
+    .feedback-label {
+        position: absolute;
+        top: 50%;
+        right: calc(100% + var(--space-3));
+        z-index: 12;
         max-width: 9rem; /* то же число держит поля плашки (.toast-region) */
-        margin-inline: var(--space-2) var(--space-1);
+        padding: var(--space-1) var(--space-3);
+        border-radius: var(--radius-sm);
+        background: var(--ink);
+        box-shadow: var(--shadow-md);
+        color: var(--paper);
+        font-size: var(--text-sm);
+        font-weight: 500;
+        white-space: nowrap;
+        opacity: 0;
+        pointer-events: none;
+        transform: translate(var(--space-1), -50%);
+        transition: opacity var(--motion-fast) var(--ease-soft),
+                    transform var(--motion-fast) var(--motion-ease);
+    }
+
+    .feedback-toggle:hover .feedback-label,
+    .feedback-toggle:focus-visible .feedback-label {
         opacity: 1;
+        transform: translate(0, -50%);
+        transition-delay: var(--motion-hint-delay);
     }
 
     .feedback-toggle svg {
