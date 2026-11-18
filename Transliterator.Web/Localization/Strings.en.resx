@@ -270,6 +270,12 @@
   <data name="Profile.ValueColumn" xml:space="preserve">
     <value>Grapheme</value>
   </data>
+  <data name="Profile.SoundColumn" xml:space="preserve">
+    <value>Sound</value>
+  </data>
+  <data name="Profile.NotInRussian" xml:space="preserve">
+    <value>not in Russian</value>
+  </data>
   <data name="Profile.SearchLabel" xml:space="preserve">
     <value>Search by letter, spelling or variant</value>
   </data>
@@ -438,24 +444,6 @@
     <value>How to say the letters</value>
   </data>
   <data name="Sounds.ToggleTitle" xml:space="preserve">
-    <value>Sound table: how to say each letter and how it is written</value>
-  </data>
-  <data name="Sounds.Title" xml:space="preserve">
-    <value>How to say the letters</value>
-  </data>
-  <data name="Sounds.Caption" xml:space="preserve">
-    <value>Next to each letter — how the “{0}” profile writes it.</value>
-  </data>
-  <data name="Sounds.Unfamiliar" xml:space="preserve">
-    <value>Sounds to learn first</value>
-  </data>
-  <data name="Sounds.Rest" xml:space="preserve">
-    <value>Other letters</value>
-  </data>
-  <data name="Sounds.RecordLabel" xml:space="preserve">
-    <value>Written:</value>
-  </data>
-  <data name="Sounds.NotWritten" xml:space="preserve">
-    <value>not written</value>
+    <value>How each letter sounds and how it is written — in the profile settings</value>
   </data>
 </root>

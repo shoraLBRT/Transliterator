@@ -114,17 +114,8 @@ namespace Transliterator.Web.Components
             await FocusToggleAsync();
         }
 
-        /// <summary>
-        /// Вернуть фокус на кнопку панели. Кнопка таблицы звуков (D11) стоит в шапке
-        /// вывода, которой без текста нет, — та панель возвращает фокус и без неё.
-        /// </summary>
-        protected virtual Task FocusToggleAsync() => ToggleButton.FocusAsync().AsTask();
-
-        /// <summary>
-        /// Фокус на кнопку панели снаружи: таблица звуков (D29), открытая из этой
-        /// панели, по Escape возвращает его сюда — на хозяйку входа.
-        /// </summary>
-        public Task FocusToggleButtonAsync() => FocusToggleAsync();
+        /// <summary>Вернуть фокус на кнопку панели.</summary>
+        protected Task FocusToggleAsync() => ToggleButton.FocusAsync().AsTask();
 
         protected async Task OnPanelKeyDownAsync(KeyboardEventArgs e)
         {

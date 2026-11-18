@@ -229,6 +229,29 @@ namespace Transliterator.Tests.ProfileTests
         }
 
         [Fact]
+        public void Search_FindsALetter_ByHowItSounds()
+        {
+            // Звучание буквы (E11) — в той же таблице, и поиск находит букву по нему.
+            static string? Describe(string letter) => letter == "ع" ? "Айн: звонкий звук глубоко в горле" : null;
+
+            var groups = RuleTable.Group(TestProfiles.Cyrillic.Rules);
+
+            Assert.Equal("ع", Assert.Single(RuleTable.Filter(groups, "горле", Describe)).BaseKey);
+            Assert.DoesNotContain(RuleTable.Filter(groups, "горле"), g => g.BaseKey == "ع");
+        }
+
+        [Fact]
+        public void Search_ByHowItSounds_NeedsThreeCharacters()
+        {
+            // Как у пояснения варианта: одна-две буквы находили бы в описаниях что угодно.
+            static string? Describe(string letter) => letter == "ع" ? "Айн: звонкий звук глубоко в горле" : null;
+
+            var found = RuleTable.Filter(RuleTable.Group(TestProfiles.Cyrillic.Rules), "зв", Describe);
+
+            Assert.DoesNotContain(found, g => g.BaseKey == "ع");
+        }
+
+        [Fact]
         public void SearchWithoutMatches_IsEmpty()
         {
             Assert.Empty(RuleTable.Filter(RuleTable.Group(TestProfiles.Cyrillic.Rules), "nosuchkey"));

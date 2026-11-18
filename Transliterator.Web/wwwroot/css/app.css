@@ -1619,6 +1619,54 @@ html.is-sheet-open {
     width: 7rem;
 }
 
+/* Звучание (E11) — четвёртый столбец. Буква и графема сужаются, вариант берёт
+   долю, звучание — остаток: в 25rem и в 360px таблица по-прежнему без прокрутки
+   вбок, текст о звучании переносится по словам мельче остальных ячеек. */
+.profile-table.has-sounds .profile-col-letter {
+    width: 2.5rem;
+}
+
+.profile-table.has-sounds .profile-col-value {
+    width: 5rem;
+}
+
+.profile-table.has-sounds .profile-col-variant {
+    width: 30%;
+}
+
+.profile-table .profile-sound-cell {
+    vertical-align: top;
+    font-size: var(--text-xs);
+    line-height: 1.35;
+    color: var(--ink-muted);
+    overflow-wrap: break-word;
+    hyphens: auto;
+}
+
+.profile-sound {
+    display: grid;
+    gap: 0.15rem;
+}
+
+.profile-sound-name {
+    font-weight: 600;
+    color: var(--ink);
+}
+
+/* «Нет в русском» — такие звуки и нужно выучить: заметная, но тихая метка. */
+.profile-sound-mark {
+    justify-self: start;
+    padding: 0 0.35rem;
+    border-radius: var(--radius-pill);
+    background: var(--foam-50);
+    color: var(--foam-700);
+    font-weight: 600;
+}
+
+.profile-sound-none {
+    color: var(--ink-muted);
+}
+
 .profile-table th,
 .profile-table td {
     padding: 0.3rem 0.45rem;
@@ -1858,109 +1906,6 @@ html.is-sheet-open {
 .about-feedback:hover {
     background: var(--foam-50);
     border-color: var(--foam-100);
-}
-
-/* ---- Таблица звуков (D11) ---- */
-
-/* Строка — арабская буква крупно, запись профиля акцентом (в цвет вывода, как
-   «как пишет страница» в примере «О чём проект?»), справа название и как
-   произносить. Колонки одной ширины во всех строках — буквы и записи стоят
-   столбцами, и таблицу легко пробежать глазами. */
-.sounds-body {
-    display: grid;
-    gap: var(--space-3);
-    padding: var(--space-1) var(--space-3) var(--space-3);
-    font-size: 0.88rem;
-    line-height: 1.45;
-}
-
-.sounds-caption {
-    margin: 0;
-    color: var(--ink-muted);
-    font-size: var(--text-sm);
-}
-
-.sounds-heading {
-    margin: 0;
-    font-size: 0.88rem;
-    font-weight: 600;
-}
-
-.sounds-list {
-    display: grid;
-    margin: var(--space-1) 0 0;
-    padding: 0;
-    list-style: none;
-}
-
-.sound {
-    display: grid;
-    grid-template-columns: 2.5rem 2.75rem minmax(0, 1fr);
-    align-items: baseline;
-    gap: var(--space-2);
-    padding: var(--space-2) 0;
-    border-top: 1px solid var(--line);
-}
-
-.sound:first-child {
-    border-top: 0;
-}
-
-.sound-letter {
-    font-family: var(--font-arabic);
-    font-size: 2.1rem;
-    line-height: 1;
-    text-align: center;
-}
-
-.sound-record {
-    color: var(--foam-700);
-    font-size: 1.05rem;
-    font-weight: 600;
-    overflow-wrap: anywhere;
-}
-
-.sound-record.is-empty {
-    color: var(--ink-muted);
-    font-weight: 400;
-}
-
-.sound-text {
-    display: grid;
-    gap: 0.1rem;
-    min-width: 0;
-}
-
-.sound-name {
-    font-weight: 600;
-}
-
-.sound-how {
-    color: var(--ink-muted);
-}
-
-/* Заголовок «Остальные буквы» — кнопка на всю ширину, как разделы «О чём проект?» (D26). */
-.sounds-fold-toggle {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--space-2);
-    width: 100%;
-    padding: 0.2rem 0;
-    border: 0;
-    background: transparent;
-    color: inherit;
-    font: inherit;
-    text-align: start;
-    cursor: pointer;
-}
-
-.sounds-fold-toggle:hover {
-    color: var(--foam-700);
-}
-
-.sounds-fold-toggle[aria-expanded="true"] .about-fold-chevron {
-    transform: rotate(180deg);
 }
 
 /* ---- Результат ---- */
@@ -2258,12 +2203,6 @@ mark.changed {
 }
 
 .sounds-toggle:hover {
-    background: var(--foam-100);
-    color: var(--foam-700);
-}
-
-.sounds-toggle[aria-expanded="true"] {
-    border-color: var(--foam-300);
     background: var(--foam-100);
     color: var(--foam-700);
 }
@@ -3142,7 +3081,6 @@ mark.changed {
 .picker-toggle,
 .about-feedback,
 .about-fold-toggle,
-.sounds-fold-toggle,
 .profile-button,
 .profile-settings-toggle,
 .footer a,
@@ -3165,7 +3103,6 @@ mark.changed {
 .picker-toggle::after,
 .about-feedback::after,
 .about-fold-toggle::after,
-.sounds-fold-toggle::after,
 .profile-button::after,
 .profile-settings-toggle::after,
 .footer a::after,

@@ -281,6 +281,12 @@
   <data name="Profile.ValueColumn" xml:space="preserve">
     <value>Графема</value>
   </data>
+  <data name="Profile.SoundColumn" xml:space="preserve">
+    <value>Звучание</value>
+  </data>
+  <data name="Profile.NotInRussian" xml:space="preserve">
+    <value>нет в русском</value>
+  </data>
   <data name="Profile.SearchLabel" xml:space="preserve">
     <value>Поиск по букве, записи или варианту</value>
   </data>
@@ -460,24 +466,6 @@
     <value>Как читать буквы</value>
   </data>
   <data name="Sounds.ToggleTitle" xml:space="preserve">
-    <value>Таблица звуков: как произносить каждую букву и как она пишется</value>
-  </data>
-  <data name="Sounds.Title" xml:space="preserve">
-    <value>Как читать буквы</value>
-  </data>
-  <data name="Sounds.Caption" xml:space="preserve">
-    <value>Рядом с буквой — как её пишет профиль «{0}».</value>
-  </data>
-  <data name="Sounds.Unfamiliar" xml:space="preserve">
-    <value>Звуки, которых нет в русском</value>
-  </data>
-  <data name="Sounds.Rest" xml:space="preserve">
-    <value>Остальные буквы</value>
-  </data>
-  <data name="Sounds.RecordLabel" xml:space="preserve">
-    <value>Запись:</value>
-  </data>
-  <data name="Sounds.NotWritten" xml:space="preserve">
-    <value>не пишется</value>
+    <value>Как звучит каждая буква и как она пишется — в настройках профиля</value>
   </data>
 </root>

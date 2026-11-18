@@ -118,32 +118,16 @@
                 {<ChangedText Segments="ChangedText.Of(Changes, Preview)" />}</span>
             </div>
 
-            @* «Как читать буквы» (D29) — рядом с «Настройки профиля»: запись буквы в
-               таблице звуков — графема этого профиля. Открывается и при пустом поле;
-               таблица — своя панель, эта уступает ей место. *@
-            @if (OpenSounds is not null)
-            {
-                <div class="profile-settings profile-sounds">
-                    <div class="profile-settings-head">
-                        <button type="button" class="profile-settings-toggle profile-sounds-toggle" title="@L["Sounds.ToggleTitle"]"
-                                @onclick="OpenSoundsAsync">
-                            <span class="profile-settings-name">@L["Sounds.Toggle"]</span>
-                            <svg class="profile-settings-chevron" viewBox="0 0 24 24" aria-hidden="true">
-                                <path d="M9 6l6 6-6 6" />
-                            </svg>
-                        </button>
-                    </div>
-                </div>
-            }
-
             @* Графемы — под стрелкой «Настройки профиля» (E9): профиль выбирают чаще,
                чем переписывают. При открытии панели блок свёрнут, у только что
-               созданного профиля — раскрыт: его создают, чтобы переписать графемы. *@
+               созданного профиля — раскрыт: его создают, чтобы переписать графемы.
+               Здесь же — как звучит каждая буква (E11): «Как читать буквы» в шапке вывода
+               и в «О чём проект?» открывают эту панель с раскрытыми настройками. *@
             <section class="profile-settings">
                 <h3 class="profile-settings-head">
                     <button type="button" class="profile-settings-toggle"
                             aria-expanded="@(_settingsOpen ? "true" : "false")" aria-controls="profile-settings"
-                            @onclick="ToggleSettings">
+                            @onclick="ToggleSettings" @ref="_settingsToggle">
                         <span class="profile-settings-name">@L["Profile.Settings"]</span>
                         <svg class="profile-settings-chevron" viewBox="0 0 24 24" aria-hidden="true">
                             <path d="M6 9l6 6 6-6" />
@@ -162,7 +146,7 @@
                                placeholder="@L["Profile.SearchPlaceholder"]" spellcheck="false" autocomplete="off"
                                @bind="_query" @bind:event="oninput" />
 
-                        var groups = RuleTable.Filter(_groups, _query);
+                        var groups = RuleTable.Filter(_groups, _query, Describe);
 
                         if (groups.Count == 0)
                         {
@@ -172,31 +156,47 @@
                         {
                             @* Таблица, а не список строк (E9): у столбцов одна ширина во всех
                                строках, у ячеек — границы. Буква стоит одной ячейкой на все свои
-                               строки, её основная графема — крупно, варианты — мельче и тише. *@
-                            <table class="profile-table">
+                               строки, её основная графема — крупно, варианты — мельче и тише.
+                               Звучание (E11) — четвёртым столбцом, тоже одной ячейкой на букву:
+                               текст один на букву, не на вариант. Стоит в строке буквы, так что
+                               диктор читает его вслед за буквой и её графемой. *@
+                            <table class="profile-table @(Sounds is not null ? "has-sounds" : null)">
                                 <colgroup>
                                     <col class="profile-col-letter" />
                                     <col class="profile-col-variant" />
                                     <col class="profile-col-value" />
+                                    @if (Sounds is not null)
+                                    {
+                                        <col class="profile-col-sound" />
+                                    }
                                 </colgroup>
                                 <thead>
                                     <tr>
                                         <th scope="col">@L["Profile.LetterColumn"]</th>
                                         <th scope="col">@L["Profile.VariantColumn"]</th>
                                         <th scope="col">@L["Profile.ValueColumn"]</th>
+                                        @if (Sounds is not null)
+                                        {
+                                            <th scope="col">@L["Profile.SoundColumn"]</th>
+                                        }
                                     </tr>
                                 </thead>
 
                                 @foreach (var group in groups)
                                 {
                                     var warnings = ShownConflicts.Where(c => c.Involves(group.BaseKey)).ToList();
+                                    var rows = 1 + warnings.Count + group.Variants.Count;
 
                                     <tbody class="profile-group">
                                         <tr class="profile-row">
-                                            <th scope="rowgroup" rowspan="@(1 + warnings.Count + group.Variants.Count)" class="profile-key"
+                                            <th scope="rowgroup" rowspan="@rows" class="profile-key"
                                                 dir="rtl" lang="ar" title="@CodePoints(group.BaseKey)">@Display(group.BaseKey)</th>
                                             <td class="profile-variant-cell"></td>
                                             <td class="profile-value-cell">@Cell(group.BaseKey)</td>
+                                            @if (Sounds is not null)
+                                            {
+                                                <td rowspan="@rows" class="profile-sound-cell">@Sound(group.BaseKey)</td>
+                                            }
                                         </tr>
 
                                         @foreach (var conflict in warnings)
@@ -238,13 +238,43 @@
     public TransliterationProfile Profile { get; set; } = default!;
 
     /// <summary>
-    /// Открыть таблицу звуков (D29). Одна панель на страницу: открывшись, она
-    /// закрывает эту. <c>null</c> — таблицы нет, нет и кнопки.
+    /// Как звучит каждая буква (D11) — четвёртый столбец таблицы графем (E11).
+    /// <c>null</c> — таблица звуков не прочиталась, столбца нет.
     /// </summary>
     [Parameter]
-    public Func<Task>? OpenSounds { get; set; }
+    public SoundTable? Sounds { get; set; }
 
-    private Task OpenSoundsAsync() => OpenSounds?.Invoke() ?? Task.CompletedTask;
+    private SoundTable? _soundsIndexed;
+    private IReadOnlyDictionary<string, ArabicSound> _soundOf = new Dictionary<string, ArabicSound>();
+
+    /// <summary>
+    /// Открыть панель с раскрытыми «Настройками профиля» — «Как читать буквы» в шапке
+    /// вывода и в «О чём проект?» (E11). Фокус — на заголовок настроек: таблица
+    /// под ним, а на телефоне лист прокручивается к нему. Escape, как всегда, вернёт
+    /// фокус на кнопку панели.
+    /// </summary>
+    public async Task OpenSettingsAsync()
+    {
+        _settingsOpen = true;
+        _settingsKept = true;
+        _focusSettings = true;
+        await OpenAsync();
+    }
+
+    private bool _focusSettings;
+    private ElementReference _settingsToggle;
+
+    protected override async Task FocusOpenedAsync()
+    {
+        if (_focusSettings)
+        {
+            _focusSettings = false;
+            await _settingsToggle.FocusAsync();
+            return;
+        }
+
+        await base.FocusOpenedAsync();
+    }
 
     /// <summary>Текст кнопки сбоку: что она выбирает и что выбрано (E6).</summary>
     private string ToggleText => L["Profile.Toggle", Profile.Name];
@@ -337,6 +367,13 @@
         // и профиль остаётся тем же объектом. Букв три десятка — это дёшево.
         _conflicts = GraphemeConflicts.Find(Profile.Rules);
 
+        if (!ReferenceEquals(_soundsIndexed, Sounds))
+        {
+            _soundsIndexed = Sounds;
+            _soundOf = Sounds?.Sounds.ToDictionary(s => s.Letter, StringComparer.Ordinal)
+                       ?? new Dictionary<string, ArabicSound>();
+        }
+
         if (ReferenceEquals(_grouped, Profile))
             return;
 
@@ -364,6 +401,7 @@
     protected override void OnClosed()
     {
         Cancel();
+        _focusSettings = false;
         _settingsOpen = false;
         _settingsKept = false;
     }
@@ -598,6 +636,29 @@
 
     private static string CodePoints(string key) =>
         string.Join(" ", key.Select(c => $"U+{(int)c:X4}"));
+
+    /// <summary>Текст о звучании буквы для поиска (E11): название и как произносить.</summary>
+    private string? Describe(string letter) =>
+        _soundOf.TryGetValue(letter, out var sound) ? $"{sound.Name.Current} {sound.Pronunciation.Current}" : null;
+
+    /// <summary>
+    /// Звучание буквы (E11): название, пометка «нет в русском» — такие звуки и нужно
+    /// выучить, — и как произносить. У огласовок, цифр и знаков текста о звучании нет.
+    /// </summary>
+    private RenderFragment Sound(string letter)
+    {
+        if (!_soundOf.TryGetValue(letter, out var sound))
+            return @<span class="profile-sound-none" aria-hidden="true">—</span>;
+
+        return @<div class="profile-sound">
+                    <span class="profile-sound-name">@sound.Name.Current</span>
+                    @if (sound.NotInRussian)
+                    {
+                        <span class="profile-sound-mark">@L["Profile.NotInRussian"]</span>
+                    }
+                    <span class="profile-sound-how"><MixedText Text="@sound.Pronunciation.Current" /></span>
+                </div>;
+    }
 
     /// <summary>
     /// Графема ключа: полем у своего профиля, текстом у встроенного. Незаданный
