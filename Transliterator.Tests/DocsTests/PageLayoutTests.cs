@@ -95,8 +95,8 @@ namespace Transliterator.Tests.DocsTests
         {
             // D13: шапка над полем — знак и видимое имя (единственный h1) слева,
             // язык справа. Она в потоке: переключатель языка больше не стоит
-            // поверх страницы и не наезжает на подсказку; с 64rem шапка сдвигается
-            // вместе с полем, и колонка панели её не накрывает.
+            // поверх страницы и не наезжает на подсказку; с 64rem шапка стоит в одной
+            // колонке с полем и, как оно, при открытии панели не двигается (D32).
             var app = Web("App.razor");
             var css = Web("wwwroot", "css", "app.css");
             var index = Web("wwwroot", "index.html");
@@ -735,7 +735,6 @@ namespace Transliterator.Tests.DocsTests
             var rules = wide.Groups[1].Value;
 
             Assert.Matches(@"\.picker-panel, \.reading-panel, \.profile-panel \{[^}]*position: fixed", rules);
-            Assert.Matches(@"\.shell\.has-panel \{[^}]*--rail-space: calc\(var\(--panel-left\) \+ var\(--panel-width\)\)", rules);
             Assert.Matches(@"\.stage, \.footer \{[^}]*margin-left: max\(var\(--rail-space\)", rules);
 
             // Ни подложки, которая закрыла бы панель щелчком по полю, ни повтора вывода
@@ -745,6 +744,44 @@ namespace Transliterator.Tests.DocsTests
             Assert.Contains("html.is-sheet-open { overflow: visible;", rules);
             Assert.Contains(".picker-panel.is-closing { animation-name: panel-out; }", rules);
             Assert.Matches(@"\.picker-panel \{[^}]*border-radius: var\(--radius-xl\);[^}]*animation-name: panel-in;", rules);
+        }
+
+        /// <summary>
+        /// D32, вариант «В»: открытая колонка не сдвигает шапку, поле, вывод и подвал —
+        /// отступ слева у них один, с панелью и без. С 110rem колонка помещается в
+        /// свободное поле слева; уже — ложится поверх, и под ней прозрачная подложка,
+        /// как у списка сур: щелчок мимо закрывает панель и возвращает фокус на кнопку.
+        /// Ширина колонки прежняя (таблица графем), лист D14 уже 64rem не тронут.
+        /// </summary>
+        [Fact]
+        public void OnAWideScreen_OpeningThePanelMovesNothing_AndWhereItCoversThePageAClickOutsideClosesIt()
+        {
+            var css = Regex.Replace(Web("wwwroot", "css", "app.css"), @"\s+", " ");
+            var wide = Regex.Match(css, @"@media \(min-width: 64rem\) \{(.*?)\} /\* ---- Загрузка");
+            Assert.True(wide.Success, "the wide-screen layout is not found");
+            var rules = wide.Groups[1].Value;
+
+            // Отступ контента — от --rail-space, и has-panel его не меняет нигде.
+            Assert.Matches(@"\.shell \{ --panel-left: 4\.75rem; --panel-width: 25rem; --rail-space: 14rem;", rules);
+            Assert.Matches(@"\.topbar, \.stage, \.footer \{[^}]*margin-left: max\(var\(--rail-space\), \(100% - 46rem\) / 2\);", rules);
+            Assert.DoesNotMatch(@"has-panel[^{]*\{[^}]*--rail-space", css);
+            Assert.DoesNotMatch(@"has-panel[^{]*(\.topbar|\.stage|\.footer)[^{]*\{", css);
+
+            // Где колонка не помещается слева (край 4.75 + 25 = 29.75rem, поле 46rem
+            // по центру — нужно не меньше ~108.6rem с полосой прокрутки) — подложка.
+            // Подложка ниже колонки и капсулы кнопок: соседняя кнопка переключает панель.
+            var overlay = Regex.Match(css, @"@media \(min-width: 64rem\) and \(max-width: 109\.99rem\) \{ \.shell\.has-panel \.picker-backdrop \{([^}]*)\} \.shell\.has-panel \.side-rail \.picker-backdrop \{ z-index: -1; \} \}");
+            Assert.True(overlay.Success, "the overlay backdrop for a column that does not fit is not found");
+            foreach (var declaration in new[] { "display: block;", "z-index: 10;", "background: transparent;", "animation: none;" })
+                Assert.Contains(declaration, overlay.Groups[1].Value);
+
+            // Подложка — в каждой колонке, и щелчок по ней закрывает её к кнопке.
+            foreach (var picker in new[] { "ReadingPicker.razor", "ProfilePicker.razor", "SoundsPicker.razor", "AboutPicker.razor" })
+                Assert.Contains("<div class=\"picker-backdrop @Closing.CssClass\" @onclick=\"CloseToToggleAsync\"></div>",
+                                Web("Components", picker));
+            var close = Web("Components", "PanelPicker.cs");
+            Assert.Contains("if (e.Key == \"Escape\")", close);
+            Assert.Contains("await CloseToToggleAsync();", close);
         }
 
         /// <summary>
