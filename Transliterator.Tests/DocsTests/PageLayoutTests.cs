@@ -179,13 +179,14 @@ namespace Transliterator.Tests.DocsTests
 
         /// <summary>
         /// D23: с 64rem кнопки сбоку — одна капсула на высоте поля, открытая кнопка
-        /// залита акцентом и отмечена чертой. Пока открыта колонка, подпись — подсказка
-        /// справа от значка при наведении и фокусе: с задержкой, на токенах движения,
-        /// поверх колонки и по-прежнему имя кнопки для диктора (opacity, не visibility).
+        /// залита акцентом и отмечена чертой. D40: капсула всегда столбик значков —
+        /// с колонкой и без, has-panel её не меняет; подпись — подсказка справа от
+        /// значка при наведении и фокусе: с задержкой, на токенах движения, поверх
+        /// колонки и по-прежнему имя кнопки для диктора (opacity, не visibility).
         /// Нативного title у кнопок нет — подсказка не двоится.
         /// </summary>
         [Fact]
-        public void RailIcons_ShowTheirNameAsATooltip_WhileThePanelIsOpen()
+        public void RailIcons_AlwaysShowTheirNameAsATooltip()
         {
             var css = Regex.Replace(Web("wwwroot", "css", "app.css"), @"\s+", " ");
             var wide = Regex.Match(css, @"@media \(min-width: 64rem\) \{(.*?)\} /\* ---- Загрузка");
@@ -198,15 +199,19 @@ namespace Transliterator.Tests.DocsTests
             {
                 "position: fixed;", "top: calc(max(var(--space-3) + var(--topbar-height) + var(--space-6), 24vh) + 2.8 * var(--hint-size) + var(--space-5));",
                 "background: var(--paper);", "border: 1px solid var(--line);", "box-shadow: var(--shadow-md);",
+                "padding: var(--space-1);", "border-radius: var(--radius-pill);",
             })
                 Assert.Contains(declaration, rail.Groups[1].Value);
+            // Вид капсулы и подписей один, открыта колонка или нет (D40).
+            Assert.DoesNotContain(".shell.has-panel .side-rail {", css);
+            Assert.DoesNotMatch(@"has-panel[^{]*\.picker-toggle-text", css);
             Assert.DoesNotContain("justify-content: center", rail.Groups[1].Value);
             Assert.Contains(".shell.is-active .side-rail { top: max(var(--space-3) + var(--topbar-height) + var(--space-4), 7vh); }", rules);
 
             Assert.Contains(".side-rail .picker-toggle[aria-expanded=\"true\"] svg { background: var(--foam-700); border-color: var(--foam-700); color: var(--paper); }", css);
             Assert.Matches(@"\.side-rail \.picker-toggle\[aria-expanded=""true""\]::before \{[^}]*background: var\(--foam-700\);", rules);
 
-            var tip = Regex.Match(rules, @"\.shell\.has-panel \.side-rail \.picker-toggle-text \{([^}]*)\}");
+            var tip = Regex.Match(rules, @"(?<![\w-]) \.side-rail \.picker-toggle-text \{([^}]*)\}");
             Assert.True(tip.Success, "the tooltip rule is not found");
             foreach (var declaration in new[]
             {
@@ -217,8 +222,8 @@ namespace Transliterator.Tests.DocsTests
             Assert.DoesNotContain("clip", tip.Groups[1].Value);
             // Поверх колонки: подсказка выше её z-index.
             Assert.Matches(@"\.picker-panel \{ right: auto; bottom: auto; z-index: 11;", rules);
-            Assert.Contains(".shell.has-panel .side-rail .picker-toggle:hover .picker-toggle-text, "
-                            + ".shell.has-panel .side-rail .picker-toggle:focus-visible .picker-toggle-text "
+            Assert.Contains(" .side-rail .picker-toggle:hover .picker-toggle-text, "
+                            + ".side-rail .picker-toggle:focus-visible .picker-toggle-text "
                             + "{ opacity: 1; transform: translate(0, -50%); transition: opacity var(--motion-fast) var(--ease-soft), "
                             + "transform var(--motion-move-fast) var(--motion-ease); transition-delay: var(--motion-hint-delay); }", rules);
             Assert.Matches(@":root \{[^}]*--motion-hint-delay: 0\.3s;", css);
@@ -867,8 +872,8 @@ namespace Transliterator.Tests.DocsTests
             foreach (var name in new[] { "column-in", "column-out" })
                 Assert.Matches($@"@keyframes {name} \{{[^@]*clip-path: inset\(var\(--panel-clip-room\) calc\(var\(--panel-clip-room\) \+ \(100% - var\(--panel-clip-room\)\) \* var\(--motion-travel\)\)", css);
 
-            Assert.Matches(@"\.shell\.has-panel \.side-rail \.picker-toggle-text \{[^}]*transition: none;", rules);
-            Assert.Contains(".shell.has-panel .side-rail .picker-toggle[aria-expanded=\"true\"] .picker-toggle-text { opacity: 0; transition: none; }", rules);
+            Assert.Matches(@"(?<![\w-]) \.side-rail \.picker-toggle-text \{[^}]*transition: none;", rules);
+            Assert.Contains(" .side-rail .picker-toggle[aria-expanded=\"true\"] .picker-toggle-text { opacity: 0; transition: none; }", rules);
 
             // Лист уже 64rem не тронут: срез только в широкой раскладке.
             Assert.DoesNotContain("animation-name: column-in", css.Replace(wide.Value, ""));
@@ -890,7 +895,7 @@ namespace Transliterator.Tests.DocsTests
             var rules = wide.Groups[1].Value;
 
             // Отступ контента — от --rail-space, и has-panel его не меняет нигде.
-            Assert.Matches(@"\.shell \{ --panel-left: 4\.75rem; --panel-width: 25rem; --rail-space: 14rem;", rules);
+            Assert.Matches(@"\.shell \{ --panel-left: 4\.75rem; --panel-width: 25rem; --rail-space: 6rem;", rules);
             Assert.Matches(@"\.topbar, \.stage, \.footer \{[^}]*margin-left: max\(var\(--rail-space\), \(100% - 46rem\) / 2\);", rules);
             Assert.DoesNotMatch(@"has-panel[^{]*\{[^}]*--rail-space", css);
             Assert.DoesNotMatch(@"has-panel[^{]*(\.topbar|\.stage|\.footer)[^{]*\{", css);
