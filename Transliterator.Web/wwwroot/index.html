@@ -5,19 +5,20 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="Транслитерация Корана кириллицей по правилам таджвида — прямо в браузере." />
-    <!-- Цвет полосы браузера — фон страницы своей темы (D12), как --cream в app.css. -->
-    <meta name="theme-color" content="#fbf7ef" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#141a19" media="(prefers-color-scheme: dark)" />
+    <!-- Тема одна, светлая (D27): поля и полосы прокрутки светлые и до загрузки
+         app.css; цвет полосы браузера — фон страницы, как --cream в app.css. -->
+    <meta name="color-scheme" content="light" />
+    <meta name="theme-color" content="#fbf7ef" />
     <title>Транслитерация Корана</title>
     <base href="/" />
-    <!-- Значок вкладки (D13) — знак из шапки; SVG сам меняет цвета под тёмную тему. -->
+    <!-- Значок вкладки (D13) — знак из шапки, всегда в светлых цветах (D27). -->
     <link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32" />
     <link rel="icon" href="favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="apple-touch-icon.png" />
     <!-- ?v= — первые 8 знаков SHA-256 файла (переводы строк как LF). Браузер не берёт
          из кеша прежний page.js или app.css к новой сборке: файл изменился — изменился
          и адрес. Сверяет PageAssetVersionTests и подсказывает новое значение. -->
-    <link rel="stylesheet" href="css/app.css?v=006f1328" />
+    <link rel="stylesheet" href="css/app.css?v=4013328a" />
 </head>
 
 <body>
