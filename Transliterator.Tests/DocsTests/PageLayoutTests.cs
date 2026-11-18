@@ -1004,6 +1004,37 @@ namespace Transliterator.Tests.DocsTests
         }
 
         /// <summary>
+        /// Проверка «не робот» в отзыве переживает неудачу (H5): виджет Turnstile
+        /// ставится с колбэками; ошибка, истечение и пропущенный флажок ставят его
+        /// заново (remove + render, без reset); отправка ждёт исхода проверки, а не
+        /// фиксированные десять секунд; когда нужен флажок, это сказано текстом в
+        /// role="status".
+        /// </summary>
+        [Fact]
+        public void FeedbackGuard_RetriesAfterAFailedOrExpiredCheck_AndSaysWhenItNeedsAHuman()
+        {
+            var script = Web("wwwroot", "js", "page.js");
+            var button = Regex.Replace(Web("Components", "FeedbackButton.razor"), @"\s+", " ");
+
+            foreach (var callback in new[] { "callback:", "\"error-callback\":", "\"expired-callback\":", "\"timeout-callback\":", "\"before-interactive-callback\":", "\"after-interactive-callback\":" })
+                Assert.Contains(callback, script);
+
+            Assert.DoesNotContain("turnstile?.reset(", script);
+            Assert.DoesNotContain("turnstile.reset(", script);
+            Assert.DoesNotContain("TokenAttempts", script);
+            Assert.Matches(@"function guardRenew\(entry, failed\) \{[\s\S]*?window\.turnstile\.remove\(entry\.widget\);[\s\S]*?guardRender\(entry\);", script);
+            Assert.Contains("invokeMethodAsync(\"OnGuard\", state)", script);
+
+            Assert.Contains("[JSInvokable] public Task OnGuard(string state)", button);
+            Assert.Contains("\"page.guard\", _guard, Settings.TurnstileSiteKey, PageLanguages.Current.Code, _self", button);
+            Assert.Contains("return L[\"Feedback.Confirm\"];", button);
+            Assert.Contains("<p class=\"feedback-note @StatusClass\" role=\"status\">@StatusText</p>", button);
+
+            Assert.Contains("не робот", PageStrings.Web("ru")["Feedback.Confirm"]);
+            Assert.Contains("robot", PageStrings.Web("en")["Feedback.Confirm"]);
+        }
+
+        /// <summary>
         /// Кнопка отзыва в углу (D33): при наведении и фокусе не меняет ширину и не
         /// раскрывается подписью — только подсвечивается; подпись показывает подсказка
         /// тем же видом, что у кнопок сбоку (D23), без title; имя для диктора — та же

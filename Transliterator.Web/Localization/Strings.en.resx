@@ -366,6 +366,9 @@
   <data name="Feedback.GuardFailed" xml:space="preserve">
     <value>The “not a robot” check did not load: a browser extension may be blocking it.</value>
   </data>
+  <data name="Feedback.Confirm" xml:space="preserve">
+    <value>Please confirm you are not a robot: tick the box above the Send button. The message will go out after that.</value>
+  </data>
   <data name="Feedback.NotVerified" xml:space="preserve">
     <value>The “not a robot” check failed. Try sending again.</value>
   </data>

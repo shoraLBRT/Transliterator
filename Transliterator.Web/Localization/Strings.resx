@@ -381,6 +381,9 @@
   <data name="Feedback.GuardFailed" xml:space="preserve">
     <value>Проверка «не робот» не загрузилась: возможно, её блокирует расширение браузера.</value>
   </data>
+  <data name="Feedback.Confirm" xml:space="preserve">
+    <value>Подтвердите, что вы не робот: отметьте флажок над кнопкой «Отправить». После этого сообщение уйдёт само.</value>
+  </data>
   <data name="Feedback.NotVerified" xml:space="preserve">
     <value>Проверка «не робот» не прошла. Попробуйте отправить ещё раз.</value>
   </data>
