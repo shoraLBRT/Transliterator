@@ -631,6 +631,11 @@ namespace Transliterator.Tests.DocsTests
 
             Assert.Matches(@"\.result-head \{ position: sticky; top: 0;", css);
             Assert.Matches(@"\.result-line \{[^}]*white-space: pre-wrap; overflow-wrap: anywhere;", css);
+            // Строка вывода прижата вправо, как арабская над ней (D39); направление
+            // текста прежнее — у строки нет dir, меняется только выравнивание.
+            Assert.Matches(@"\.result-line \{[^}]*text-align: right;", css);
+            Assert.Matches(@"\.result-source-text \{[^}]*text-align: right;", css);
+            Assert.DoesNotMatch(@"class=""result-line""[^>]*dir=", card.Groups[1].Value);
             Assert.Matches(@"\.ayah-mark \{[^}]*font-variant-numeric: tabular-nums;", css);
             Assert.Matches(@"\.copy-button\.is-copied \.copy-icon-check \{ opacity: 1; stroke-dashoffset: 0; \}", css);
 
