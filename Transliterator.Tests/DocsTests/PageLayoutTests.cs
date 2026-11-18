@@ -567,9 +567,9 @@ namespace Transliterator.Tests.DocsTests
             Assert.Matches(@"\.result-source-text \{[^}]*font-family: var\(--font-arabic\);[^}]*color: var\(--ink-muted\); text-align: right;[^}]*user-select: none;", css);
 
             // Близость: арабская вплотную к своей строке, пары — с воздухом и чертой.
-            Assert.Matches(@"\.result-line \+ \.result-source\.is-open \{ margin-top: var\(--space-2\); padding-top: var\(--space-3\); border-top: 1px solid var\(--foam-100\); \}", css);
-            Assert.Matches(@"\.result-source\.is-open \+ \.result-line \{ margin-top: 0; padding-top: 0\.15rem; \}", css);
-            Assert.Matches(@"\.result-source-text \{[^}]*line-height: 1\.6;", css);
+            Assert.Matches(@"\.result-line \+ \.result-source\.is-open \{ margin-top: var\(--space-1\); padding-top: var\(--space-2\); border-top: 1px solid var\(--foam-100\); \}", css);
+            Assert.Matches(@"\.result-source\.is-open \+ \.result-line \{ margin-top: 0; padding-top: 0; \}", css);
+            Assert.Matches(@"\.result-source-text \{[^}]*line-height: var\(--leading-arabic-line\);", css);
 
             // На телефоне — одна иконка, подпись остаётся имени кнопки.
             Assert.Matches(@"@media \(max-width: 36rem\) \{.*\.arabic-toggle-label \{ position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect\(0 0 0 0\);", css);
@@ -605,8 +605,8 @@ namespace Transliterator.Tests.DocsTests
 
             Assert.Contains("<h2 id=\"result-title\" class=\"result-title\">@L[\"Result.Title\"]</h2>", head.Groups[1].Value);
             Assert.DoesNotContain("visually-hidden", head.Groups[1].Value);
-            Assert.Matches(@"class=""result-chip""[^>]*aria-label=""@L\[""Result\.ReadingChip"", ReadingName\]"" @onclick=""OpenReadingAsync""><span class=""result-chip-text"">@ReadingName</span></button>", head.Groups[1].Value);
-            Assert.Matches(@"class=""result-chip""[^>]*aria-label=""@L\[""Result\.ProfileChip"", _profile\.Name\]"" @onclick=""OpenProfileAsync""><span class=""result-chip-text"">@_profile\.Name</span></button>", head.Groups[1].Value);
+            Assert.Matches(@"class=""result-chip""[^>]*aria-label=""@L\[""Result\.ReadingChip"", ReadingName\]"" @onclick=""OpenReadingAsync""><span class=""result-chip-label"">@L\[""Result\.ReadingChipLabel""\]</span><span class=""result-chip-text"">@ReadingName</span></button>", head.Groups[1].Value);
+            Assert.Matches(@"class=""result-chip""[^>]*aria-label=""@L\[""Result\.ProfileChip"", _profile\.Name\]"" @onclick=""OpenProfileAsync""><span class=""result-chip-label"">@L\[""Result\.ProfileChipLabel""\]</span><span class=""result-chip-text"">@_profile\.Name</span></button>", head.Groups[1].Value);
             Assert.Matches(@"<button type=""button"" class=""copy-button @CopyClass"" @onclick=""CopyAsync"">.*<span class=""copy-label"" aria-live=""polite"">@CopyLabel</span> </button>", head.Groups[1].Value);
 
             // Метки — та же ступень, что у кнопки сбоку, и та же панель.
@@ -964,8 +964,9 @@ namespace Transliterator.Tests.DocsTests
         public void TheButtonsUnderTheFieldAndAtTheSide_AreAStepSmaller_TheirTargetsStay44px()
         {
             var css = Regex.Replace(Web("wwwroot", "css", "app.css"), @"\s+", " ");
-            Assert.Matches(@"\.picker-toggle \{ display: inline-flex;[^}]*padding: 0\.35rem 0\.75rem;[^}]*font-size: var\(--text-sm\);", css);
-            Assert.Contains(".composer-bar .icon-button { width: 2rem; height: 2rem; }", css);
+            Assert.Matches(@"\.picker-toggle \{ display: inline-flex;[^}]*padding: var\(--space-1\) var\(--space-3\);[^}]*font-size: var\(--text-xs\);", css);
+            Assert.Matches(@":root \{[^}]*--bar-icon-size: 1\.75rem;", css);
+            Assert.Contains(".composer-bar .icon-button { width: var(--bar-icon-size); height: var(--bar-icon-size); }", css);
             Assert.Matches(@"\.side-rail \.picker-toggle svg \{ box-sizing: content-box; padding: var\(--space-2\);", css);
             Assert.Matches(@"\.picker-toggle::after,[^{]*\{ content: """"; position: absolute;[^}]*width: max\(100%, var\(--target-min\)\); height: max\(100%, var\(--target-min\)\);", css);
             Assert.Contains(".icon-button::after,", css);
@@ -973,6 +974,37 @@ namespace Transliterator.Tests.DocsTests
             var wide = Regex.Match(css, @"@media \(min-width: 64rem\) \{(.*?)\} /\* ---- Загрузка");
             Assert.True(wide.Success, "the wide-screen layout is not found");
             Assert.Matches(@"\.side-rail \{ position: fixed;[^}]*gap: var\(--space-2\);", wide.Groups[1].Value);
+        }
+
+        /// <summary>
+        /// D38: страница плотнее по вертикали. Межстрочные поля, вывода и арабской
+        /// строки над ним (D18) — токены на :root, меньше прежних 1.9 / 1.75 / 1.6.
+        /// Метки ступени и профиля в шапке вывода — подпись и значение в одну строку
+        /// («Чтение: Полный таджвид»): метки не переносятся друг под друга, значение
+        /// обрезается многоточием, подпись не сжимается (как E6), а имя кнопки для
+        /// диктора начинается с той же видимой подписи.
+        /// </summary>
+        [Fact]
+        public void ThePageIsDenser_AndTheOutputChipsSayLabelAndValueOnOneLine()
+        {
+            var css = Regex.Replace(Web("wwwroot", "css", "app.css"), @"\s+", " ");
+            Assert.Matches(@":root \{[^}]*--leading-arabic: 1\.65;[^}]*--leading-arabic-line: 1\.45;[^}]*--leading-output: 1\.5;", css);
+            Assert.Matches(@"\.composer-input \{[^}]*line-height: var\(--leading-arabic\);", css);
+            Assert.Matches(@"\.result-text \{[^}]*line-height: var\(--leading-output\);", css);
+            Assert.Matches(@"\.result-line \{ min-height: calc\(var\(--leading-output\) \* 1em\);", css);
+
+            Assert.Matches(@"\.result-chips \{ display: flex; flex-wrap: nowrap;", css);
+            Assert.Matches(@"\.result-chip \{ display: inline-flex;[^}]*flex: 0 1 auto;", css);
+            Assert.Matches(@"\.result-chip-label \{ flex: none; white-space: nowrap; \}", css);
+
+            foreach (var (language, reading, profile) in new[] { ("ru", "Чтение:", "Профиль:"), ("en", "Reading:", "Profile:") })
+            {
+                var strings = PageStrings.Web(language);
+                Assert.Equal(reading, strings["Result.ReadingChipLabel"]);
+                Assert.Equal(profile, strings["Result.ProfileChipLabel"]);
+                Assert.StartsWith(reading + " {0}", strings["Result.ReadingChip"]);
+                Assert.StartsWith(profile + " {0}", strings["Result.ProfileChip"]);
+            }
         }
 
         /// <summary>
