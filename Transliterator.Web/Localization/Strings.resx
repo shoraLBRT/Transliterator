@@ -43,7 +43,7 @@
     <value>مَالِكِ يَوْمِ الدِّين — маалики йауми-ддиин</value>
   </data>
   <data name="Hint.7" xml:space="preserve">
-    <value>Суры для примера — под полем ввода</value>
+    <value>Готовые суры — кнопкой «Выбрать суру»</value>
   </data>
   <data name="Composer.Label" xml:space="preserve">
     <value>Арабский текст для транслитерации</value>
@@ -457,11 +457,13 @@
     <value>{0} стадий</value>
     <comment>0, 5–20, 25…</comment>
   </data>
-  <data name="QuickStart.Label" xml:space="preserve">
-    <value>Попробовать:</value>
+  <data name="Composer.Placeholder" xml:space="preserve">
+    <value>Вставьте арабский текст с огласовками — транслитерация появится сразу</value>
+    <comment>Placeholder of the empty input field (D28); also its description for screen readers</comment>
   </data>
-  <data name="QuickStart.Note" xml:space="preserve">
-    <value>Вставьте арабский текст с огласовками — запись появится сразу</value>
+  <data name="Surah.Tip" xml:space="preserve">
+    <value>Подставить в поле суру из Корана</value>
+    <comment>Tooltip of the "Choose a surah" button (D28)</comment>
   </data>
   <data name="Sounds.Toggle" xml:space="preserve">
     <value>Как читать буквы</value>

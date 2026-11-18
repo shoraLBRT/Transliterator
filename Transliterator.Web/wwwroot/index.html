@@ -18,7 +18,7 @@
     <!-- ?v= — первые 8 знаков SHA-256 файла (переводы строк как LF). Браузер не берёт
          из кеша прежний page.js или app.css к новой сборке: файл изменился — изменился
          и адрес. Сверяет PageAssetVersionTests и подсказывает новое значение. -->
-    <link rel="stylesheet" href="css/app.css?v=22a1e22e" />
+    <link rel="stylesheet" href="css/app.css?v=19bb56ed" />
 </head>
 
 <body>
@@ -58,17 +58,9 @@
                     </div>
                 </div>
 
-                <div class="quick-start-body">
-                    <div class="quick-start-chips" aria-hidden="true">
-                        <span class="boot-block boot-label"></span>
-                        <span class="picker-toggle boot-chip">&nbsp;</span>
-                        <span class="picker-toggle boot-chip">&nbsp;</span>
-                        <span class="picker-toggle boot-chip">&nbsp;</span>
-                    </div>
-                    <p class="quick-start-note boot-status" role="status">
-                        <span id="boot-loading" data-shell="loading">Загрузка…</span><span class="boot-percent"></span>
-                    </p>
-                </div>
+                <p class="boot-status" role="status">
+                    <span id="boot-loading" data-shell="loading">Загрузка…</span><span class="boot-percent"></span>
+                </p>
 
                 <!-- Кнопки в обёртке .picker, как в компонентах: высоту строки рейла
                      даёт она. -->

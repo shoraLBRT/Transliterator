@@ -12,14 +12,18 @@
    появляется здесь сама. *@
 
 <div class="picker surah-picker">
-    <button type="button" class="picker-toggle" aria-expanded="@(IsOpen ? "true" : "false")"
-            aria-controls="@(IsShown ? "surah-menu" : null)" @onclick="ToggleAsync" @ref="ToggleButton">
+    @* Что делает кнопка, говорит подсказка (D28) — тем же видом, что у кнопок
+       сбоку и у значка отзыва (D23, D33): при наведении и фокусе, с задержкой.
+       Диктору она — описание кнопки (aria-describedby); title её не двоит. *@
+    <button type="button" class="picker-toggle surah-toggle" aria-expanded="@(IsOpen ? "true" : "false")"
+            aria-controls="@(IsShown ? "surah-menu" : null)" aria-describedby="surah-tip" @onclick="ToggleAsync" @ref="ToggleButton">
         <svg viewBox="0 0 24 24" aria-hidden="true">
             <path d="M3 5.5C5.5 4.2 8.5 4.2 12 6c3.5-1.8 6.5-1.8 9-.5V19c-2.5-1.3-5.5-1.3-9 .5-3.5-1.8-6.5-1.8-9-.5z" />
             <path d="M12 6v13.5" />
         </svg>
         <span>@L["Surah.Toggle"]</span>
     </button>
+    <span id="surah-tip" class="surah-tip" role="tooltip">@L["Surah.Tip"]</span>
 
     @if (IsShown)
     {
