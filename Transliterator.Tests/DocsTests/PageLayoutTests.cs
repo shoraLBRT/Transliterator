@@ -33,10 +33,10 @@ namespace Transliterator.Tests.DocsTests
 
             Assert.Contains("<SurahPicker", field);
 
-            // D24: быстрый старт под полем — тоже выбор суры (ChooseAsync), а не
-            // настройка чтения или профиля; те по-прежнему только сбоку.
-            Assert.Contains("class=\"fold quick-start", field);
-            Assert.Contains("@onclick=\"() => ChooseAsync(surah)\"", field);
+            // D28: быстрого старта D24 под полем больше нет — ни чипов, ни подписи,
+            // ни пояснения; сура выбирается одной кнопкой.
+            Assert.DoesNotContain("quick-start", field);
+            Assert.DoesNotContain("@onclick=\"() => ChooseAsync(surah)\"", field);
             Assert.DoesNotContain("<ReadingPicker", field);
             Assert.DoesNotContain("<ProfilePicker", field);
 
@@ -935,6 +935,37 @@ namespace Transliterator.Tests.DocsTests
             Assert.Matches(@"\.feedback-label \{ position: absolute;[^}]*right: calc\(100% \+ var\(--space-3\)\);[^}]*background: var\(--ink\);[^}]*color: var\(--paper\);[^}]*opacity: 0;[^}]*pointer-events: none;", rules);
             Assert.DoesNotMatch(@"\.feedback-label \{[^}]*visibility", rules);
             Assert.Matches(@"\.feedback-toggle:hover \.feedback-label, \.feedback-toggle:focus-visible \.feedback-label \{ opacity: 1;[^}]*transition-delay: var\(--motion-hint-delay\);", rules);
+        }
+
+        /// <summary>
+        /// D28: под пустым полем только кнопки. Что вставить, говорит placeholder на
+        /// языке страницы (и диктору тоже — пока поле пустое, у него нет lang="ar");
+        /// у «Выбрать суру» — подсказка тем же видом, что у значка отзыва (D33), без title.
+        /// </summary>
+        [Fact]
+        public void EmptyField_ExplainsItselfInThePlaceholder_AndTheSurahButtonHasATooltip()
+        {
+            var app = Regex.Replace(Web("App.razor"), @"\s+", " ");
+            var picker = Regex.Replace(Web("Components", "SurahPicker.razor"), @"\s+", " ");
+            var css = Regex.Replace(Web("wwwroot", "css", "app.css"), @"\s+", " ");
+            var index = Web("wwwroot", "index.html");
+
+            Assert.Contains("<textarea id=\"arabic\" class=\"composer-input\" dir=\"rtl\" lang=\"@(HasText ? \"ar\" : null)\"", app);
+            Assert.Contains("placeholder=\"@L[\"Composer.Placeholder\"]\"", app);
+            Assert.DoesNotContain("QuickStart", app);
+            Assert.DoesNotContain("quick-start", index);
+            Assert.DoesNotContain("boot-chip", css);
+            Assert.Matches(@"\.composer-input::placeholder \{[^}]*font-family: var\(--font-ui\);[^}]*text-align: left;", css);
+
+            var toggle = Regex.Match(picker, @"<button type=""button"" class=""picker-toggle surah-toggle""[^>]*>.*?</button> <span id=""surah-tip"" class=""surah-tip"" role=""tooltip"">@L\[""Surah.Tip""\]</span>");
+            Assert.True(toggle.Success, "the surah button with its tooltip is not found");
+            Assert.Contains("aria-describedby=\"surah-tip\"", toggle.Value);
+            Assert.DoesNotContain("title=", toggle.Value);
+
+            Assert.Matches(@"\.surah-tip \{ position: absolute;[^}]*background: var\(--ink\);[^}]*color: var\(--paper\);[^}]*opacity: 0;[^}]*pointer-events: none;", css);
+            Assert.DoesNotMatch(@"\.surah-tip \{[^}]*visibility", css);
+            Assert.Matches(@"\.surah-toggle:hover \+ \.surah-tip, \.surah-toggle:focus-visible \+ \.surah-tip \{ opacity: 1;[^}]*transition-delay: var\(--motion-hint-delay\);", css);
+            Assert.Matches(@"\.surah-toggle\[aria-expanded=""true""\] \+ \.surah-tip \{ opacity: 0;", css);
         }
 
         [Fact]

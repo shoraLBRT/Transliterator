@@ -40,7 +40,7 @@
     <value>مَالِكِ يَوْمِ الدِّين — maaliki yawmi-ddiin</value>
   </data>
   <data name="Hint.7" xml:space="preserve">
-    <value>Sample surahs are below the input field</value>
+    <value>Ready surahs are behind “Choose a surah”</value>
   </data>
   <data name="Composer.Label" xml:space="preserve">
     <value>Arabic text to transliterate</value>
@@ -435,11 +435,13 @@
   <data name="StageCount.Many" xml:space="preserve">
     <value>{0} stages</value>
   </data>
-  <data name="QuickStart.Label" xml:space="preserve">
-    <value>Try:</value>
-  </data>
-  <data name="QuickStart.Note" xml:space="preserve">
+  <data name="Composer.Placeholder" xml:space="preserve">
     <value>Paste Arabic text with vowel marks — the transliteration appears at once</value>
+    <comment>Placeholder of the empty input field (D28); also its description for screen readers</comment>
+  </data>
+  <data name="Surah.Tip" xml:space="preserve">
+    <value>Put a surah of the Quran into the field</value>
+    <comment>Tooltip of the "Choose a surah" button (D28)</comment>
   </data>
   <data name="Sounds.Toggle" xml:space="preserve">
     <value>How to say the letters</value>

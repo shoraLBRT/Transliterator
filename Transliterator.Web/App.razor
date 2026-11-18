@@ -41,8 +41,11 @@
 
         <div class="composer">
             <label for="arabic" class="visually-hidden">@L["Composer.Label"]</label>
-            <textarea id="arabic" class="composer-input" dir="rtl" lang="ar" rows="1"
-                      spellcheck="false" autocomplete="off" placeholder="@_placeholder"
+            @* Что вставить, говорит placeholder (D28): он же — описание поля для
+               диктора. Пока поле пустое, у него язык страницы, не арабский, — иначе
+               диктор прочтёт русскую строку арабским голосом. *@
+            <textarea id="arabic" class="composer-input" dir="rtl" lang="@(HasText ? "ar" : null)" rows="1"
+                      spellcheck="false" autocomplete="off" placeholder="@L["Composer.Placeholder"]"
                       value="@_arabic" @oninput="OnInput" @ref="_input"></textarea>
 
             @* Под полем — только выбор суры (D6): он меняет сам текст. Как этот текст
@@ -81,27 +84,6 @@
                 <p class="composer-note" role="status">@_pasteNote</p>
             }
         </div>
-
-        @* Быстрый старт (D24): в пустом состоянии три готовые суры одним щелчком.
-           Тот же .fold, что у подсказки (D16): с текстом блок схлопывается и возвращается
-           при очистке. Это тот же выбор суры, что под полем, — ChooseAsync. *@
-        @if (_quickSurahs.Count > 0)
-        {
-            <div class="fold quick-start @(HasText ? null : "is-open")" inert="@HasText" aria-hidden="@(HasText ? "true" : null)">
-            <div class="fold-inner">
-                <div class="quick-start-body">
-                    <div class="quick-start-chips" role="group" aria-label="@L["QuickStart.Label"]">
-                        <span class="quick-start-label">@L["QuickStart.Label"]</span>
-                        @foreach (var surah in _quickSurahs)
-                        {
-                            <button type="button" class="picker-toggle quick-chip" @onclick="() => ChooseAsync(surah)">@surah.Name.Current</button>
-                        }
-                    </div>
-                    <p class="quick-start-note">@L["QuickStart.Note"]</p>
-                </div>
-            </div>
-            </div>
-        }
 
         @* Ступень чтения и профиль (D6). На широком экране — круглые кнопки у края
            страницы, и панель открывается колонкой рядом с полем и выводом, отодвигая
@@ -288,9 +270,6 @@
     /// <summary>Ключ хранилища браузера с именем выбранного профиля (E4).</summary>
     private const string ProfileKey = "transliterator.profile";
 
-    /// <summary>Первый аят Аль-Фатихи — на случай, если корпус не прочитался.</summary>
-    private const string FallbackPlaceholder = "بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ";
-
     /// <summary>
     /// Фразы подсказки — ресурсы <c>Hint.1</c>, <c>Hint.2</c>… по порядку (D7).
     /// Короткие, чтобы на телефоне помещаться в две строки и успевать прочитаться
@@ -323,7 +302,6 @@
     private TajweedRuleCatalog? _catalog;
     private SoundTable? _sounds;
     private ReadingChoice _reading = ReadingChoice.Default;
-    private string _placeholder = FallbackPlaceholder;
     private string _arabic = string.Empty;
     private string _result = string.Empty;
     private string? _error;
@@ -368,10 +346,6 @@
     private bool _toastClosing;
     private int _toastStamp;
 
-    /// <summary>Суры быстрого старта (D24); которых нет в корпусе — пропускаются.</summary>
-    private static readonly int[] QuickSurahNumbers = { 1, 112, 114 };
-
-    private IReadOnlyList<CorpusSurah> _quickSurahs = Array.Empty<CorpusSurah>();
     private CopyState _copyState;
     private int _copyStamp;
 
@@ -405,8 +379,6 @@
         Panels.Changed += OnPanelsChanged;
 
         _surahs = await LoadSurahsAsync();
-        _quickSurahs = QuickSurahNumbers.Select(n => _surahs.FirstOrDefault(s => s.Number == n)).OfType<CorpusSurah>().ToList();
-        _placeholder = _surahs.FirstOrDefault(s => s.Number == 1)?.Ayahs.FirstOrDefault()?.Arabic ?? FallbackPlaceholder;
 
         _profile = await Profiles.GetProfileAsync(DefaultProfile);
         if (_profile is null)

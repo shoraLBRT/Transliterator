@@ -336,9 +336,14 @@ button {
     outline: none; /* рамку показывает карточка целиком */
 }
 
+/* Placeholder (D28) — пояснение на языке страницы, а не арабский текст: шрифтом
+   и размером интерфейса и от левого края, хотя само поле пишет справа налево. */
 .composer-input::placeholder {
     color: var(--ink-muted);
-    opacity: 0.55;
+    opacity: 1;
+    font-family: var(--font-ui);
+    font-size: var(--text-md);
+    text-align: left;
 }
 
 .composer-bar {
@@ -472,49 +477,6 @@ svg {
     flex: none;
 }
 
-/* ---- Быстрый старт (D24) ---- */
-
-/* Блок — .fold (D21), как подсказка (D16): с текстом схлопывается, при очистке
-   возвращается; ход тот же и вровень с подтягиванием поля. */
-.fold.quick-start {
-    transition: grid-template-rows var(--motion-slow) var(--ease-soft),
-                opacity var(--motion-slow) var(--ease-soft),
-                visibility var(--motion-instant) linear var(--motion-slow);
-}
-
-.quick-start-body {
-    padding-top: var(--space-4);
-    text-align: center;
-}
-
-.quick-start-chips {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: center;
-    /* Между строками меток — 0.6rem: с ней строка в 2.2rem даёт 44px на нажатие (D25). */
-    gap: 0.6rem var(--space-2);
-}
-
-.quick-start-label {
-    color: var(--ink-muted);
-    font-size: var(--text-md);
-}
-
-.quick-start-note {
-    margin: var(--space-3) 0 0;
-    color: var(--ink-muted);
-    font-size: var(--text-sm);
-}
-
-/* Чипы появляются каскадом, когда блок раскрывается (стоит шаг --stagger-step из D21). */
-.quick-start.is-open .quick-chip {
-    animation: item-in var(--motion-fast) var(--motion-ease) backwards;
-}
-
-.quick-start.is-open .quick-chip:nth-of-type(2) { animation-delay: var(--stagger-step); }
-.quick-start.is-open .quick-chip:nth-of-type(3) { animation-delay: calc(var(--stagger-step) * 2); }
-
 /* ---- Готовые суры ---- */
 
 .picker-toggle {
@@ -540,6 +502,48 @@ svg {
 
 .picker-toggle {
     max-width: 100%;
+}
+
+/* Подсказка у «Выбрать суру» (D28) — тем же видом, что у кнопок сбоку и у
+   значка отзыва (D23, D33): тёмная плашка под кнопкой, появляется при наведении
+   и фокусе с клавиатуры после --motion-hint-delay, уходит сразу и нажатий не
+   ловит. Пока список открыт, подсказки нет. */
+.surah-picker {
+    position: relative;
+}
+
+.surah-tip {
+    position: absolute;
+    top: calc(100% + var(--space-2));
+    left: 0;
+    z-index: 12;
+    width: max-content;
+    max-width: 16rem;
+    padding: var(--space-1) var(--space-3);
+    border-radius: var(--radius-sm);
+    background: var(--ink);
+    box-shadow: var(--shadow-md);
+    color: var(--paper);
+    font-size: var(--text-sm);
+    font-weight: 500;
+    line-height: 1.4;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(calc(var(--space-1) * -1));
+    transition: opacity var(--motion-fast) var(--ease-soft),
+                transform var(--motion-fast) var(--motion-ease);
+}
+
+.surah-toggle:hover + .surah-tip,
+.surah-toggle:focus-visible + .surah-tip {
+    opacity: 1;
+    transform: translateY(0);
+    transition-delay: var(--motion-hint-delay);
+}
+
+.surah-toggle[aria-expanded="true"] + .surah-tip {
+    opacity: 0;
+    transition-delay: 0s;
 }
 
 .picker-toggle-text {
@@ -2994,15 +2998,14 @@ mark.changed {
     background: var(--line);
 }
 
-/* Быстрый старт — подпись бруском и пустые капсулы той же высоты (внутри
-   неразрывный пробел); ширины — как у «Попробовать:» и имён сур, чтобы на
-   телефоне ряд переносился так же. */
-.boot-chip {
-    width: 6.75rem;
-}
-
+/* Строка загрузки под полем — мелко и по центру. Быстрого старта под полем
+   больше нет (D28), и скелет его не рисует. */
 .boot-status {
+    margin: 0;
+    padding-top: var(--space-4);
     color: var(--ink-muted);
+    font-size: var(--text-sm);
+    text-align: center;
 }
 
 /* Проценты — строка, которую Blazor кладёт в --blazor-load-percentage-text. */
