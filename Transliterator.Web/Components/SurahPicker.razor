@@ -7,7 +7,8 @@
    На широком экране список выпадает прямо под своей кнопкой (D15), а не
    колонкой у края страницы, как «Как читать» и профиль: взгляд ищет его там,
    где нажал, и поле с выводом не сдвигаются. Щелчок мимо списка его закрывает
-   (прозрачная подложка). Уже 64rem — нижний лист, как у всех панелей (D14).
+   (прозрачная подложка). Шириной он с поле ввода, суры — в несколько столбцов
+   (D36). Уже 64rem — нижний лист, как у всех панелей (D14).
    Список не перечисляет суры в разметке: сура, добавленная в корпус,
    появляется здесь сама. *@
 
@@ -48,13 +49,16 @@
                        aria-activedescendant="@ActiveId" value="@_query" @oninput="OnSearch" @onkeydown="OnSearchKeyDownAsync" @ref="_search" />
             </div>
 
-            @if (Found.Count == 0)
+            @* «Ничего не найдено» (D36) — в строке состояния, что стоит в списке
+               всегда, пустой, пока суры находятся: диктор читает её, когда текст
+               появляется, а не когда строка возникает в разметке вместе с текстом. *@
+            <p class="surah-empty" role="status">@(Found.Count == 0 ? L["Surah.NothingFound"].Value : null)</p>
+
+            @* Суры — сеткой в несколько столбцов (D36), строки плотные. Порядок
+               в разметке — по номерам, и стрелки в поиске идут по нему же. *@
+            @if (Found.Count > 0)
             {
-                <p class="surah-empty" role="status">@L["Surah.NothingFound"]</p>
-            }
-            else
-            {
-                <ul id="surah-list" class="picker-list" role="listbox" aria-labelledby="surah-menu-title">
+                <ul id="surah-list" class="picker-list surah-grid" role="listbox" aria-labelledby="surah-menu-title">
                     @for (var i = 0; i < Found.Count; i++)
                     {
                         var surah = Found[i];
