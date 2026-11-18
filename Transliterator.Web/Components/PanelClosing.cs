@@ -6,12 +6,12 @@ namespace Transliterator.Web.Components
     /// <c>aria-hidden</c>: её уже не нажать и диктор её не читает, но она успевает
     /// плавно уйти. Потом исчезает, как прежде. Открыли снова, пока уходила, —
     /// уход отменяется. Длительность — та же, что <c>--motion-duration</c> в app.css;
-    /// с <c>prefers-reduced-motion</c> уходящая панель скрыта сразу.
+    /// с <c>prefers-reduced-motion</c> она гаснет на месте, без сдвига (D30).
     /// </summary>
     public sealed class PanelClosing
     {
         /// <summary>Как <c>--motion-duration</c> в app.css.</summary>
-        public static readonly TimeSpan Duration = TimeSpan.FromMilliseconds(200);
+        public static readonly TimeSpan Duration = TimeSpan.FromMilliseconds(250);
 
         private int _run;
 

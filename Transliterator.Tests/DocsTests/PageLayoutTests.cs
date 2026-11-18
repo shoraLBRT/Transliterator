@@ -87,7 +87,7 @@ namespace Transliterator.Tests.DocsTests
             Assert.Matches(@"\.boot-block \{[^}]*animation: shimmer var\(--motion-shimmer\) linear infinite;", css);
             var reduced = Regex.Match(css, @"@media \(prefers-reduced-motion: reduce\) \{(.*)\}\s*$");
             Assert.True(reduced.Success, "the reduced-motion block is not found");
-            Assert.Contains(".boot-block { background: var(--line); }", reduced.Groups[1].Value);
+            Assert.Contains(".boot-block { background: var(--line); animation: none; }", reduced.Groups[1].Value);
         }
 
         [Fact]
@@ -639,7 +639,8 @@ namespace Transliterator.Tests.DocsTests
         /// уходит сразу; подложка листа панели (D14) гаснет вместе с ним, уже не ловя
         /// щелчков, а щелчок по открытой закрывает лист и возвращает фокус на кнопку.
         /// Одна длительность на всё, и та же длительность — в коде, что держит
-        /// уходящую панель. С prefers-reduced-motion движения нет.
+        /// уходящую панель. С prefers-reduced-motion движения нет, но прозрачность
+        /// меняется плавно (D30).
         /// </summary>
         [Theory]
         [InlineData("SurahPicker.razor", "Closing", "IsShown")]
@@ -662,7 +663,7 @@ namespace Transliterator.Tests.DocsTests
         }
 
         [Fact]
-        public void PanelsAndTheOutput_ShareOneAnimation_AndReducedMotionTurnsItOff()
+        public void PanelsAndTheOutput_ShareOneAnimation_AndReducedMotionKeepsOnlyTheFade()
         {
             var css = Regex.Replace(Web("wwwroot", "css", "app.css"), @"\s+", " ");
 
@@ -689,10 +690,42 @@ namespace Transliterator.Tests.DocsTests
 
             var reduced = Regex.Match(css, @"@media \(prefers-reduced-motion: reduce\) \{(.*)$");
             Assert.True(reduced.Success, "the reduced-motion block is not found");
-            Assert.Contains("animation: none !important; transition: none !important;", reduced.Groups[1].Value);
-            // D20: уходящая плашка отмены очистки скрыта сразу — как уходящие панели
-            // и подложка листа (D14).
-            Assert.Contains(".picker-panel.is-closing, .picker-backdrop.is-closing, .feedback-panel.is-closing, .toast.is-closing { display: none; }", reduced.Groups[1].Value);
+            // D30: reduce снимает только движение — токены ходов и множитель сдвига
+            // обнуляются, а animation и transition целиком не снимаются; уходящие
+            // панели и плашка гаснут на месте, а не пропадают сразу.
+            Assert.DoesNotContain("animation: none !important", reduced.Groups[1].Value);
+            Assert.DoesNotContain("transition: none !important", reduced.Groups[1].Value);
+            Assert.DoesNotContain("display: none", reduced.Groups[1].Value);
+            Assert.Contains(":root { --motion-move-fast: var(--motion-instant); --motion-move: var(--motion-instant); --motion-move-slow: var(--motion-instant); --motion-travel: 0; }", reduced.Groups[1].Value);
+            Assert.Contains(".picker-panel { animation-name: scrim-in; } .picker-panel.is-closing { animation-name: scrim-out; }", reduced.Groups[1].Value);
+        }
+
+        /// <summary>
+        /// D30: появление панелей и карточки — не короче 0.2 с. Ходы, которые
+        /// двигают, берут токены --motion-move*, сдвиг в @keyframes умножен на
+        /// --motion-travel — их и обнуляет reduce. Смена текста вывода проявляется.
+        /// </summary>
+        [Fact]
+        public void Movement_HasItsOwnTokens_AndTheOutputTextFadesIn()
+        {
+            var css = Regex.Replace(Regex.Replace(Web("wwwroot", "css", "app.css"), @"/\*.*?\*/", " ", RegexOptions.Singleline), @"\s+", " ");
+
+            var duration = Regex.Match(css, @"--motion-duration: ([0-9.]+)s;");
+            Assert.True(duration.Success, "the motion duration is not found");
+            Assert.True(double.Parse(duration.Groups[1].Value, System.Globalization.CultureInfo.InvariantCulture) >= 0.2,
+                        "panels and the output card appear faster than 0.2s");
+            foreach (var token in new[] { "--motion-move-fast: var(--motion-fast);", "--motion-move: var(--motion-duration);", "--motion-move-slow: var(--motion-slow);", "--motion-travel: 1;" })
+                Assert.Matches(@"^ ?:root \{[^}]*" + Regex.Escape(token), css);
+
+            Assert.DoesNotMatch(@"(?:transform|grid-template-rows|margin-(?:top|bottom|left)|width) var\(--motion-(?:fast|duration|slow)\)", css);
+            foreach (Match frame in Regex.Matches(css, @"@keyframes [a-z-]+ \{ (?:[^{}]*\{[^}]*\} )+\}"))
+                foreach (Match shift in Regex.Matches(frame.Value, @"translate[XY]?\(([^;]*)\);"))
+                    Assert.Contains("var(--motion-travel)", shift.Groups[1].Value);
+
+            Assert.Matches(@"\.result-text \{[^}]*animation: text-in var\(--motion-duration\) var\(--ease-soft\);", css);
+            Assert.Contains("@keyframes text-in { from { opacity: 0.35; } }", css);
+            var app = Regex.Replace(Web("App.razor"), @"\s+", " ");
+            Assert.Contains("<div class=\"result-text\" @key=\"_changeKey\">", app);
         }
 
         /// <summary>
@@ -837,7 +870,7 @@ namespace Transliterator.Tests.DocsTests
             foreach (var declaration in new[]
             {
                 "position: absolute;", "top: calc(100% + var(--space-2));", "left: 0;",
-                "max-height: 60dvh;", "box-shadow: var(--shadow-lg);", "--panel-shift-x: 0;",
+                "max-height: 60dvh;", "box-shadow: var(--shadow-lg);", "--panel-shift-x: 0rem;",
             })
                 Assert.Contains(declaration, dropdown.Groups[1].Value);
             Assert.Contains(".surah-picker .picker-backdrop { display: block; background: transparent;", rules);

@@ -73,10 +73,19 @@
     /* Движение (D10): одна длительность и одна кривая на панели и вывод.
        Длительность повторена в PanelClosing.Duration — столько уходящая панель
        остаётся в разметке. Рядом — короткая (наведение, переключатели), долгая
-       (сдвиг поля) и циклы курсора и загрузки (D12). */
+       (сдвиг поля) и циклы курсора и загрузки (D12). Панели и вывод появляются
+       за 0.25 с — короче ход не замечают (D30). */
     --motion-fast: 0.15s;
-    --motion-duration: 0.2s;
+    --motion-duration: 0.25s;
     --motion-slow: 0.4s;
+    /* Ходы, которые двигают (сдвиг, выезд, раскрытие по высоте, поворот стрелки),
+       берут свои токены, а смены прозрачности и цвета — общие. Так при
+       prefers-reduced-motion снимается только движение: в конце файла эти токены
+       обнуляются вместе с --motion-travel — множителем сдвига в @keyframes (D30). */
+    --motion-move-fast: var(--motion-fast);
+    --motion-move: var(--motion-duration);
+    --motion-move-slow: var(--motion-slow);
+    --motion-travel: 1;
     --motion-instant: 0s; /* шаг без хода: visibility свёрнутого блока (D21) */
     --motion-blink: 1s;
     --motion-shimmer: 1.4s; /* проход блика по заглушке скелета загрузки (D22) */
@@ -96,7 +105,7 @@
                           border-color var(--motion-fast) var(--ease-soft),
                           color var(--motion-fast) var(--ease-soft),
                           box-shadow var(--motion-fast) var(--ease-soft),
-                          transform var(--motion-fast) var(--motion-ease);
+                          transform var(--motion-move-fast) var(--motion-ease);
 
     --font-ui: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 
@@ -177,7 +186,7 @@ button {
     max-width: 46rem;
     min-height: var(--topbar-height);
     margin: 0 auto max(var(--space-6), 24vh - var(--space-3) - var(--topbar-height));
-    transition: margin-bottom var(--motion-slow) var(--ease-soft);
+    transition: margin-bottom var(--motion-move-slow) var(--ease-soft);
 }
 
 .shell.is-active .topbar {
@@ -276,7 +285,7 @@ button {
 /* Схлопывание подсказки (D16): сам блок — .fold (D21), здесь только ход вровень
    с отступом шапки, которая подтягивает поле в то же время. */
 .fold.hint-fold {
-    transition: grid-template-rows var(--motion-slow) var(--ease-soft),
+    transition: grid-template-rows var(--motion-move-slow) var(--ease-soft),
                 opacity var(--motion-slow) var(--ease-soft),
                 visibility var(--motion-instant) linear var(--motion-slow);
 }
@@ -433,11 +442,11 @@ button {
 }
 
 @keyframes toast-in {
-    from { opacity: 0; transform: translateY(0.75rem); }
+    from { opacity: 0; transform: translateY(calc(0.75rem * var(--motion-travel))); }
 }
 
 @keyframes toast-out {
-    to { opacity: 0; transform: translateY(0.75rem); }
+    to { opacity: 0; transform: translateY(calc(0.75rem * var(--motion-travel))); }
 }
 
 @media (min-width: 56rem) {
@@ -531,7 +540,7 @@ svg {
     pointer-events: none;
     transform: translateY(calc(var(--space-1) * -1));
     transition: opacity var(--motion-fast) var(--ease-soft),
-                transform var(--motion-fast) var(--motion-ease);
+                transform var(--motion-move-fast) var(--motion-ease);
 }
 
 .surah-toggle:hover + .surah-tip,
@@ -738,11 +747,11 @@ svg {
    Уходящая панель (.is-closing) ещё миг на месте, но уже inert: нажатия её
    не достают, диктор её не читает. На широком экране колонка выезжает сбоку. */
 @keyframes panel-in {
-    from { opacity: 0; transform: translate(var(--panel-shift-x, 0), var(--panel-shift-y, -0.4rem)); }
+    from { opacity: 0; transform: translate(calc(var(--panel-shift-x, 0rem) * var(--motion-travel)), calc(var(--panel-shift-y, -0.4rem) * var(--motion-travel))); }
 }
 
 @keyframes panel-out {
-    to { opacity: 0; transform: translate(var(--panel-shift-x, 0), var(--panel-shift-y, -0.4rem)); }
+    to { opacity: 0; transform: translate(calc(var(--panel-shift-x, 0rem) * var(--motion-travel)), calc(var(--panel-shift-y, -0.4rem) * var(--motion-travel))); }
 }
 
 .picker-panel.is-closing,
@@ -754,11 +763,11 @@ svg {
 /* Лист (D14) выезжает снизу целиком и уходит обратно, подложка проявляется
    и гаснет с ним. С 64rem колонка снова берёт panel-in и panel-out. */
 @keyframes sheet-in {
-    from { transform: translateY(100%); }
+    from { transform: translateY(calc(100% * var(--motion-travel))); }
 }
 
 @keyframes sheet-out {
-    to { transform: translateY(100%); }
+    to { transform: translateY(calc(100% * var(--motion-travel))); }
 }
 
 @keyframes scrim-in {
@@ -1115,7 +1124,7 @@ html.is-sheet-open {
     border-radius: 50%;
     background: var(--switch-knob);
     /* Ручка доходит до края с лёгким перелётом и возвращается (D21). */
-    transition: transform var(--motion-duration) var(--ease-spring),
+    transition: transform var(--motion-move) var(--ease-spring),
                 background-color var(--motion-duration) var(--ease-soft);
 }
 
@@ -1154,9 +1163,9 @@ html.is-sheet-open {
     grid-template-rows: 0fr;
     opacity: 0;
     visibility: hidden;
-    transition: grid-template-rows var(--motion-duration) var(--motion-ease),
+    transition: grid-template-rows var(--motion-move) var(--motion-ease),
                 opacity var(--motion-duration) var(--ease-soft),
-                margin-top var(--motion-duration) var(--motion-ease),
+                margin-top var(--motion-move) var(--motion-ease),
                 visibility var(--motion-instant) linear var(--motion-duration);
 }
 
@@ -1227,7 +1236,7 @@ html.is-sheet-open {
     stroke-width: 2;
     stroke-linecap: round;
     stroke-linejoin: round;
-    transition: transform var(--motion-duration) var(--motion-ease); /* в такт раскрытию блока (D21) */
+    transition: transform var(--motion-move) var(--motion-ease); /* в такт раскрытию блока (D21) */
 }
 
 .reading-group-toggle[aria-expanded="true"] .reading-group-chevron {
@@ -1303,7 +1312,7 @@ html.is-sheet-open {
     stroke-width: 2;
     stroke-linecap: round;
     stroke-linejoin: round;
-    transition: transform var(--motion-duration) var(--motion-ease); /* в такт раскрытию блока (D21) */
+    transition: transform var(--motion-move) var(--motion-ease); /* в такт раскрытию блока (D21) */
 }
 
 .reading-rule-toggle[aria-expanded="true"] .reading-rule-chevron {
@@ -1561,7 +1570,7 @@ html.is-sheet-open {
     stroke-width: 2;
     stroke-linecap: round;
     stroke-linejoin: round;
-    transition: transform var(--motion-duration) var(--motion-ease); /* в такт раскрытию блока (D21) */
+    transition: transform var(--motion-move) var(--motion-ease); /* в такт раскрытию блока (D21) */
 }
 
 .profile-settings-toggle[aria-expanded="true"] .profile-settings-chevron {
@@ -1770,7 +1779,7 @@ html.is-sheet-open {
     stroke-width: 2;
     stroke-linecap: round;
     stroke-linejoin: round;
-    transition: transform var(--motion-duration) var(--motion-ease);
+    transition: transform var(--motion-move) var(--motion-ease);
 }
 
 .about-fold-toggle[aria-expanded="true"] .about-fold-chevron {
@@ -2048,6 +2057,13 @@ html.is-sheet-open {
 .result-text {
     font-size: 1.15rem;
     line-height: 1.75;
+    animation: text-in var(--motion-duration) var(--ease-soft);
+}
+
+/* Смена настройки пересоздаёт строки вывода (новый ключ, D19): текст не
+   подменяется рывком, а проявляется на месте, без сдвига (D30). */
+@keyframes text-in {
+    from { opacity: 0.35; }
 }
 
 /* Строка — аят: отдельный блок с воздухом вокруг. Подсветка наведения выходит
@@ -2061,7 +2077,7 @@ html.is-sheet-open {
     white-space: pre-wrap;
     overflow-wrap: anywhere;
     transition: background-color var(--motion-fast) var(--ease-soft),
-                margin-top var(--motion-duration) var(--motion-ease);
+                margin-top var(--motion-move) var(--motion-ease);
 }
 
 /* Изменённое сменой настройки (D19): фон вспыхивает и гаснет, текст и его
@@ -2284,7 +2300,7 @@ mark.changed {
     transform-box: fill-box;
     transform-origin: center;
     transition: opacity var(--motion-fast) var(--ease-soft),
-                transform var(--motion-duration) var(--ease-spring),
+                transform var(--motion-move) var(--ease-spring),
                 stroke-dashoffset var(--motion-slow) var(--motion-ease);
 }
 
@@ -2556,7 +2572,7 @@ mark.changed {
         pointer-events: none;
         transform: translate(var(--space-1), -50%);
         transition: opacity var(--motion-fast) var(--ease-soft),
-                    transform var(--motion-fast) var(--motion-ease);
+                    transform var(--motion-move-fast) var(--motion-ease);
     }
 
     .feedback-toggle:hover .feedback-label,
@@ -2637,7 +2653,7 @@ mark.changed {
    на 4px, задержка растёт у первых шести строк, дальше одна — весь каскад
    не дольше 250ms. Строки ниже видимой части панели ждут столько же. */
 @keyframes item-in {
-    from { opacity: 0; transform: translateY(4px); }
+    from { opacity: 0; transform: translateY(calc(4px * var(--motion-travel))); }
 }
 
 .picker-list > li,
@@ -2705,13 +2721,13 @@ mark.changed {
         max-width: none;
         margin-right: 0;
         margin-left: max(var(--rail-space), (100% - 46rem) / 2);
-        transition: margin-left var(--motion-duration) var(--motion-ease), width var(--motion-duration) var(--motion-ease);
+        transition: margin-left var(--motion-move) var(--motion-ease), width var(--motion-move) var(--motion-ease);
     }
 
     /* Шапка ещё и опускает поле (см. .topbar) — её отступ снизу едет как прежде. */
     .topbar {
-        transition: margin-left var(--motion-duration) var(--motion-ease), width var(--motion-duration) var(--motion-ease),
-                    margin-bottom var(--motion-slow) var(--ease-soft);
+        transition: margin-left var(--motion-move) var(--motion-ease), width var(--motion-move) var(--motion-ease),
+                    margin-bottom var(--motion-move-slow) var(--ease-soft);
     }
 
     /* Кнопки сбоку — одна капсула (D23) вровень с верхом поля: верх страницы,
@@ -2804,7 +2820,7 @@ mark.changed {
         pointer-events: none;
         transform: translate(calc(-1 * var(--space-1)), -50%);
         transition: opacity var(--motion-fast) var(--ease-soft),
-                    transform var(--motion-fast) var(--motion-ease);
+                    transform var(--motion-move-fast) var(--motion-ease);
     }
 
     .shell.has-panel .side-rail .picker-toggle:hover .picker-toggle-text,
@@ -2824,7 +2840,7 @@ mark.changed {
         max-height: calc(100vh - 2.5rem);
         max-height: calc(100dvh - 2.5rem);
         --panel-shift-x: -0.75rem; /* колонка выезжает из-под кнопок */
-        --panel-shift-y: 0;
+        --panel-shift-y: 0rem; /* с единицей: сдвиг умножается в calc (D30) */
     }
 
     /* Колонка, не лист (D14): скругление со всех сторон, отступ вокруг, движение
@@ -2863,7 +2879,7 @@ mark.changed {
         max-height: 60vh;
         max-height: 60dvh;
         box-shadow: var(--shadow-lg);
-        --panel-shift-x: 0;
+        --panel-shift-x: 0rem;
         --panel-shift-y: -0.4rem;
     }
 
@@ -3050,7 +3066,7 @@ mark.changed {
     height: 100%;
     border-radius: 0 var(--radius-pill) var(--radius-pill) 0;
     background: var(--foam-700);
-    transition: width var(--motion-duration) var(--motion-ease);
+    transition: width var(--motion-move) var(--motion-ease);
 }
 
 #blazor-error-ui {
@@ -3281,32 +3297,34 @@ mark.changed {
     }
 }
 
-/* Движение — сдвиг поля, всплытие карточек, мерцание скелета загрузки — снимается.
-   Мигание курсора подсказки остаётся: оно ничего не двигает, а без него печать
-   читается как застывший текст. */
+/* С prefers-reduced-motion снимается только движение (D30): сдвиги, выезды,
+   раскрытие по высоте и поворот стрелок — их токены обнуляются, и блок встаёт
+   на место сразу. Короткие смены прозрачности и цвета остаются: панель, карточка
+   вывода и плашка проявляются и гаснут на месте, страница не дёргается. Раньше
+   здесь снимались все animation и transition, и с выключенными «Эффектами
+   анимации» Windows, по удалённому столу и в режиме экономии страница была вся
+   резкой. Мигание курсора подсказки как было: оно ничего не двигает. */
 @media (prefers-reduced-motion: reduce) {
-    *,
-    *::before,
-    *::after {
-        animation: none !important;
-        transition: none !important;
+    :root {
+        --motion-move-fast: var(--motion-instant);
+        --motion-move: var(--motion-instant);
+        --motion-move-slow: var(--motion-instant);
+        --motion-travel: 0;
     }
 
-    /* Без анимации уходящей панели не на что задерживаться — скрыта сразу. */
-    .picker-panel.is-closing,
-    .picker-backdrop.is-closing,
-    .feedback-panel.is-closing,
-    .toast.is-closing {
-        display: none;
+    /* Лист (D14) не выезжает снизу, а проявляется на месте, как подложка под ним. */
+    .picker-panel {
+        animation-name: scrim-in;
     }
 
-    .hint-text.is-typing::after {
-        animation: caret var(--motion-blink) steps(1) infinite !important;
+    .picker-panel.is-closing {
+        animation-name: scrim-out;
     }
 
     /* Заглушки скелета (D22) без мерцания — ровные, без застывшего блика. */
     .boot-block {
         background: var(--line);
+        animation: none;
     }
 
     /* Изменённое (D19) подсвечено ровным фоном и снимается разом, без затухания. */
