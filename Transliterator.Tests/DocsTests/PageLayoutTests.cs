@@ -151,7 +151,6 @@ namespace Transliterator.Tests.DocsTests
         [InlineData("ReadingPicker.razor", "reading-menu")]
         [InlineData("ProfilePicker.razor", "profile-menu")]
         [InlineData("AboutPicker.razor", "about-menu")]
-        [InlineData("SoundsPicker.razor", "sounds-menu")]
         public void AllPanels_BehaveAlike(string file, string panel)
         {
             // Одно поведение на все панели: общий учёт открытой (одна на страницу),
@@ -378,10 +377,10 @@ namespace Transliterator.Tests.DocsTests
             var settings = picker.IndexOf("<div id=\"profile-settings\"", StringComparison.Ordinal);
             Assert.True(settings > toggle.Index, "the settings block is not under its toggle");
             Assert.True(picker.IndexOf("profile-search", StringComparison.Ordinal) > settings, "the search is not inside the settings");
-            Assert.True(picker.IndexOf("<table class=\"profile-table\">", StringComparison.Ordinal) > settings, "the table is not inside the settings");
+            Assert.True(picker.IndexOf("<table class=\"profile-table ", StringComparison.Ordinal) > settings, "the table is not inside the settings");
 
             // Свёрнуто при каждом закрытии панели, раскрыто у только что созданного профиля.
-            Assert.Matches(@"OnClosed\(\) \{ Cancel\(\); _settingsOpen = false; _settingsKept = false; \}", picker);
+            Assert.Matches(@"OnClosed\(\) \{ Cancel\(\); _focusSettings = false; _settingsOpen = false; _settingsKept = false; \}", picker);
             // D21: свёрнутые настройки — inert и aria-hidden, раскрываются плавно.
             Assert.Contains("<div id=\"profile-settings\" class=\"fold @(_settingsOpen ? \"is-open\" : null)\" inert=\"@(!_settingsOpen)\" aria-hidden=\"@(_settingsOpen ? null : \"true\")\"> <div class=\"fold-inner\"> <div class=\"profile-rules\">", picker);
             Assert.Matches(@"CreateAsync\(\) \{.*?_settingsOpen = true; await ProfileChanged\.InvokeAsync\(copy\);", picker);
@@ -446,7 +445,7 @@ namespace Transliterator.Tests.DocsTests
             Assert.Contains("@onclick=\"OpenFeedbackAsync\">@L[\"About.FeedbackAction\"]</button>", about);
 
             var app = Regex.Replace(Web("App.razor"), @"\s+", " ");
-            Assert.Contains("<AboutPicker Transliterate=\"TransliterateExample\" OpenFeedback=\"OpenFeedbackAsync\" OpenSounds=\"AboutSoundsOpener\" @ref=\"_aboutPicker\" />", app);
+            Assert.Contains("<AboutPicker Transliterate=\"TransliterateExample\" OpenFeedback=\"OpenFeedbackAsync\" OpenSounds=\"SoundsOpener\" />", app);
             Assert.Contains("<FeedbackButton Arabic=\"@_arabic\" Transliteration=\"@_result\" @ref=\"_feedback\" />", app);
 
             Assert.Equal("О чём проект?", PageStrings.Web("ru")["About.Toggle"]);
@@ -462,75 +461,84 @@ namespace Transliterator.Tests.DocsTests
         }
 
         /// <summary>
-        /// D11: «Как читать буквы» — таблица звуков. Кнопка — в шапке вывода перед
-        /// «С арабским» (её разметку ставит SoundsPicker через SectionOutlet), на телефоне
-        /// одной иконкой с подписью для диктора. Панель от вывода не зависит: её открывает
-        /// и «О чём проект?». Сначала звуки, которых нет в русском, остальные — под
-        /// свёрнутым «Остальные буквы». Запись буквы — графема текущего профиля.
+        /// D11, E11: «Как читать буквы». Звучание каждой буквы — четвёртый столбец
+        /// таблицы графем под «Настройки профиля», одной ячейкой на букву, как сама
+        /// буква; у звука, которого нет в русском, — пометка. Отдельной панели звуков
+        /// и отдельного входа в панели профиля нет.
         /// </summary>
         [Fact]
-        public void SoundsButton_OpensTheSoundTable_WrittenByTheCurrentProfile()
+        public void SoundOfEachLetter_IsAColumnOfTheProfileTable()
+        {
+            var profile = Regex.Replace(Web("Components", "ProfilePicker.razor"), @"\s+", " ");
+            profile = Regex.Replace(profile, @"@\*.*?\*@ ?", string.Empty);
+
+            Assert.Contains("<table class=\"profile-table @(Sounds is not null ? \"has-sounds\" : null)\">", profile);
+            Assert.Contains("@if (Sounds is not null) { <col class=\"profile-col-sound\" /> }", profile);
+            Assert.Contains("@if (Sounds is not null) { <th scope=\"col\">@L[\"Profile.SoundColumn\"]</th> }", profile);
+
+            // В строке буквы, после графемы, на все её строки — как сама буква.
+            Assert.Contains("<th scope=\"rowgroup\" rowspan=\"@rows\" class=\"profile-key\"", profile);
+            Assert.Contains("<td class=\"profile-value-cell\">@Cell(group.BaseKey)</td> @if (Sounds is not null) { <td rowspan=\"@rows\" class=\"profile-sound-cell\">@Sound(group.BaseKey)</td> } </tr>", profile);
+
+            Assert.Contains("<span class=\"profile-sound-name\">@sound.Name.Current</span>", profile);
+            Assert.Contains("@if (sound.NotInRussian) { <span class=\"profile-sound-mark\">@L[\"Profile.NotInRussian\"]</span> }", profile);
+            Assert.Contains("<span class=\"profile-sound-how\"><MixedText Text=\"@sound.Pronunciation.Current\" /></span>", profile);
+
+            // Поиск находит букву и по звучанию.
+            Assert.Contains("RuleTable.Filter(_groups, _query, Describe)", profile);
+
+            // Отдельного входа больше нет.
+            Assert.DoesNotContain("OpenSounds", profile);
+            Assert.DoesNotContain("profile-sounds", profile);
+            Assert.False(File.Exists(Path.Combine(ReadmeTests.RepositoryRoot(), "Transliterator.Web", "Components", "SoundsPicker.razor")),
+                         "the separate sound panel is still there");
+
+            var app = Regex.Replace(Web("App.razor"), @"\s+", " ");
+            Assert.Matches(@"<ProfilePicker [^>]*Sounds=""_sounds"" @ref=""_profilePicker"" />", app);
+            Assert.DoesNotContain("SoundsPicker", app);
+
+            // Столбцы — без прокрутки вбок: ширина фиксирована у узких, звучание — остаток.
+            var css = Regex.Replace(Web("wwwroot", "css", "app.css"), @"\s+", " ");
+            Assert.Contains(".profile-table.has-sounds .profile-col-value { width: 4.75rem; }", css);
+            Assert.Contains(".profile-table.has-sounds .profile-col-variant { width: 30%; }", css);
+            Assert.DoesNotContain(".sounds-panel", css);
+            Assert.DoesNotContain(".sounds-fold-toggle", css);
+
+            Assert.Equal("Звучание", PageStrings.Web("ru")["Profile.SoundColumn"]);
+            Assert.Equal("Sound", PageStrings.Web("en")["Profile.SoundColumn"]);
+            Assert.Equal("нет в русском", PageStrings.Web("ru")["Profile.NotInRussian"]);
+        }
+
+        /// <summary>
+        /// E11 (пересмотр D29): «Как читать буквы» в шапке вывода — перед «С арабским»,
+        /// на телефоне одной иконкой с подписью для диктора, — и в «О чём проект?»
+        /// открывают панель профиля с раскрытыми «Настройками профиля». Фокус — на их
+        /// заголовок; Escape возвращает его на кнопку панели, как у меток над выводом.
+        /// </summary>
+        [Fact]
+        public void HowToSayTheLetters_OpensTheProfileSettings()
         {
             var app = Regex.Replace(Web("App.razor"), @"\s+", " ");
             var head = Regex.Match(app, "<div class=\"result-head\">(.*?)<div class=\"result-text\"");
             Assert.True(head.Success, "the result head is not found");
-            Assert.Matches("<SectionOutlet SectionName=\"@SoundsPicker.ToggleSection\" />.*<button type=\"button\" class=\"arabic-toggle\"", head.Groups[1].Value);
-            Assert.Contains("<SoundsPicker Table=\"_sounds\" Profile=\"_profile\" FocusFallback=\"FocusInputAsync\" @ref=\"_soundsPicker\" />", app);
-
-            var picker = Regex.Replace(Web("Components", "SoundsPicker.razor"), @"\s+", " ");
-            Assert.Contains("<SectionContent SectionName=\"@ToggleSection\">", picker);
-            Assert.Contains("<span class=\"sounds-toggle-label\">@L[\"Sounds.Toggle\"]</span>", picker);
-            Assert.Contains("title=\"@L[\"Sounds.ToggleTitle\"]\"", picker);
-            Assert.Contains("<span class=\"sound-letter\" lang=\"ar\" dir=\"rtl\">@sound.Letter</span>", picker);
-            Assert.Contains("Profile?.Rules.GetValueOrDefault(sound.Letter)", picker);
-            Assert.Contains("@List(Table.Sounds.Where(s => s.NotInRussian))", picker);
-            Assert.Contains("<div id=\"sounds-rest\" class=\"fold @(_restOpen ? \"is-open\" : null)\" inert=\"@(!_restOpen)\" aria-hidden=\"@(_restOpen ? null : \"true\")\">", picker);
-            Assert.Contains("@List(Table.Sounds.Where(s => !s.NotInRussian))", picker);
+            Assert.Matches("<button type=\"button\" class=\"sounds-toggle\" title=\"@L\\[\"Sounds.ToggleTitle\"\\]\" @onclick=\"OpenSoundsAsync\">.*<span class=\"sounds-toggle-label\">@L\\[\"Sounds.Toggle\"\\]</span> </button> } .*<button type=\"button\" class=\"arabic-toggle\"", head.Groups[1].Value);
+            Assert.Contains("private Func<Task>? SoundsOpener => _sounds is null || _profile is null ? null : OpenSoundsAsync;", app);
+            Assert.Contains("private Task OpenSoundsAsync() => _profilePicker?.OpenSettingsAsync() ?? Task.CompletedTask;", app);
 
             var about = Regex.Replace(Web("Components", "AboutPicker.razor"), @"\s+", " ");
             Assert.Contains("@onclick=\"OpenSoundsAsync\">@L[\"Sounds.Toggle\"]</button>", about);
+
+            var profile = Regex.Replace(Web("Components", "ProfilePicker.razor"), @"\s+", " ");
+            Assert.Contains("public async Task OpenSettingsAsync() { _settingsOpen = true; _settingsKept = true; _focusSettings = true; await OpenAsync(); }", profile);
+            Assert.Contains("@onclick=\"ToggleSettings\" @ref=\"_settingsToggle\">", profile);
+            Assert.Contains("if (_focusSettings) { _focusSettings = false; await _settingsToggle.FocusAsync(); return; } await base.FocusOpenedAsync();", profile);
 
             // На телефоне — одна иконка, подпись остаётся имени кнопки (как «С арабским»).
             var css = Regex.Replace(Web("wwwroot", "css", "app.css"), @"\s+", " ");
             Assert.Contains(".sounds-toggle-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }", css);
             Assert.Contains(".sounds-toggle::after,", css);
-            Assert.Contains(".sounds-fold-toggle::after,", css);
 
             Assert.Equal("Как читать буквы", PageStrings.Web("ru")["Sounds.Toggle"]);
-            Assert.Equal("Остальные буквы", PageStrings.Web("ru")["Sounds.Rest"]);
-        }
-
-        /// <summary>
-        /// D29: «Как читать буквы» открывается из панели профиля, рядом с «Настройки
-        /// профиля», и при пустом поле — кнопка не зависит от вывода. Ссылка из «О чём
-        /// проект?» открывает ту же таблицу. Открытая из другой панели, таблица по
-        /// Escape и крестику возвращает фокус на кнопку той панели у края страницы;
-        /// открытая своей кнопкой в шапке вывода — на неё, как прежде.
-        /// </summary>
-        [Fact]
-        public void SoundTable_OpensFromTheProfilePanel_WithoutText()
-        {
-            var app = Regex.Replace(Web("App.razor"), @"\s+", " ");
-            Assert.Matches(@"<ProfilePicker [^>]*OpenSounds=""ProfileSoundsOpener"" @ref=""_profilePicker"" />", app);
-            Assert.Contains("() => OpenSoundsFromAsync(_profilePicker)", app);
-            Assert.Contains("() => OpenSoundsFromAsync(_aboutPicker)", app);
-            Assert.Contains("_soundsPicker?.OpenFromAsync(() => from?.FocusToggleButtonAsync() ?? FocusInputAsync())", app);
-
-            // Вход — в панели, не в шапке вывода: виден и без текста; стоит перед «Настройки профиля».
-            var profile = Regex.Replace(Web("Components", "ProfilePicker.razor"), @"\s+", " ");
-            var entry = profile.IndexOf("@onclick=\"OpenSoundsAsync\">", StringComparison.Ordinal);
-            var settings = profile.IndexOf("<section class=\"profile-settings\">", StringComparison.Ordinal);
-            Assert.True(entry > 0 && entry < settings, "the sound table entry is not right before the profile settings");
-            Assert.Contains("<span class=\"profile-settings-name\">@L[\"Sounds.Toggle\"]</span>", profile);
-            Assert.Contains("@if (OpenSounds is not null) { <div class=\"profile-settings profile-sounds\">", profile);
-
-            var sounds = Regex.Replace(Web("Components", "SoundsPicker.razor"), @"\s+", " ");
-            Assert.Contains("public async Task OpenFromAsync(Func<Task> returnFocus)", sounds);
-            Assert.Contains("_returnFocus = null;", sounds);
-            Assert.Contains("if (_returnFocus is not null) { await _returnFocus(); return; }", sounds);
-
-            var panel = Web("Components", "PanelPicker.cs");
-            Assert.Contains("public Task FocusToggleButtonAsync() => FocusToggleAsync();", panel);
         }
 
         /// <summary>
@@ -647,7 +655,6 @@ namespace Transliterator.Tests.DocsTests
         [InlineData("ReadingPicker.razor", "Closing", "IsShown")]
         [InlineData("ProfilePicker.razor", "Closing", "IsShown")]
         [InlineData("AboutPicker.razor", "Closing", "IsShown")]
-        [InlineData("SoundsPicker.razor", "Closing", "IsShown")]
         [InlineData("FeedbackButton.razor", "_closing", "_open || _closing.IsClosing")]
         public void ClosingPanel_StaysAMoment_InertAndHiddenFromTheReader(string file, string closing, string shown)
         {
@@ -842,7 +849,7 @@ namespace Transliterator.Tests.DocsTests
                 Assert.Contains(declaration, overlay.Groups[1].Value);
 
             // Подложка — в каждой колонке, и щелчок по ней закрывает её к кнопке.
-            foreach (var picker in new[] { "ReadingPicker.razor", "ProfilePicker.razor", "SoundsPicker.razor", "AboutPicker.razor" })
+            foreach (var picker in new[] { "ReadingPicker.razor", "ProfilePicker.razor", "AboutPicker.razor" })
                 Assert.Contains("<div class=\"picker-backdrop @Closing.CssClass\" @onclick=\"CloseToToggleAsync\"></div>",
                                 Web("Components", picker));
             var close = Web("Components", "PanelPicker.cs");

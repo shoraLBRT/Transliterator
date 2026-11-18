@@ -87,8 +87,11 @@ namespace Transliterator.Core.Services
         /// есть, вместе с их базовыми графемами), по графеме — тому, как буква пишется
         /// («х»), — и по пояснению варианта на языке интерфейса («пауз» находит <c>waqf</c>, E7; в английском — «pause», D7).
         /// Кириллица ищется в любом интерфейсе: графемы своего профиля — буквы, а не перевод.
+        /// <paramref name="describe"/> — текст о звучании буквы (E11): название и как
+        /// произносить; по нему буква находится, как по пояснению варианта, с трёх знаков.
         /// </summary>
-        public static IReadOnlyList<RuleGroup> Filter(IReadOnlyList<RuleGroup> groups, string? query)
+        public static IReadOnlyList<RuleGroup> Filter(IReadOnlyList<RuleGroup> groups, string? query,
+                                                      Func<string, string?>? describe = null)
         {
             var needle = query?.Trim();
 
@@ -99,7 +102,8 @@ namespace Transliterator.Core.Services
                                       || Matches(group.BaseValue, needle)
                                       || group.Variants.Any(variant => Matches(variant.Key, needle)
                                                                     || Matches(variant.Value, needle)
-                                                                    || (needle.Length >= MinNoteQuery && Matches(variant.Note, needle))))
+                                                                    || (needle.Length >= MinNoteQuery && Matches(variant.Note, needle)))
+                                      || (needle.Length >= MinNoteQuery && describe is not null && Matches(describe(group.BaseKey), needle)))
                          .ToList();
         }
 

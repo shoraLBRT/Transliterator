@@ -1,6 +1,5 @@
 @using Transliterator.Core.Repositories
 @using Transliterator.Core.Services
-@using Microsoft.AspNetCore.Components.Sections
 @inject UserProfileRepository Profiles
 @inject ICorpusRepository Corpus
 @inject ITransliterationService Transliteration
@@ -91,22 +90,13 @@
                     <ProfilePicker Profile="_profile" DefaultProfile="@DefaultProfile" Preview="@_result"
                                    Changes="_changes" ChangeKey="_changeKey" Unchanged="_unchangedNote"
                                    ProfileChanged="ChangeProfileAsync" ProfileDeleted="ResetProfileAsync"
-                                   OpenSounds="ProfileSoundsOpener" @ref="_profilePicker" />
+                                   Sounds="_sounds" @ref="_profilePicker" />
                 }
 
                 @* «?» — что это за страница (D8). Последней: она ничего не выбирает. *@
                 <AboutPicker Transliterate="TransliterateExample" OpenFeedback="OpenFeedbackAsync"
-                             OpenSounds="AboutSoundsOpener" @ref="_aboutPicker" />
+                             OpenSounds="SoundsOpener" />
             </aside>
-        }
-
-        @* Таблица звуков (D11): панель не зависит от вывода — её открывают панель
-           профиля (D29) и «О чём проект?» при пустом поле. Своя кнопка панели — в шапке
-           вывода (SectionOutlet ниже).
-           Сама панель — fixed-колонка или лист, место в потоке ей не нужно. *@
-        @if (_sounds is not null)
-        {
-            <SoundsPicker Table="_sounds" Profile="_profile" FocusFallback="FocusInputAsync" @ref="_soundsPicker" />
         }
 
         @if (_error is not null)
@@ -143,8 +133,20 @@
                     <p class="result-note" role="status">@(_unchangedNote ? L["Output.Unchanged"].Value : null)</p>
                     </div>
 
-                    @* «Как читать буквы» (D11) — кнопка таблицы звуков; разметку ставит SoundsPicker. *@
-                    <SectionOutlet SectionName="@SoundsPicker.ToggleSection" />
+                    @* «Как читать буквы» (D11): звучание букв — в таблице графем профиля (E11),
+                       кнопка открывает панель профиля с раскрытыми настройками. На телефоне
+                       видна только иконка (как у «С арабским», D18): подпись остаётся именем
+                       кнопки для диктора и подсказкой title. *@
+                    @if (SoundsOpener is not null)
+                    {
+                        <button type="button" class="sounds-toggle" title="@L["Sounds.ToggleTitle"]" @onclick="OpenSoundsAsync">
+                            <svg class="sounds-toggle-icon" viewBox="0 0 24 24" aria-hidden="true">
+                                <path d="M4 5.5h7v13H4zM13 5.5h7v13h-7z" />
+                                <path d="M6.5 9h2M15.5 9h2M15.5 12.5h2" />
+                            </svg>
+                            <span class="sounds-toggle-label">@L["Sounds.Toggle"]</span>
+                        </button>
+                    }
 
                     @* «С арабским» (D18): над каждой строкой вывода — её арабская строка
                        поля. Тумблер — aria-pressed; на телефоне видна только иконка, подпись
@@ -774,23 +776,14 @@
 
     private Task OpenProfileAsync() => _profilePicker?.OpenAsync() ?? Task.CompletedTask;
 
-    private SoundsPicker? _soundsPicker;
-
-    private AboutPicker? _aboutPicker;
-
     /// <summary>
-    /// «Как читать буквы» из другой панели (D11, D29) — та же таблица, что у кнопки
-    /// в шапке вывода. Escape возвращает фокус на кнопку панели, откуда пришли.
+    /// «Как читать буквы» (D11) в шапке вывода и в «О чём проект?» — панель профиля
+    /// с раскрытыми «Настройками профиля», где у каждой буквы её звучание (E11).
+    /// Таблица звуков не прочиталась или профиля нет — нет и кнопок.
     /// </summary>
-    private Task OpenSoundsFromAsync(PanelPicker? from) =>
-        _soundsPicker?.OpenFromAsync(() => from?.FocusToggleButtonAsync() ?? FocusInputAsync()) ?? Task.CompletedTask;
+    private Func<Task>? SoundsOpener => _sounds is null || _profile is null ? null : OpenSoundsAsync;
 
-    /// <summary>Таблица не прочиталась — в панели профиля и в «О чём проект?» кнопки к ней нет.</summary>
-    private Func<Task>? ProfileSoundsOpener => _sounds is null ? null : () => OpenSoundsFromAsync(_profilePicker);
-
-    private Func<Task>? AboutSoundsOpener => _sounds is null ? null : () => OpenSoundsFromAsync(_aboutPicker);
-
-    private Task FocusInputAsync() => _input.FocusAsync().AsTask();
+    private Task OpenSoundsAsync() => _profilePicker?.OpenSettingsAsync() ?? Task.CompletedTask;
 
     private FeedbackButton? _feedback;
 
