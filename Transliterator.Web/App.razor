@@ -104,17 +104,19 @@
                 {
                     <ProfilePicker Profile="_profile" DefaultProfile="@DefaultProfile" Preview="@_result"
                                    Changes="_changes" ChangeKey="_changeKey" Unchanged="_unchangedNote"
-                                   ProfileChanged="ChangeProfileAsync" ProfileDeleted="ResetProfileAsync" @ref="_profilePicker" />
+                                   ProfileChanged="ChangeProfileAsync" ProfileDeleted="ResetProfileAsync"
+                                   OpenSounds="ProfileSoundsOpener" @ref="_profilePicker" />
                 }
 
                 @* «?» — что это за страница (D8). Последней: она ничего не выбирает. *@
                 <AboutPicker Transliterate="TransliterateExample" OpenFeedback="OpenFeedbackAsync"
-                             OpenSounds="SoundsOpener" />
+                             OpenSounds="AboutSoundsOpener" @ref="_aboutPicker" />
             </aside>
         }
 
-        @* Таблица звуков (D11): панель не зависит от вывода — её открывает и «О чём
-           проект?» при пустом поле. Кнопка панели — в шапке вывода (SectionOutlet ниже).
+        @* Таблица звуков (D11): панель не зависит от вывода — её открывают панель
+           профиля (D29) и «О чём проект?» при пустом поле. Своя кнопка панели — в шапке
+           вывода (SectionOutlet ниже).
            Сама панель — fixed-колонка или лист, место в потоке ей не нужно. *@
         @if (_sounds is not null)
         {
@@ -833,11 +835,19 @@
 
     private SoundsPicker? _soundsPicker;
 
-    /// <summary>«Как читать буквы» из «О чём проект?» (D11) — та же панель, что у кнопки в шапке вывода.</summary>
-    private Task OpenSoundsAsync() => _soundsPicker?.OpenAsync() ?? Task.CompletedTask;
+    private AboutPicker? _aboutPicker;
 
-    /// <summary>Таблица не прочиталась — в «О чём проект?» кнопки к ней нет.</summary>
-    private Func<Task>? SoundsOpener => _sounds is null ? null : OpenSoundsAsync;
+    /// <summary>
+    /// «Как читать буквы» из другой панели (D11, D29) — та же таблица, что у кнопки
+    /// в шапке вывода. Escape возвращает фокус на кнопку панели, откуда пришли.
+    /// </summary>
+    private Task OpenSoundsFromAsync(PanelPicker? from) =>
+        _soundsPicker?.OpenFromAsync(() => from?.FocusToggleButtonAsync() ?? FocusInputAsync()) ?? Task.CompletedTask;
+
+    /// <summary>Таблица не прочиталась — в панели профиля и в «О чём проект?» кнопки к ней нет.</summary>
+    private Func<Task>? ProfileSoundsOpener => _sounds is null ? null : () => OpenSoundsFromAsync(_profilePicker);
+
+    private Func<Task>? AboutSoundsOpener => _sounds is null ? null : () => OpenSoundsFromAsync(_aboutPicker);
 
     private Task FocusInputAsync() => _input.FocusAsync().AsTask();
 

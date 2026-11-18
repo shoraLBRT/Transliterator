@@ -92,14 +92,38 @@
     /// <summary>«Остальные буквы» при открытии панели свёрнуты.</summary>
     private bool _restOpen;
 
+    /// <summary>
+    /// Куда вернуть фокус, когда таблицу открыла другая панель (D29): панель профиля
+    /// или «О чём проект?» уже закрылась, Escape ведёт на её кнопку у края страницы.
+    /// <c>null</c> — открыли своей кнопкой в шапке вывода.
+    /// </summary>
+    private Func<Task>? _returnFocus;
+
     protected override Task BeforeOpenAsync()
     {
         _restOpen = false;
+        _returnFocus = null;
         return Task.CompletedTask;
+    }
+
+    /// <summary>
+    /// Открыть таблицу из другой панели (D29) — та закроется, одна панель на
+    /// страницу. Escape и крестик вернут фокус через <paramref name="returnFocus"/>.
+    /// </summary>
+    public async Task OpenFromAsync(Func<Task> returnFocus)
+    {
+        await OpenAsync();
+        _returnFocus = returnFocus;
     }
 
     protected override async Task FocusToggleAsync()
     {
+        if (_returnFocus is not null)
+        {
+            await _returnFocus();
+            return;
+        }
+
         try
         {
             await ToggleButton.FocusAsync();

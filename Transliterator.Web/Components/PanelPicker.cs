@@ -120,6 +120,12 @@ namespace Transliterator.Web.Components
         /// </summary>
         protected virtual Task FocusToggleAsync() => ToggleButton.FocusAsync().AsTask();
 
+        /// <summary>
+        /// Фокус на кнопку панели снаружи: таблица звуков (D29), открытая из этой
+        /// панели, по Escape возвращает его сюда — на хозяйку входа.
+        /// </summary>
+        public Task FocusToggleButtonAsync() => FocusToggleAsync();
+
         protected async Task OnPanelKeyDownAsync(KeyboardEventArgs e)
         {
             if (e.Key == "Escape")
