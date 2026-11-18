@@ -118,6 +118,24 @@
                 {<ChangedText Segments="ChangedText.Of(Changes, Preview)" />}</span>
             </div>
 
+            @* «Как читать буквы» (D29) — рядом с «Настройки профиля»: запись буквы в
+               таблице звуков — графема этого профиля. Открывается и при пустом поле;
+               таблица — своя панель, эта уступает ей место. *@
+            @if (OpenSounds is not null)
+            {
+                <div class="profile-settings profile-sounds">
+                    <div class="profile-settings-head">
+                        <button type="button" class="profile-settings-toggle profile-sounds-toggle" title="@L["Sounds.ToggleTitle"]"
+                                @onclick="OpenSoundsAsync">
+                            <span class="profile-settings-name">@L["Sounds.Toggle"]</span>
+                            <svg class="profile-settings-chevron" viewBox="0 0 24 24" aria-hidden="true">
+                                <path d="M9 6l6 6-6 6" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            }
+
             @* Графемы — под стрелкой «Настройки профиля» (E9): профиль выбирают чаще,
                чем переписывают. При открытии панели блок свёрнут, у только что
                созданного профиля — раскрыт: его создают, чтобы переписать графемы. *@
@@ -218,6 +236,15 @@
     /// <summary>Профиль, которым пишет страница.</summary>
     [Parameter, EditorRequired]
     public TransliterationProfile Profile { get; set; } = default!;
+
+    /// <summary>
+    /// Открыть таблицу звуков (D29). Одна панель на страницу: открывшись, она
+    /// закрывает эту. <c>null</c> — таблицы нет, нет и кнопки.
+    /// </summary>
+    [Parameter]
+    public Func<Task>? OpenSounds { get; set; }
+
+    private Task OpenSoundsAsync() => OpenSounds?.Invoke() ?? Task.CompletedTask;
 
     /// <summary>Текст кнопки сбоку: что она выбирает и что выбрано (E6).</summary>
     private string ToggleText => L["Profile.Toggle", Profile.Name];

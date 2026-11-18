@@ -446,7 +446,7 @@ namespace Transliterator.Tests.DocsTests
             Assert.Contains("@onclick=\"OpenFeedbackAsync\">@L[\"About.FeedbackAction\"]</button>", about);
 
             var app = Regex.Replace(Web("App.razor"), @"\s+", " ");
-            Assert.Contains("<AboutPicker Transliterate=\"TransliterateExample\" OpenFeedback=\"OpenFeedbackAsync\" OpenSounds=\"SoundsOpener\" />", app);
+            Assert.Contains("<AboutPicker Transliterate=\"TransliterateExample\" OpenFeedback=\"OpenFeedbackAsync\" OpenSounds=\"AboutSoundsOpener\" @ref=\"_aboutPicker\" />", app);
             Assert.Contains("<FeedbackButton Arabic=\"@_arabic\" Transliteration=\"@_result\" @ref=\"_feedback\" />", app);
 
             Assert.Equal("О чём проект?", PageStrings.Web("ru")["About.Toggle"]);
@@ -498,6 +498,39 @@ namespace Transliterator.Tests.DocsTests
 
             Assert.Equal("Как читать буквы", PageStrings.Web("ru")["Sounds.Toggle"]);
             Assert.Equal("Остальные буквы", PageStrings.Web("ru")["Sounds.Rest"]);
+        }
+
+        /// <summary>
+        /// D29: «Как читать буквы» открывается из панели профиля, рядом с «Настройки
+        /// профиля», и при пустом поле — кнопка не зависит от вывода. Ссылка из «О чём
+        /// проект?» открывает ту же таблицу. Открытая из другой панели, таблица по
+        /// Escape и крестику возвращает фокус на кнопку той панели у края страницы;
+        /// открытая своей кнопкой в шапке вывода — на неё, как прежде.
+        /// </summary>
+        [Fact]
+        public void SoundTable_OpensFromTheProfilePanel_WithoutText()
+        {
+            var app = Regex.Replace(Web("App.razor"), @"\s+", " ");
+            Assert.Matches(@"<ProfilePicker [^>]*OpenSounds=""ProfileSoundsOpener"" @ref=""_profilePicker"" />", app);
+            Assert.Contains("() => OpenSoundsFromAsync(_profilePicker)", app);
+            Assert.Contains("() => OpenSoundsFromAsync(_aboutPicker)", app);
+            Assert.Contains("_soundsPicker?.OpenFromAsync(() => from?.FocusToggleButtonAsync() ?? FocusInputAsync())", app);
+
+            // Вход — в панели, не в шапке вывода: виден и без текста; стоит перед «Настройки профиля».
+            var profile = Regex.Replace(Web("Components", "ProfilePicker.razor"), @"\s+", " ");
+            var entry = profile.IndexOf("@onclick=\"OpenSoundsAsync\">", StringComparison.Ordinal);
+            var settings = profile.IndexOf("<section class=\"profile-settings\">", StringComparison.Ordinal);
+            Assert.True(entry > 0 && entry < settings, "the sound table entry is not right before the profile settings");
+            Assert.Contains("<span class=\"profile-settings-name\">@L[\"Sounds.Toggle\"]</span>", profile);
+            Assert.Contains("@if (OpenSounds is not null) { <div class=\"profile-settings profile-sounds\">", profile);
+
+            var sounds = Regex.Replace(Web("Components", "SoundsPicker.razor"), @"\s+", " ");
+            Assert.Contains("public async Task OpenFromAsync(Func<Task> returnFocus)", sounds);
+            Assert.Contains("_returnFocus = null;", sounds);
+            Assert.Contains("if (_returnFocus is not null) { await _returnFocus(); return; }", sounds);
+
+            var panel = Web("Components", "PanelPicker.cs");
+            Assert.Contains("public Task FocusToggleButtonAsync() => FocusToggleAsync();", panel);
         }
 
         /// <summary>
