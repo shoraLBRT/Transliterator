@@ -232,7 +232,7 @@
     <value>Профиль записи</value>
   </data>
   <data name="Profile.Caption" xml:space="preserve">
-    <value>Профиль выбирает буквы для каждого звука</value>
+    <value>Профиль — это то, какими русскими буквами пишется каждая арабская буква.</value>
   </data>
   <data name="Profile.ListLabel" xml:space="preserve">
     <value>Профиль</value>

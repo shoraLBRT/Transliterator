@@ -223,7 +223,7 @@
     <value>Writing profile</value>
   </data>
   <data name="Profile.Caption" xml:space="preserve">
-    <value>The profile chooses letters for each sound</value>
+    <value>A profile sets which letters are used to write each Arabic letter.</value>
   </data>
   <data name="Profile.ListLabel" xml:space="preserve">
     <value>Profile</value>
