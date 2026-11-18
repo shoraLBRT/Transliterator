@@ -960,11 +960,11 @@ namespace Transliterator.Tests.DocsTests
         }
 
         /// <summary>
-        /// Поле ввода (D20): растёт по тексту без своей прокрутки, пустое предлагает
-        /// вставку из буфера, а очистку можно отменить плашкой внизу страницы.
+        /// Поле ввода (D20): растёт по тексту без своей прокрутки, своей кнопки вставки
+        /// у него нет (D34), а очистку можно отменить плашкой внизу страницы.
         /// </summary>
         [Fact]
-        public void TheField_GrowsWithoutItsOwnScroll_OffersPaste_AndClearingCanBeUndone()
+        public void TheField_GrowsWithoutItsOwnScroll_HasNoPasteButton_AndClearingCanBeUndone()
         {
             var app = Regex.Replace(Web("App.razor"), @"\s+", " ");
             var css = Regex.Replace(Web("wwwroot", "css", "app.css"), @"\s+", " ");
@@ -980,12 +980,19 @@ namespace Transliterator.Tests.DocsTests
             Assert.Contains("element.style.height = `${element.scrollHeight}px`;", script);
             Assert.Contains("new ResizeObserver(", script);
 
-            // «Вставить» — только у пустого поля и только если браузер читает буфер.
-            Assert.Contains("_canPaste = await JS.InvokeAsync<bool>(\"page.canPaste\");", app);
-            Assert.Matches(@"@if \(HasText\) \{ <button type=""button"" class=""icon-button""[^>]*@onclick=""ClearAsync"">.*?</button> \} else if \(_canPaste\) \{ <button type=""button"" class=""picker-toggle paste-button""[^>]*@onclick=""PasteAsync"">", app);
-            Assert.Contains("@if (!HasText && _canPaste) { <p class=\"composer-note\" role=\"status\">@_pasteNote</p> }", app);
-            Assert.Contains("navigator.clipboard.readText()", script);
-            Assert.Matches(@"_pasteNote = text is null \? L\[""Composer.PasteFailed""\]", app);
+            // Кнопки «Вставить» нет (D34) ни на странице, ни в скелете загрузки: у
+            // поля с текстом крестик, у пустого — ничего; вставляют Ctrl+V и долгим
+            // нажатием, как в любое поле, — обработчика paste страница не ставит.
+            var shell = Web("wwwroot", "index.html");
+            Assert.Matches(@"@if \(HasText\) \{ <button type=""button"" class=""icon-button""[^>]*@onclick=""ClearAsync"">.*?</button> \} </div>", app);
+            foreach (var gone in new[] { "paste-button", "PasteAsync", "_canPaste", "_pasteNote", "composer-note", "Composer.Paste" })
+                Assert.DoesNotContain(gone, app);
+            Assert.DoesNotContain("paste-button", shell);
+            Assert.DoesNotContain("paste-button", css);
+            Assert.DoesNotContain("canPaste", script);
+            Assert.DoesNotContain("readText", script);
+            Assert.DoesNotContain("\"paste\"", script);
+            Assert.DoesNotContain("@onpaste", app);
 
             // Плашка: живая область в разметке всегда, внутри — текст и «Вернуть».
             Assert.Matches(@"<div class=""toast-region"" role=""status"" aria-live=""polite""> @if \(_cleared is not null\) \{ <div class=""toast[^>]*> <span class=""toast-text"">@L\[""Toast.Cleared""\]</span> <button type=""button"" class=""toast-action""[^>]*@onclick=""UndoClearAsync"">@L\[""Toast.Undo""\]</button>", app);
@@ -1191,15 +1198,15 @@ namespace Transliterator.Tests.DocsTests
             Assert.Matches(@":root \{[^}]*--focus-ring: var\(--foam-700\);", css);
             Assert.Contains(":focus-visible { outline: 3px solid var(--focus-ring);", css);
 
-            // Подписи кнопок под полем не переносятся; не помещаются обе — «Вставить» значком.
+            // Подписи кнопок под полем не переносятся (D25). Сжимать «Вставить» до
+            // значка больше нечего (D34): page.fitBar и .is-compact убраны.
             Assert.Matches(@"\.composer-bar \.picker-toggle, \.composer-bar \.composer-tools \{ flex: none; white-space: nowrap; \}", css);
-            Assert.Matches(@"\.composer-bar\.is-compact \.paste-button span \{ position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect\(0 0 0 0\);", css);
+            Assert.DoesNotContain("is-compact", css);
             var app = Regex.Replace(Web("App.razor"), @"\s+", " ");
-            Assert.Contains("<div class=\"composer-bar\" @ref=\"_composerBar\">", app);
-            Assert.Contains("await JS.InvokeVoidAsync(\"page.fitBar\", _composerBar);", app);
+            Assert.Contains("<div class=\"composer-bar\">", app);
+            Assert.DoesNotContain("page.fitBar", app);
             var script = Web("wwwroot", "js", "page.js");
-            Assert.Contains("function fitBar(bar)", script);
-            Assert.Contains("bar.classList.add(\"is-compact\");", script);
+            Assert.DoesNotContain("fitBar", script);
 
             // «Вывод обновлён» — своя вежливая живая область, всегда в разметке, через
             // секунду после последней правки, а не на каждый символ.

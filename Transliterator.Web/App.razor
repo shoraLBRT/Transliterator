@@ -50,7 +50,7 @@
 
             @* Под полем — только выбор суры (D6): он меняет сам текст. Как этот текст
                читать и писать — круглые кнопки сбоку, ниже. *@
-            <div class="composer-bar" @ref="_composerBar">
+            <div class="composer-bar">
                 <div class="composer-tools">
                     @if (_surahs.Count > 0)
                     {
@@ -58,31 +58,15 @@
                     }
                 </div>
 
-                @* Пустое поле предлагает вставку (D20) — там же, где у поля с текстом
-                   крестик. Кнопка есть, только если браузер умеет читать буфер; не дал
-                   прочитать — короткая строка под кнопками, не окно. *@
+                @* У поля с текстом — крестик (D20). Своей кнопки вставки нет (D34):
+                   вставляют как в любое поле — Ctrl+V, долгим нажатием. *@
                 @if (HasText)
                 {
                     <button type="button" class="icon-button" title="@L["Composer.ClearTitle"]" aria-label="@L["Composer.ClearLabel"]" @onclick="ClearAsync">
                         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" /></svg>
                     </button>
                 }
-                else if (_canPaste)
-                {
-                    <button type="button" class="picker-toggle paste-button" title="@L["Composer.PasteTitle"]" @onclick="PasteAsync">
-                        <svg viewBox="0 0 24 24" aria-hidden="true">
-                            <rect x="6" y="4.5" width="12" height="16" rx="2" />
-                            <path d="M9.5 4.5V3.5h5v1M9.5 10h5M9.5 13.5h5M9.5 17h3" />
-                        </svg>
-                        <span>@L["Composer.Paste"]</span>
-                    </button>
-                }
             </div>
-
-            @if (!HasText && _canPaste)
-            {
-                <p class="composer-note" role="status">@_pasteNote</p>
-            }
         </div>
 
         @* Ступень чтения и профиль (D6). На широком экране — круглые кнопки у края
@@ -335,15 +319,10 @@
 
     private ElementReference _hint;
     private ElementReference _input;
-    private ElementReference _composerBar;
     private bool _resizePending;
     private bool _hintPaused;
 
-    // Вставка и отмена очистки (D20): умеет ли браузер читать буфер, строка о неудаче
-    // вставки, очищенный текст для «Вернуть» и метки последних таймеров.
-    private bool _canPaste;
-    private string? _pasteNote;
-    private int _pasteStamp;
+    // Отмена очистки (D20): очищенный текст для «Вернуть» и метки последних таймеров.
     private string? _cleared;
     private bool _toastClosing;
     private int _toastStamp;
@@ -435,10 +414,6 @@
                 await JS.InvokeVoidAsync("page.typewriter", _hint, Hints(), _input);
                 _hintPaused = false;
                 await JS.InvokeVoidAsync("page.autosize", _input);
-                await JS.InvokeVoidAsync("page.fitBar", _composerBar);
-                _canPaste = await JS.InvokeAsync<bool>("page.canPaste");
-                if (_canPaste)
-                    StateHasChanged();
                 await RestoreReadingAsync();
                 await RestoreArabicLinesAsync();
                 await RestoreProfileAsync();
@@ -684,9 +659,6 @@
     /// <summary>Сколько держится плашка «Поле очищено» (D20).</summary>
     private static readonly TimeSpan ToastDuration = TimeSpan.FromSeconds(5);
 
-    /// <summary>Сколько держится строка «буфер не прочитан» (D20).</summary>
-    private static readonly TimeSpan PasteNoteDuration = TimeSpan.FromSeconds(4);
-
     /// <summary>
     /// Очистка запоминает текст, и плашка предлагает его вернуть (D20). Повторная
     /// очистка начинает срок заново: гасит плашку только последний таймер.
@@ -743,44 +715,6 @@
         _cleared = null;
         _toastClosing = false;
         StateHasChanged();
-    }
-
-    /// <summary>
-    /// «Вставить» (D20): текст буфера заменяет пустое поле, как вставка руками, и сразу
-    /// считается. Буфер не прочитан или пуст — строка рядом с кнопкой, и она гаснет сама.
-    /// </summary>
-    private async Task PasteAsync()
-    {
-        string? text = null;
-
-        try
-        {
-            text = await JS.InvokeAsync<string?>("page.paste");
-        }
-        catch (JSException ex)
-        {
-            Logger.LogWarning(ex, "Clipboard could not be read");
-        }
-
-        if (!string.IsNullOrWhiteSpace(text))
-        {
-            _pasteNote = null;
-            _arabic = text;
-            _resizePending = true;
-            Calculate();
-            AnnounceOutput();
-            _ = HideToastAsync();
-            await _input.FocusAsync();
-            return;
-        }
-
-        _pasteNote = text is null ? L["Composer.PasteFailed"] : L["Composer.PasteEmpty"];
-        var stamp = ++_pasteStamp;
-        StateHasChanged();
-        await Task.Delay(PasteNoteDuration);
-
-        if (stamp == _pasteStamp)
-            _pasteNote = null;
     }
 
     private async Task CopyAsync()

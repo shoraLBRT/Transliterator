@@ -363,26 +363,6 @@ button {
     padding: var(--space-1) var(--space-3) var(--space-3);
 }
 
-/* «Вставить» (D20) — справа, на месте крестика; строка о неудаче — под кнопками,
-   своей строкой: рядом с кнопками на телефоне ей нет места. */
-.paste-button {
-    flex: none;
-    margin-inline-start: auto;
-}
-
-.composer-note {
-    margin: calc(-1 * var(--space-1)) var(--space-4) 0;
-    padding-bottom: var(--space-3);
-    font-size: var(--text-sm);
-    line-height: 1.35;
-    color: var(--ink-muted);
-    text-align: end;
-}
-
-.composer-note:empty {
-    display: none;
-}
-
 /* ---- Плашка отмены очистки (D20) ---- */
 
 /* Внизу по центру, над краем экрана с учётом выреза телефона. Область — во всю
@@ -3164,25 +3144,11 @@ mark.changed {
     padding: var(--space-3) 0 var(--space-3) var(--space-4);
 }
 
-/* Подписи кнопок не переносятся (D25): «Выбрать суру» рядом с «Вставить» на
-   узком телефоне ломалась в две строки. Не помещаются обе — page.fitBar ставит
-   .is-compact, и «Вставить» остаётся значком; подпись остаётся имени кнопки. */
+/* Подписи кнопок под полем не переносятся (D25): «Выбрать суру» на узком
+   телефоне ломалась в две строки. Кнопки «Вставить» рядом больше нет (D34). */
 .composer-bar .picker-toggle,
 .composer-bar .composer-tools {
     flex: none;
-    white-space: nowrap;
-}
-
-.composer-bar.is-compact .paste-button {
-    padding-inline: 0.6rem;
-}
-
-.composer-bar.is-compact .paste-button span {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip: rect(0 0 0 0);
     white-space: nowrap;
 }
 

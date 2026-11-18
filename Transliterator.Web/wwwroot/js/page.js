@@ -203,62 +203,6 @@ window.page = (() => {
     }
 
     /**
-     * Кнопки под полем в одну строку (D25): подписи не переносятся, и если «Выбрать
-     * суру» и «Вставить» вместе не помещаются, строке ставится .is-compact —
-     * «Вставить» остаётся значком. Решает ширина, а не медиазапрос: подписи
-     * разной длины на разных языках и шрифтах. Строку меняет и Blazor (кнопка
-     * вставки появляется и уходит, список сур приходит позже), поэтому следит
-     * ещё и MutationObserver.
-     */
-    function fitBar(bar) {
-        if (!bar)
-            return;
-
-        // Считаются сами кнопки, а не scrollWidth строки: выпадающий список сур
-        // (D15) стоит внутри неё и шире её не делает, но в scrollWidth попал бы.
-        const fit = () => {
-            bar.classList.remove("is-compact");
-            const buttons = bar.querySelectorAll(".picker-toggle");
-            const style = getComputedStyle(bar);
-            const room = bar.getBoundingClientRect().width - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight)
-                - parseFloat(style.borderLeftWidth) - parseFloat(style.borderRightWidth);
-            const gap = parseFloat(style.columnGap) || 0;
-            let need = gap * (buttons.length - 1);
-            // Кнопка, сжатая уже своей подписи, отдаёт полную ширину в scrollWidth.
-            for (const button of buttons)
-                need += Math.max(button.getBoundingClientRect().width, button.scrollWidth);
-            if (need > room)
-                bar.classList.add("is-compact");
-        };
-
-        if (window.ResizeObserver)
-            new ResizeObserver(fit).observe(bar);
-        else
-            window.addEventListener("resize", fit);
-
-        new MutationObserver(fit).observe(bar, { childList: true, subtree: true });
-        document.fonts?.ready.then(fit);
-        fit();
-    }
-
-    /**
-     * Вставка из буфера (D20). Кнопка «Вставить» показывается, только если
-     * браузер умеет читать буфер; читать его он может и не дать — запрет
-     * разрешения, страница не в фокусе. Тогда null, и страница скажет об этом.
-     */
-    function canPaste() {
-        return !!(navigator.clipboard && navigator.clipboard.readText);
-    }
-
-    async function paste() {
-        try {
-            return await navigator.clipboard.readText();
-        } catch {
-            return null;
-        }
-    }
-
-    /**
      * Буфер обмена. Clipboard API бывает недоступен: старый браузер, страница
      * во фрейме, запрет разрешения. Тогда — прежний способ через выделение
      * скрытого поля; не сработал и он — страница попросит выделить текст руками.
@@ -660,7 +604,7 @@ window.page = (() => {
     }
 
     return {
-        typewriter, hintPaused, autosize, fitBar, resize, sheetOpen, wide, listKeys, reveal, canPaste, paste, copy, guard, guardToken, guardReset, guardRemove,
+        typewriter, hintPaused, autosize, resize, sheetOpen, wide, listKeys, reveal, copy, guard, guardToken, guardReset, guardRemove,
         load, save, storageSet, storageRemove, storageKeys,
         browserLanguages, sessionSave, sessionTake, reload, setDocument,
     };
