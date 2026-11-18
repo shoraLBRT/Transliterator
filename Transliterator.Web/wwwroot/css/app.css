@@ -742,6 +742,29 @@ svg {
     to { opacity: 0; transform: translate(calc(var(--panel-shift-x, 0rem) * var(--motion-travel)), calc(var(--panel-shift-y, -0.4rem) * var(--motion-travel))); }
 }
 
+/* Колонка с 64rem (D37) раскрывается от своей кнопки слева направо: правый
+   край среза идёт от левого края колонки к правому. --motion-travel 0
+   (prefers-reduced-motion) оставляет срез открытым — только проявление. */
+@keyframes column-in {
+    from {
+        opacity: 0;
+        clip-path: inset(var(--panel-clip-room) calc(var(--panel-clip-room) + (100% - var(--panel-clip-room)) * var(--motion-travel)) var(--panel-clip-room) var(--panel-clip-room));
+    }
+    to {
+        clip-path: inset(var(--panel-clip-room));
+    }
+}
+
+@keyframes column-out {
+    from {
+        clip-path: inset(var(--panel-clip-room));
+    }
+    to {
+        opacity: 0;
+        clip-path: inset(var(--panel-clip-room) calc(var(--panel-clip-room) + (100% - var(--panel-clip-room)) * var(--motion-travel)) var(--panel-clip-room) var(--panel-clip-room));
+    }
+}
+
 .picker-panel.is-closing,
 .feedback-panel.is-closing {
     animation: panel-out var(--motion-duration) var(--motion-ease) forwards;
@@ -2695,6 +2718,7 @@ mark.changed {
         --panel-left: 4.75rem;
         --panel-width: 25rem;
         --rail-space: 14rem; /* значки и подписи у кнопок сбоку */
+        --rail-left: 1.25rem; /* левый край капсулы кнопок сбоку */
     }
 
     .topbar,
@@ -2723,7 +2747,7 @@ mark.changed {
     .side-rail {
         position: fixed;
         top: calc(max(var(--space-3) + var(--topbar-height) + var(--space-6), 24vh) + 2.8 * var(--hint-size) + var(--space-5));
-        left: 1.25rem;
+        left: var(--rail-left);
         z-index: 11;
         flex-direction: column;
         flex-wrap: nowrap;
@@ -2802,15 +2826,68 @@ mark.changed {
         opacity: 0;
         pointer-events: none;
         transform: translate(calc(-1 * var(--space-1)), -50%);
-        transition: opacity var(--motion-fast) var(--ease-soft),
-                    transform var(--motion-move-fast) var(--motion-ease);
+        transition: none; /* при открытии колонки подпись уходит сразу, не гаснет поверх неё (D37) */
     }
 
     .shell.has-panel .side-rail .picker-toggle:hover .picker-toggle-text,
     .shell.has-panel .side-rail .picker-toggle:focus-visible .picker-toggle-text {
         opacity: 1;
         transform: translate(0, -50%);
+        transition: opacity var(--motion-fast) var(--ease-soft),
+                    transform var(--motion-move-fast) var(--motion-ease);
         transition-delay: var(--motion-hint-delay);
+    }
+
+    /* У открытой кнопки подсказки нет вовсе (D37): её имя — заголовок колонки рядом. */
+    .shell.has-panel .side-rail .picker-toggle[aria-expanded="true"] .picker-toggle-text {
+        opacity: 0;
+        transition: none;
+    }
+
+    /* Кнопка и её колонка — одно целое, как вкладка (D37). Пока колонка открыта,
+       значок открытой кнопки — на фоне колонки, скруглён только слева, а мост
+       (::before, черта D23 здесь не нужна) того же фона и с той же рамкой сверху
+       и снизу тянется от него до колонки и накрывает край капсулы и левую рамку
+       колонки — зазора нет. Мост выше колонки (z 12 > 11) в слое капсулы.
+       Его правый край — --panel-left от края экрана: right отсчитывается от правого
+       края кнопки, а её левый край — --rail-left, рамка и отступ капсулы. Колонка
+       во всю высоту экрана: она всегда стоит против своей кнопки. */
+    .shell.has-panel .side-rail .picker-toggle[aria-expanded="true"] svg {
+        border-color: var(--line);
+        border-right-color: transparent;
+        border-radius: var(--radius-pill) 0 0 var(--radius-pill);
+        background: var(--paper);
+        color: var(--foam-700);
+    }
+
+    .shell.has-panel .side-rail .picker-toggle[aria-expanded="true"]::before {
+        top: 0;
+        right: calc(var(--rail-left) + 1px + var(--space-1) + 100% - var(--panel-left) - 1px);
+        bottom: 0;
+        left: 100%;
+        z-index: 12;
+        width: auto;
+        height: auto;
+        border-block: 1px solid var(--line);
+        border-radius: 0;
+        background: var(--paper);
+        transform: none;
+    }
+
+    /* Колонка вытекает из своей кнопки (D37): открывается от левого края —
+       от кнопки — к правому и тем же путём уходит обратно в кнопку. Срез
+       (clip-path) с запасом --panel-clip-room вокруг, чтобы не резать тень;
+       ширина среза умножена на --motion-travel, и с prefers-reduced-motion
+       остаётся только проявление (D30). */
+    .side-rail .picker-panel {
+        --panel-clip-room: -2rem;
+        min-height: calc(100vh - 2.5rem);
+        min-height: calc(100dvh - 2.5rem);
+        animation-name: column-in;
+    }
+
+    .side-rail .picker-panel.is-closing {
+        animation-name: column-out;
     }
 
     .picker-panel,

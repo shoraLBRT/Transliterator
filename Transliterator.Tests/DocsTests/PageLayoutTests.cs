@@ -219,7 +219,8 @@ namespace Transliterator.Tests.DocsTests
             Assert.Matches(@"\.picker-panel \{ right: auto; bottom: auto; z-index: 11;", rules);
             Assert.Contains(".shell.has-panel .side-rail .picker-toggle:hover .picker-toggle-text, "
                             + ".shell.has-panel .side-rail .picker-toggle:focus-visible .picker-toggle-text "
-                            + "{ opacity: 1; transform: translate(0, -50%); transition-delay: var(--motion-hint-delay); }", rules);
+                            + "{ opacity: 1; transform: translate(0, -50%); transition: opacity var(--motion-fast) var(--ease-soft), "
+                            + "transform var(--motion-move-fast) var(--motion-ease); transition-delay: var(--motion-hint-delay); }", rules);
             Assert.Matches(@":root \{[^}]*--motion-hint-delay: 0\.3s;", css);
 
             foreach (var (file, panel) in new[] { ("ReadingPicker.razor", "reading-menu"), ("ProfilePicker.razor", "profile-menu"), ("AboutPicker.razor", "about-menu") })
@@ -817,6 +818,55 @@ namespace Transliterator.Tests.DocsTests
             Assert.Contains("html.is-sheet-open { overflow: visible;", rules);
             Assert.Contains(".picker-panel.is-closing { animation-name: panel-out; }", rules);
             Assert.Matches(@"\.picker-panel \{[^}]*border-radius: var\(--radius-xl\);[^}]*animation-name: panel-in;", rules);
+        }
+
+        /// <summary>
+        /// D37: с 64rem открытая кнопка сбоку — часть своей колонки, как вкладка:
+        /// значок на фоне колонки, мост того же фона с той же рамкой тянется до
+        /// колонки и накрывает её левую рамку. Колонка во всю высоту экрана и
+        /// раскрывается срезом от кнопки, уходит в неё обратно; при reduce срез
+        /// открыт (--motion-travel 0) — только проявление. Подпись кнопки при
+        /// открытии уходит сразу, у открытой кнопки подсказки нет. Лист D14 уже
+        /// 64rem прежний.
+        /// </summary>
+        [Fact]
+        public void OnAWideScreen_TheOpenRailButtonIsATabOfItsColumn_AndTheColumnFlowsOutOfIt()
+        {
+            var css = Regex.Replace(Web("wwwroot", "css", "app.css"), @"\s+", " ");
+            var wide = Regex.Match(css, @"@media \(min-width: 64rem\) \{(.*?)\} /\* ---- Загрузка");
+            Assert.True(wide.Success, "the wide-screen layout is not found");
+            var rules = wide.Groups[1].Value;
+
+            Assert.Matches(@"\.shell \{[^}]*--rail-left: 1\.25rem;", rules);
+            Assert.Matches(@"\.side-rail \{ position: fixed;[^}]*left: var\(--rail-left\);", rules);
+
+            var icon = Regex.Match(rules, @"\.shell\.has-panel \.side-rail \.picker-toggle\[aria-expanded=""true""\] svg \{([^}]*)\}");
+            Assert.True(icon.Success, "the open tab icon rule is not found");
+            foreach (var declaration in new[] { "border-right-color: transparent;", "background: var(--paper);" })
+                Assert.Contains(declaration, icon.Groups[1].Value);
+
+            var bridge = Regex.Match(rules, @"\.shell\.has-panel \.side-rail \.picker-toggle\[aria-expanded=""true""\]::before \{ top: 0;([^}]*)\}");
+            Assert.True(bridge.Success, "the tab bridge rule is not found");
+            foreach (var declaration in new[]
+            {
+                "right: calc(var(--rail-left) + 1px + var(--space-1) + 100% - var(--panel-left) - 1px);", "left: 100%;",
+                "z-index: 12;", "border-block: 1px solid var(--line);", "background: var(--paper);",
+            })
+                Assert.Contains(declaration, bridge.Groups[1].Value);
+
+            var column = Regex.Match(rules, @"\.side-rail \.picker-panel \{([^}]*)\}");
+            Assert.True(column.Success, "the rail column rule is not found");
+            foreach (var declaration in new[] { "min-height: calc(100dvh - 2.5rem);", "animation-name: column-in;" })
+                Assert.Contains(declaration, column.Groups[1].Value);
+            Assert.Contains(".side-rail .picker-panel.is-closing { animation-name: column-out; }", rules);
+            foreach (var name in new[] { "column-in", "column-out" })
+                Assert.Matches($@"@keyframes {name} \{{[^@]*clip-path: inset\(var\(--panel-clip-room\) calc\(var\(--panel-clip-room\) \+ \(100% - var\(--panel-clip-room\)\) \* var\(--motion-travel\)\)", css);
+
+            Assert.Matches(@"\.shell\.has-panel \.side-rail \.picker-toggle-text \{[^}]*transition: none;", rules);
+            Assert.Contains(".shell.has-panel .side-rail .picker-toggle[aria-expanded=\"true\"] .picker-toggle-text { opacity: 0; transition: none; }", rules);
+
+            // Лист уже 64rem не тронут: срез только в широкой раскладке.
+            Assert.DoesNotContain("animation-name: column-in", css.Replace(wide.Value, ""));
         }
 
         /// <summary>
