@@ -3,6 +3,7 @@
 @inject FeedbackClient Client
 @inject IJSRuntime JS
 @inject ILogger<FeedbackButton> Logger
+@implements IDisposable
 
 @* Обратная связь. Когда настроена функция обратной связи (H3), сообщение уходит
    прямо отсюда и становится issue, аккаунт GitHub не нужен. Пока не настроена —
@@ -132,6 +133,9 @@
     private bool _renderGuard;
     private string? _guardId;
     private bool _guardFailed;
+    /// <summary>Проверке нужен человек: виджет показал флажок и ждёт его (H5).</summary>
+    private bool _guardInteractive;
+    private DotNetObjectReference<FeedbackButton>? _self;
     private bool _sending;
     private FeedbackResult? _sent;
     private FeedbackOutcome? _failure;
@@ -166,6 +170,10 @@
     {
         get
         {
+            // Флажок ждёт человека — это главное, даже во время отправки: отправка
+            // ждёт исхода проверки и продолжится сама, когда флажок отмечен.
+            if (_guardInteractive && !_guardFailed && _sent is null)
+                return L["Feedback.Confirm"];
             if (_sending)
                 return L["Feedback.Sending"];
             if (_sent is not null)
@@ -203,8 +211,11 @@
     {
         try
         {
-            _guardId = await JS.InvokeAsync<string>("page.guard", _guard, Settings.TurnstileSiteKey, PageLanguages.Current.Code);
+            _self ??= DotNetObjectReference.Create(this);
+            _guardId = await JS.InvokeAsync<string>("page.guard", _guard, Settings.TurnstileSiteKey, PageLanguages.Current.Code, _self);
             _guardFailed = false;
+            _guardInteractive = false;
+            StateHasChanged();
         }
         catch (JSException ex)
         {
@@ -261,6 +272,7 @@
 
         var id = _guardId;
         _guardId = null;
+        _guardInteractive = false;
 
         try
         {
@@ -307,10 +319,18 @@
 
         try
         {
-            var token = await JS.InvokeAsync<string>("page.guardToken", _guardId);
-            var result = string.IsNullOrEmpty(token)
-                ? new FeedbackResult(FeedbackOutcome.NotVerified)
-                : await Client.SendAsync(Settings.Endpoint!, title, body, token);
+            // Ожидание без срока: page.guardToken ждёт исхода проверки, а пустой
+            // токен значит, что она упала или истекла и виджет уже поставлен заново.
+            var token = await JS.InvokeAsync<string>("page.guardToken", TimeSpan.FromMinutes(5), new object?[] { _guardId });
+            if (string.IsNullOrEmpty(token))
+            {
+                if (!_guardFailed)
+                    _failure = FeedbackOutcome.NotVerified;
+
+                return;
+            }
+
+            var result = await Client.SendAsync(Settings.Endpoint!, title, body, token);
 
             if (result.Outcome == FeedbackOutcome.Sent)
             {
@@ -323,7 +343,9 @@
                 _failure = result.Outcome;
             }
 
-            await JS.InvokeVoidAsync("page.guardReset", _guardId);
+            // Токен потрачен — для следующей отправки нужен новый виджет.
+            if (_guardId is not null)
+                await JS.InvokeVoidAsync("page.guardReset", _guardId);
         }
         catch (Exception ex)
         {
@@ -337,4 +359,31 @@
             _sending = false;
         }
     }
+
+    /// <summary>
+    /// Состояние проверки от page.js (H5): "interactive" — нужен флажок, и панель
+    /// так и говорит; "ready" и "retry" — флажок больше не нужен или виджет
+    /// поставлен заново; "failed" — Turnstile не работает, остаётся форма GitHub.
+    /// </summary>
+    [JSInvokable]
+    public Task OnGuard(string state)
+    {
+        switch (state)
+        {
+            case "interactive":
+                _guardInteractive = true;
+                break;
+            case "failed":
+                _guardInteractive = false;
+                _guardFailed = true;
+                break;
+            default:
+                _guardInteractive = false;
+                break;
+        }
+
+        return InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose() => _self?.Dispose();
 }

@@ -297,8 +297,6 @@ window.page = (() => {
      * interaction-only виджет невидим, пока проверке хватает фона браузера.
      */
     const TurnstileScript = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
-    const TokenWait = 250;
-    const TokenAttempts = 40; // десять секунд: проверка обычно укладывается в одну-две
 
     let turnstileLoading = null;
 
@@ -323,41 +321,156 @@ window.page = (() => {
         return turnstileLoading;
     }
 
-    /** Ставит виджет в элемент и возвращает его номер. Язык виджета — язык страницы (D7). */
-    async function guard(element, siteKey, language) {
-        const turnstile = await loadTurnstile();
-        return turnstile.render(element, {
-            sitekey: siteKey,
-            language: language || "ru",
+    /**
+     * Проверка живёт в «охране» (guard): виджет, его токен и те, кто токена ждёт.
+     * Колбэки Turnstile говорят странице, что происходит (H5): проверке нужен
+     * человек — панель так и пишет; проверка упала, истекла или флажок не нажали
+     * вовремя — виджет ставится заново (remove + render, не reset: после
+     * просроченной интерактивной проверки сброшенный виджет может остаться
+     * скрытым навсегда), и следующая отправка снова может пройти проверку.
+     * Состояние уходит в компонент через owner.invokeMethodAsync("OnGuard", …):
+     * "interactive" — нужен флажок, "ready" — флажок больше не нужен,
+     * "retry" — виджет поставлен заново, "failed" — Turnstile не работает.
+     */
+    const GuardRetries = 3; // ошибок подряд, после которых проверка считается недоступной
+    const GuardWait = 120000; // предохранитель: Turnstile молчит дольше двух минут
+    const guards = new Map();
+    let guardCount = 0;
+
+    function guardNotify(entry, state) {
+        entry.owner?.invokeMethodAsync("OnGuard", state).catch(() => {
+            // Компонент уже убран — сообщать некому.
+        });
+    }
+
+    /** Отдаёт ждущим токен (или пусто, если проверка не дала его). */
+    function guardSettle(entry, token) {
+        const waiters = entry.waiters;
+        entry.waiters = [];
+        waiters.forEach(resolve => resolve(token));
+    }
+
+    function guardRender(entry) {
+        entry.token = "";
+        entry.widget = window.turnstile.render(entry.element, {
+            sitekey: entry.siteKey,
+            language: entry.language,
             theme: "light",
             appearance: "interaction-only",
+            callback: token => {
+                entry.token = token;
+                entry.errors = 0;
+                guardSettle(entry, token);
+                guardNotify(entry, "ready");
+            },
+            "before-interactive-callback": () => guardNotify(entry, "interactive"),
+            "after-interactive-callback": () => guardNotify(entry, "ready"),
+            "expired-callback": () => guardRenew(entry, false),
+            "timeout-callback": () => guardRenew(entry, false),
+            "error-callback": () => {
+                guardRenew(entry, true);
+                return true; // ошибка обработана: Turnstile не бросает её в консоль
+            },
         });
     }
 
     /**
-     * Токен проверки. Человек может нажать «Отправить» раньше, чем проверка
-     * закончилась, — тогда токен дожидается, а не приходит пустым.
+     * Ставит виджет заново. Ждущие получают пустой токен: проверка, которой
+     * они ждали, кончилась. Ошибки подряд считаются — Turnstile, который
+     * падает раз за разом (блокировщик, неверный ключ), заново не ставится.
      */
-    async function guardToken(id) {
-        for (let attempt = 0; attempt < TokenAttempts; attempt++) {
-            const token = window.turnstile?.getResponse(id);
-            if (token)
-                return token;
+    function guardRenew(entry, failed) {
+        if (!guards.has(entry.id))
+            return;
 
-            await new Promise(resolve => setTimeout(resolve, TokenWait));
+        entry.errors = failed ? entry.errors + 1 : 0;
+        guardSettle(entry, "");
+
+        try {
+            window.turnstile.remove(entry.widget);
+        } catch {
+            // Виджета уже нет — ставим новый.
         }
 
-        return "";
+        if (entry.errors >= GuardRetries || !entry.element.isConnected) {
+            entry.widget = null;
+            guardNotify(entry, "failed");
+            return;
+        }
+
+        try {
+            guardRender(entry);
+            guardNotify(entry, "retry");
+        } catch {
+            entry.widget = null;
+            guardNotify(entry, "failed");
+        }
     }
 
-    /** Токен одноразовый: после каждой отправки проверка начинается заново. */
+    /**
+     * Ставит виджет в элемент и возвращает номер охраны. Язык виджета — язык
+     * страницы (D7). owner — DotNetObjectReference компонента, ему уходят состояния.
+     */
+    async function guard(element, siteKey, language, owner) {
+        await loadTurnstile();
+        const entry = {
+            id: `guard-${++guardCount}`,
+            element, siteKey, owner,
+            language: language || "ru",
+            widget: null, token: "", errors: 0, waiters: [],
+        };
+        guards.set(entry.id, entry);
+        guardRender(entry);
+        return entry.id;
+    }
+
+    /**
+     * Токен проверки. Человек может нажать «Отправить» раньше, чем проверка
+     * закончилась, — тогда токен дожидается исхода проверки, а не фиксированного
+     * срока: пока виджет ждёт флажок, ждёт и отправка. Пустой токен — проверка
+     * упала, истекла или флажок не нажали; виджет к этому времени уже поставлен
+     * заново.
+     */
+    function guardToken(id) {
+        const entry = guards.get(id);
+        if (!entry || !entry.widget)
+            return Promise.resolve("");
+
+        const token = entry.token || window.turnstile?.getResponse(entry.widget);
+        if (token)
+            return Promise.resolve(token);
+
+        return new Promise(resolve => {
+            const timer = setTimeout(() => {
+                entry.waiters = entry.waiters.filter(waiter => waiter !== done);
+                resolve("");
+                guardRenew(entry, false);
+            }, GuardWait);
+            const done = value => {
+                clearTimeout(timer);
+                resolve(value);
+            };
+            entry.waiters.push(done);
+        });
+    }
+
+    /** Токен одноразовый: после каждой отправки проверка начинается заново, с новым виджетом. */
     function guardReset(id) {
-        window.turnstile?.reset(id);
+        const entry = guards.get(id);
+        if (entry)
+            guardRenew(entry, false);
     }
 
     function guardRemove(id) {
+        const entry = guards.get(id);
+        if (!entry)
+            return;
+
+        guards.delete(id);
+        guardSettle(entry, "");
         try {
-            window.turnstile?.remove(id);
+            if (entry.widget !== null)
+                window.turnstile?.remove(entry.widget);
         } catch {
             // Элемент уже убран со страницы — убирать нечего.
         }
