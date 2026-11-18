@@ -4,9 +4,9 @@ using Xunit;
 namespace Transliterator.Tests.RulesTests
 {
     /// <summary>
-    /// Перевод строки — граница слов для правил и перевод строки для письма (D3).
-    /// Правила его от пробела не отличают: перенос строки посреди фразы — вёрстка,
-    /// а не остановка чтеца, и паузы он вводить не должен.
+    /// Перевод строки — граница слов для правил и перевод строки для письма (D3),
+    /// и вдобавок пауза (B15): строку чтец кончает так же, как аят, — последнее
+    /// слово в форме паузы, следующая строка начинается новым высказыванием.
     /// </summary>
     public class LineBreakTests
     {
@@ -23,30 +23,50 @@ namespace Transliterator.Tests.RulesTests
             Assert.Equal(expected, new ArabicNormalizer().Normalize(input));
         }
 
-        [Theory]
-        [InlineData("قُلْ هُوَ ٱللَّهُ أَحَدٌ")]
-        [InlineData("لَمْ يَلِدْ وَلَمْ يُولَدْ")]
-        [InlineData("إِذَا جَآءَ نَصْرُ ٱللَّهِ وَٱلْفَتْحُ")]
-        public void LineBreak_ChangesTheLayout_NotTheReading(string ayah)
+        [Fact]
+        public void LineBreak_IsAPause_LikeAVerseNumber()
         {
-            // Каждый пробел заменён переводом строки. Правила разницы не видят,
-            // и вывод отличается только тем, чем разделены слова.
-            var oneLine = TransliterationPipeline.Transliterate(ayah);
-            var lines = TransliterationPipeline.Transliterate(ayah.Replace(' ', '\n'));
+            // Без переноса — васля и слитная дамма: «hууа-ллааhу».
+            // С переносом هُوَ стоит в форме паузы, а ٱللَّهُ начинает заново.
+            var lines = TransliterationPipeline.Transliterate("قُلْ هُوَ\nٱللَّهُ أَحَدٌ");
 
-            Assert.Contains('\n', lines);
-            Assert.Equal(oneLine, lines.Replace('\n', ' '));
+            Assert.Equal("qуль hуу\nал-лааhу ахIад", lines);
         }
 
         [Fact]
-        public void WordSeamAcrossALineBreak_IsStillAHyphen()
+        public void LineBreak_TakesTheTanwinToItsPausalForm()
         {
-            // Шов слова съедает границу, и перевод строки уходит вместе с пробелом:
-            // слияние — звук, вёрстка его не разрывает.
-            var lines = TransliterationPipeline.Transliterate("هُوَ\nٱللَّهُ");
+            // Танвин на конце строки снимается так же, как перед номером аята.
+            var lines = TransliterationPipeline.Transliterate("أَحَدٌ\nلَمْ يَلِدْ");
 
-            Assert.DoesNotContain('\n', lines);
-            Assert.Equal(TransliterationPipeline.Transliterate("هُوَ ٱللَّهُ"), lines);
+            Assert.Equal(TransliterationPipeline.Transliterate("أَحَدٌ ١ لَمْ يَلِدْ").Replace(" 1 ", "\n"), lines);
+        }
+
+        [Fact]
+        public void Surah110_LastWordOfALine_IsInPausalForm()
+        {
+            // Пример из отзыва (B15): «уастагъфирhу» в конце третьей строки читалось
+            // слитно, хотя строка кончается. Перед переносом ещё и ۚ — пауза и сама.
+            var text = TransliterationPipeline.Transliterate(
+                "إِذَا جَآءَ نَصْرُ ٱللَّهِ وَٱلْفَتْحُ ١\n"
+                + "وَرَأَيْتَ ٱلنَّاسَ يَدْخُلُونَ فِى دِينِ ٱللَّهِ أَفْوَاجًۭا ٢\n"
+                + "فَسَبِّحْ بِحَمْدِ رَبِّكَ وَٱسْتَغْفِرْهُ ۚ\n"
+                + " إِنَّهُۥ كَانَ تَوَّابًۢا ٣");
+
+            var lines = text.Split('\n');
+            Assert.Equal(4, lines.Length);
+            Assert.EndsWith("уастагъфирh", lines[2]);
+            Assert.StartsWith("иннаhуу ", lines[3]);
+        }
+
+        [Fact]
+        public void Permissible_Mark_IsAPause_WithoutALineBreak()
+        {
+            // ۚ — пауза сама по себе (B15): та же строка без переноса даёт ту же форму.
+            var text = TransliterationPipeline.Transliterate(
+                "فَسَبِّحْ بِحَمْدِ رَبِّكَ وَٱسْتَغْفِرْهُ ۚ إِنَّهُۥ كَانَ تَوَّابًۢا");
+
+            Assert.Contains("уастагъфирh иннаhуу", text);
         }
 
         [Fact]
