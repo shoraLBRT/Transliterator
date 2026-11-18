@@ -717,7 +717,7 @@ namespace Transliterator.Tests.DocsTests
             foreach (var token in new[] { "--motion-move-fast: var(--motion-fast);", "--motion-move: var(--motion-duration);", "--motion-move-slow: var(--motion-slow);", "--motion-travel: 1;" })
                 Assert.Matches(@"^ ?:root \{[^}]*" + Regex.Escape(token), css);
 
-            Assert.DoesNotMatch(@"(?:transform|grid-template-rows|margin-(?:top|bottom|left)|width) var\(--motion-(?:fast|duration|slow)\)", css);
+            Assert.DoesNotMatch(@"(?:transform|grid-template-rows|margin-(?:top|bottom|left)|width|top) var\(--motion-(?:fast|duration|slow)\)", css);
             foreach (Match frame in Regex.Matches(css, @"@keyframes [a-z-]+ \{ (?:[^{}]*\{[^}]*\} )+\}"))
                 foreach (Match shift in Regex.Matches(frame.Value, @"translate[XY]?\(([^;]*)\);"))
                     Assert.Contains("var(--motion-travel)", shift.Groups[1].Value);

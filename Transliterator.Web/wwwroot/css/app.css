@@ -2752,7 +2752,7 @@ mark.changed {
         border-radius: var(--radius-card);
         background: var(--paper);
         box-shadow: var(--shadow-md);
-        transition: top var(--motion-slow) var(--ease-soft);
+        transition: top var(--motion-move-slow) var(--ease-soft);
     }
 
     .shell.is-active .side-rail {
