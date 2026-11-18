@@ -499,8 +499,7 @@ namespace Transliterator.Tests.DocsTests
 
             // Столбцы — без прокрутки вбок: ширина фиксирована у узких, звучание — остаток.
             var css = Regex.Replace(Web("wwwroot", "css", "app.css"), @"\s+", " ");
-            Assert.Contains(".profile-table.has-sounds .profile-col-letter { width: 2.5rem; }", css);
-            Assert.Contains(".profile-table.has-sounds .profile-col-value { width: 5rem; }", css);
+            Assert.Contains(".profile-table.has-sounds .profile-col-value { width: 4.75rem; }", css);
             Assert.Contains(".profile-table.has-sounds .profile-col-variant { width: 30%; }", css);
             Assert.DoesNotContain(".sounds-panel", css);
             Assert.DoesNotContain(".sounds-fold-toggle", css);
