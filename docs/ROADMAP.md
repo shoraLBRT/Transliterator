@@ -194,7 +194,7 @@ Milestone «Итерация 4 · Отзывы 2026-11-18». Отзывы со �
 
 | Порядок | Issue | Зависит от |
 |---|---|---|
-| 1 | [D31](https://github.com/shoraLBRT/Transliterator/issues/217) — значок вкладки: валидный `favicon.svg` и запасной PNG | — (причина найдена: `--` в XML-комментарии делает SVG невалидным) |
+| 1 | [D31](https://github.com/shoraLBRT/Transliterator/issues/217) — значок вкладки: валидный `favicon.svg` и запасной PNG | — (причина найдена: `--` в XML-комментарии делает SVG невалидным; сделано 2026-11-18, кроме проверки во вкладке Chrome, Firefox и Edge на стенде — она после деплоя: комментарий `favicon.svg` без двух дефисов подряд, тест разбирает файл как XML; запасной `favicon-32.png` 32×32 в светлой теме подключён `<link rel="icon" type="image/png" sizes="32x32">` перед SVG) |
 | 2 | [D27](https://github.com/shoraLBRT/Transliterator/issues/212) — без тёмной темы, страница всегда светлая | — |
 | 3 | [D32](https://github.com/shoraLBRT/Transliterator/issues/218) — панель настроек не сдвигает страницу | **`BA`**: вариант раскладки (рекомендован «В» — не двигать, пока панель помещается слева) |
 | 4 | [D33](https://github.com/shoraLBRT/Transliterator/issues/219) — кнопка отзыва: подсветка и подсказка вместо текста | — |

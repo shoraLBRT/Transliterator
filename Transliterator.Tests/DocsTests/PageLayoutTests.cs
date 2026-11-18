@@ -123,6 +123,29 @@ namespace Transliterator.Tests.DocsTests
             Assert.True(File.Exists(Path.Combine(ReadmeTests.RepositoryRoot(), "Transliterator.Web", "wwwroot", "apple-touch-icon.png")));
         }
 
+        /// <summary>
+        /// D31: браузер отбрасывает SVG, который не разбирается как XML (раньше
+        /// его ломало «--» в комментарии), и вкладка остаётся без значка. Рядом —
+        /// запасной PNG 32×32 для браузеров без SVG-значков.
+        /// </summary>
+        [Fact]
+        public void TabIcon_SvgIsWellFormedXml_AndAPngFallbackIsLinked()
+        {
+            var wwwroot = Path.Combine(ReadmeTests.RepositoryRoot(), "Transliterator.Web", "wwwroot");
+
+            var svg = System.Xml.Linq.XDocument.Load(Path.Combine(wwwroot, "favicon.svg"));
+            Assert.Equal("{http://www.w3.org/2000/svg}svg", svg.Root!.Name.ToString());
+
+            var index = Web("wwwroot", "index.html");
+            Assert.Contains("<link rel=\"icon\" href=\"favicon-32.png\" type=\"image/png\" sizes=\"32x32\" />", index);
+
+            var png = File.ReadAllBytes(Path.Combine(wwwroot, "favicon-32.png"));
+            Assert.Equal(new byte[] { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A }, png.Take(8).ToArray());
+            int BigEndian(int at) => (png[at] << 24) | (png[at + 1] << 16) | (png[at + 2] << 8) | png[at + 3];
+            Assert.Equal(32, BigEndian(16));
+            Assert.Equal(32, BigEndian(20));
+        }
+
         [Theory]
         [InlineData("SurahPicker.razor", "surah-menu")]
         [InlineData("ReadingPicker.razor", "reading-menu")]
