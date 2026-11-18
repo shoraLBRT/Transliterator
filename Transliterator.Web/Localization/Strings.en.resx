@@ -428,7 +428,7 @@
   </data>
   <data name="Composer.Placeholder" xml:space="preserve">
     <value>Paste Arabic text with vowel marks — the transliteration appears at once</value>
-    <comment>Placeholder of the empty input field (D28); also its description for screen readers</comment>
+    <comment>Description of the input field for screen readers (aria-describedby, D35); visually hidden, the placeholder itself is the first ayah</comment>
   </data>
   <data name="Surah.Tip" xml:space="preserve">
     <value>Put a surah of the Quran into the field</value>

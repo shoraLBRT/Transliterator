@@ -41,11 +41,13 @@
 
         <div class="composer">
             <label for="arabic" class="visually-hidden">@L["Composer.Label"]</label>
-            @* Что вставить, говорит placeholder (D28): он же — описание поля для
-               диктора. Пока поле пустое, у него язык страницы, не арабский, — иначе
-               диктор прочтёт русскую строку арабским голосом. *@
-            <textarea id="arabic" class="composer-input" dir="rtl" lang="@(HasText ? "ar" : null)" rows="1"
-                      spellcheck="false" autocomplete="off" placeholder="@L["Composer.Placeholder"]"
+            @* В placeholder — первый аят Аль-Фатихи, арабским шрифтом справа налево
+               (D35, как до D28). Видимого пояснения нет: что вставить, говорят строка
+               подсказки и «Выбрать суру». Диктору пояснение — описание поля
+               (aria-describedby на скрытый текст), чтобы поле не читалось одной басмалой. *@
+            <p id="arabic-note" class="visually-hidden">@L["Composer.Placeholder"]</p>
+            <textarea id="arabic" class="composer-input" dir="rtl" lang="ar" rows="1"
+                      spellcheck="false" autocomplete="off" placeholder="@_placeholder" aria-describedby="arabic-note"
                       value="@_arabic" @oninput="OnInput" @ref="_input"></textarea>
 
             @* Под полем — только выбор суры (D6): он меняет сам текст. Как этот текст
@@ -256,6 +258,9 @@
     /// <summary>Ключ хранилища браузера с именем выбранного профиля (E4).</summary>
     private const string ProfileKey = "transliterator.profile";
 
+    /// <summary>Первый аят Аль-Фатихи — на случай, если корпус не прочитался.</summary>
+    private const string FallbackPlaceholder = "بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ";
+
     /// <summary>
     /// Фразы подсказки — ресурсы <c>Hint.1</c>, <c>Hint.2</c>… по порядку (D7).
     /// Короткие, чтобы на телефоне помещаться в две строки и успевать прочитаться
@@ -288,6 +293,7 @@
     private TajweedRuleCatalog? _catalog;
     private SoundTable? _sounds;
     private ReadingChoice _reading = ReadingChoice.Default;
+    private string _placeholder = FallbackPlaceholder;
     private string _arabic = string.Empty;
     private string _result = string.Empty;
     private string? _error;
@@ -360,6 +366,7 @@
         Panels.Changed += OnPanelsChanged;
 
         _surahs = await LoadSurahsAsync();
+        _placeholder = _surahs.FirstOrDefault(s => s.Number == 1)?.Ayahs.FirstOrDefault()?.Arabic ?? FallbackPlaceholder;
 
         _profile = await Profiles.GetProfileAsync(DefaultProfile);
         if (_profile is null)

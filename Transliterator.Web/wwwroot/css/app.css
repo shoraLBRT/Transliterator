@@ -345,14 +345,11 @@ button {
     outline: none; /* рамку показывает карточка целиком */
 }
 
-/* Placeholder (D28) — пояснение на языке страницы, а не арабский текст: шрифтом
-   и размером интерфейса и от левого края, хотя само поле пишет справа налево. */
+/* Placeholder — первый аят Аль-Фатихи (D35, как до D28): шрифтом и направлением
+   самого поля, бледнее введённого текста. */
 .composer-input::placeholder {
     color: var(--ink-muted);
-    opacity: 1;
-    font-family: var(--font-ui);
-    font-size: var(--text-md);
-    text-align: left;
+    opacity: 0.55;
 }
 
 .composer-bar {
