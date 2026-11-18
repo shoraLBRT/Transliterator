@@ -1079,24 +1079,31 @@ namespace Transliterator.Tests.DocsTests
         }
 
         /// <summary>
-        /// D28: под пустым полем только кнопки. Что вставить, говорит placeholder на
-        /// языке страницы (и диктору тоже — пока поле пустое, у него нет lang="ar");
-        /// у «Выбрать суру» — подсказка тем же видом, что у значка отзыва (D33), без title.
+        /// D28: под пустым полем только кнопки; у «Выбрать суру» — подсказка тем же видом,
+        /// что у значка отзыва (D33), без title. D35: в placeholder снова первый аят
+        /// (арабским, справа налево, у поля всегда lang="ar"), видимого пояснения нет —
+        /// диктору оно описание поля через aria-describedby на скрытый текст.
         /// </summary>
         [Fact]
-        public void EmptyField_ExplainsItselfInThePlaceholder_AndTheSurahButtonHasATooltip()
+        public void EmptyField_ShowsTheFirstAyah_ExplainsItselfToScreenReaders_AndTheSurahButtonHasATooltip()
         {
             var app = Regex.Replace(Web("App.razor"), @"\s+", " ");
             var picker = Regex.Replace(Web("Components", "SurahPicker.razor"), @"\s+", " ");
             var css = Regex.Replace(Web("wwwroot", "css", "app.css"), @"\s+", " ");
             var index = Web("wwwroot", "index.html");
 
-            Assert.Contains("<textarea id=\"arabic\" class=\"composer-input\" dir=\"rtl\" lang=\"@(HasText ? \"ar\" : null)\"", app);
-            Assert.Contains("placeholder=\"@L[\"Composer.Placeholder\"]\"", app);
+            Assert.Contains("<p id=\"arabic-note\" class=\"visually-hidden\">@L[\"Composer.Placeholder\"]</p> <textarea id=\"arabic\" class=\"composer-input\" dir=\"rtl\" lang=\"ar\"", app);
+            Assert.Contains("placeholder=\"@_placeholder\" aria-describedby=\"arabic-note\"", app);
+            Assert.DoesNotContain("placeholder=\"@L[", app);
+            Assert.Contains("private const string FallbackPlaceholder = \"بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ\";", app);
+            Assert.Contains("_placeholder = _surahs.FirstOrDefault(s => s.Number == 1)?.Ayahs.FirstOrDefault()?.Arabic ?? FallbackPlaceholder;", app);
             Assert.DoesNotContain("QuickStart", app);
             Assert.DoesNotContain("quick-start", index);
             Assert.DoesNotContain("boot-chip", css);
-            Assert.Matches(@"\.composer-input::placeholder \{[^}]*font-family: var\(--font-ui\);[^}]*text-align: left;", css);
+            var placeholder = Regex.Match(css, @"\.composer-input::placeholder \{[^}]*\}");
+            Assert.True(placeholder.Success, "the placeholder rule is not found");
+            Assert.DoesNotContain("font-family", placeholder.Value);
+            Assert.DoesNotContain("text-align", placeholder.Value);
 
             var toggle = Regex.Match(picker, @"<button type=""button"" class=""picker-toggle surah-toggle""[^>]*>.*?</button> <span id=""surah-tip"" class=""surah-tip"" role=""tooltip"">@L\[""Surah.Tip""\]</span>");
             Assert.True(toggle.Success, "the surah button with its tooltip is not found");
