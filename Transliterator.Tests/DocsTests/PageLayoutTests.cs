@@ -663,39 +663,66 @@ namespace Transliterator.Tests.DocsTests
         }
 
         /// <summary>
-        /// Токены дизайна и тёмная тема (D12): цвета и длительности заданы только в
-        /// <c>:root</c> и в блоке тёмной темы, правила ниже берут их ссылками, а у
-        /// полосы браузера — цвет фона своей темы.
+        /// Токены дизайна (D12): цвета и длительности заданы только в <c>:root</c>,
+        /// правила ниже берут их ссылками, а у полосы браузера — цвет фона страницы.
         /// </summary>
         [Fact]
-        public void ColorsAndDurations_LiveInTokens_AndTheDarkThemeFollowsTheSystem()
+        public void ColorsAndDurations_LiveInTokens()
         {
             var css = Regex.Replace(Web("wwwroot", "css", "app.css"), @"/\*.*?\*/", " ", RegexOptions.Singleline);
             css = Regex.Replace(css, @"\s+", " ");
 
             var root = Regex.Match(css, @"^ ?:root \{([^}]*)\}");
             Assert.True(root.Success, "the :root tokens are not first in the file");
-            var dark = Regex.Match(css, @"@media \(prefers-color-scheme: dark\) \{ :root \{([^}]*)\} \}");
-            Assert.True(dark.Success, "the dark theme block is not found");
-            Assert.Contains("color-scheme: light dark;", root.Groups[1].Value);
 
             var tokens = Regex.Matches(root.Groups[1].Value, @"(--[a-z0-9-]+): ([^;]+);")
                               .ToDictionary(m => m.Groups[1].Value, m => m.Groups[2].Value);
-            var darkTokens = Regex.Matches(dark.Groups[1].Value, @"(--[a-z0-9-]+): ([^;]+);")
-                                  .ToDictionary(m => m.Groups[1].Value, m => m.Groups[2].Value);
-            foreach (var name in darkTokens.Keys)
-                Assert.True(tokens.ContainsKey(name), $"the dark theme overrides {name}, which the light theme does not define");
-            foreach (var name in new[] { "--cream", "--paper", "--ink", "--ink-muted", "--foam-700", "--error", "--error-bg", "--warn-bg", "--warn-ink", "--shadow-md" })
-                Assert.True(darkTokens.ContainsKey(name), $"the dark theme does not set {name}");
+            foreach (var name in new[] { "--cream", "--paper", "--ink", "--ink-muted", "--foam-700", "--error", "--error-bg", "--warn-bg", "--warn-ink", "--shadow-md", "--scrim" })
+                Assert.True(tokens.ContainsKey(name), $"the theme does not set {name}");
 
-            var rules = css.Remove(dark.Index, dark.Length).Remove(root.Index, root.Length);
+            var rules = css.Remove(root.Index, root.Length);
             Assert.DoesNotMatch(@"#[0-9a-fA-F]{3,8}\b|rgba?\(|hsla?\(", rules);
             foreach (Match declaration in Regex.Matches(rules, @"(?:transition|animation): ([^;]*);"))
                 Assert.DoesNotMatch(@"(?<![\w-])[0-9.]+m?s\b", declaration.Groups[1].Value);
 
             var index = Web("wwwroot", "index.html");
-            Assert.Contains($"<meta name=\"theme-color\" content=\"{tokens["--cream"]}\" media=\"(prefers-color-scheme: light)\" />", index);
-            Assert.Contains($"<meta name=\"theme-color\" content=\"{darkTokens["--cream"]}\" media=\"(prefers-color-scheme: dark)\" />", index);
+            Assert.Contains($"<meta name=\"theme-color\" content=\"{tokens["--cream"]}\" />", index);
+        }
+
+        /// <summary>
+        /// Тёмной темы нет (D27): страница, поля ввода, полосы прокрутки и значок
+        /// вкладки светлые при любой теме системы, светлые токены прежние.
+        /// </summary>
+        [Fact]
+        public void ThePageIsAlwaysLight_ThereIsNoDarkTheme()
+        {
+            var rawCss = Web("wwwroot", "css", "app.css");
+            var css = Regex.Replace(Regex.Replace(rawCss, @"/\*.*?\*/", " ", RegexOptions.Singleline), @"\s+", " ");
+            Assert.DoesNotContain("prefers-color-scheme", rawCss);
+            var root = Regex.Match(css, @"^ ?:root \{([^}]*)\}");
+            Assert.True(root.Success, "the :root tokens are not first in the file");
+            Assert.Contains("color-scheme: light;", root.Groups[1].Value);
+            Assert.Equal(new[] { "light" },
+                         Regex.Matches(css, @"color-scheme: ([^;]+);").Select(m => m.Groups[1].Value).Distinct());
+
+            // Светлые токены остались прежними: тема не перекрашена, а только лишилась тёмной пары.
+            var tokens = Regex.Matches(root.Groups[1].Value, @"(--[a-z0-9-]+): ([^;]+);")
+                              .ToDictionary(m => m.Groups[1].Value, m => m.Groups[2].Value);
+            Assert.Equal("#fbf7ef", tokens["--cream"]);
+            Assert.Equal("#ffffff", tokens["--paper"]);
+            Assert.Equal("#1f2d2a", tokens["--ink"]);
+            Assert.Equal("#2e7363", tokens["--foam-700"]);
+            Assert.Equal("#def0e9", tokens["--foam-100"]);
+
+            var index = Web("wwwroot", "index.html");
+            Assert.DoesNotContain("prefers-color-scheme", index);
+            Assert.Contains("<meta name=\"color-scheme\" content=\"light\" />", index);
+            Assert.Single(Regex.Matches(index, "<meta name=\"theme-color\""));
+
+            var svg = Web("wwwroot", "favicon.svg");
+            Assert.DoesNotContain("prefers-color-scheme", svg);
+            Assert.Contains($".tile {{ fill: {tokens["--foam-100"]}; }}", svg);
+            Assert.Contains($".mark {{ fill: {tokens["--foam-700"]}; }}", svg);
         }
 
         [Fact]
@@ -813,7 +840,6 @@ namespace Transliterator.Tests.DocsTests
 
             Assert.Matches(@"\.picker-backdrop \{[^}]*position: fixed; inset: 0;[^}]*background: var\(--scrim\);", narrow);
             Assert.Matches(@":root \{[^}]*--scrim: ", css);
-            Assert.Matches(@"@media \(prefers-color-scheme: dark\) \{ :root \{[^}]*--scrim: ", css);
 
             Assert.Matches(@"\.panel-head \{ position: sticky; top: 0;[^}]*height: var\(--panel-head-height\);", narrow);
             Assert.Matches(@"\.reading-group \{ position: sticky; top: var\(--panel-head-height\);", narrow);
@@ -931,7 +957,7 @@ namespace Transliterator.Tests.DocsTests
             var text = Web("Components", "ChangedText.razor");
             Assert.Contains("{<mark class=\"changed\">@segment.Text</mark>}", text);
             Assert.Matches(@"mark\.changed \{ background: transparent; color: inherit;[^}]*animation: change-flash var\(--motion-highlight\) var\(--ease-soft\);", css);
-            Assert.Equal(2, Regex.Matches(css, @"--highlight: #[0-9a-f]{6};").Count);
+            Assert.Single(Regex.Matches(css, @"--highlight: #[0-9a-f]{6};"));
             Assert.Contains("--motion-highlight: 1.2s;", css);
 
             // Без движения — ровный фон столько же и снимается разом.
