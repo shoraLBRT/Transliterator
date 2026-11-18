@@ -2720,7 +2720,7 @@ mark.changed {
     .shell {
         --panel-left: 4.75rem;
         --panel-width: 25rem;
-        --rail-space: 14rem; /* значки и подписи у кнопок сбоку */
+        --rail-space: 6rem; /* столбик значков сбоку (D40) и зазор до шапки */
         --rail-left: 1.25rem; /* левый край капсулы кнопок сбоку */
     }
 
@@ -2757,9 +2757,9 @@ mark.changed {
         align-items: stretch;
         gap: var(--space-2); /* значки меньше (D36): цели по 44px не заходят друг на друга */
         margin: 0;
-        padding: var(--space-2) var(--space-4) var(--space-2) var(--space-2);
+        padding: var(--space-1);
         border: 1px solid var(--line);
-        border-radius: var(--radius-card);
+        border-radius: var(--radius-pill);
         background: var(--paper);
         box-shadow: var(--shadow-md);
         transition: top var(--motion-move-slow) var(--ease-soft);
@@ -2767,12 +2767,6 @@ mark.changed {
 
     .shell.is-active .side-rail {
         top: max(var(--space-3) + var(--topbar-height) + var(--space-4), 7vh);
-    }
-
-    /* Пока открыта колонка, в капсуле одни значки — она сужается до столбика. */
-    .shell.has-panel .side-rail {
-        padding: var(--space-1);
-        border-radius: var(--radius-pill);
     }
 
     .side-rail .picker-toggle {
@@ -2785,19 +2779,12 @@ mark.changed {
         box-shadow: none;
     }
 
-    .side-rail .picker-toggle-text {
-        max-width: 8rem;
-        color: var(--ink);
-        font-size: var(--text-sm);
-        font-weight: 500;
-    }
-
     /* Индикатор открытой кнопки (D23) — черта у левого края капсулы. */
     .side-rail .picker-toggle[aria-expanded="true"]::before {
         content: "";
         position: absolute;
         top: 50%;
-        left: calc(-1 * var(--space-2));
+        left: calc(-1 * var(--space-1));
         width: 3px;
         height: 1.25rem;
         border-radius: var(--radius-pill);
@@ -2805,22 +2792,20 @@ mark.changed {
         transform: translateY(-50%);
     }
 
-    .shell.has-panel .side-rail .picker-toggle[aria-expanded="true"]::before {
-        left: calc(-1 * var(--space-1));
-    }
-
-    /* Пока открыта колонка, подписи ушли бы под неё: они прячутся с экрана, но
-       остаются именем кнопки для диктора (opacity, не visibility — иначе имя
-       пропадёт). Наведение или фокус с клавиатуры показывают ту же подпись
-       подсказкой справа от значка (D23) — поверх колонки: она в той же капсуле,
-       и z-index подсказки выше, чем у колонки. Появляется с задержкой, уходит сразу. */
-    .shell.has-panel .side-rail .picker-toggle-text {
+    /* Кнопки сбоку — всегда столбик значков (D40), с колонкой и без: подписи
+       спрятаны с экрана, но остаются именем кнопки для диктора (opacity, не
+       visibility — иначе имя пропадёт). Наведение или фокус с клавиатуры
+       показывают ту же подпись подсказкой справа от значка (D23) — поверх
+       колонки: она в той же капсуле, и z-index подсказки выше, чем у колонки.
+       Появляется с задержкой, уходит сразу. */
+    .side-rail .picker-toggle-text {
         position: absolute;
         top: 50%;
         left: calc(100% + var(--space-3));
         z-index: 12;
         max-width: 18rem;
         padding: var(--space-1) var(--space-3);
+        font-size: var(--text-sm);
         border-radius: var(--radius-sm);
         background: var(--ink);
         box-shadow: var(--shadow-md);
@@ -2832,8 +2817,8 @@ mark.changed {
         transition: none; /* при открытии колонки подпись уходит сразу, не гаснет поверх неё (D37) */
     }
 
-    .shell.has-panel .side-rail .picker-toggle:hover .picker-toggle-text,
-    .shell.has-panel .side-rail .picker-toggle:focus-visible .picker-toggle-text {
+    .side-rail .picker-toggle:hover .picker-toggle-text,
+    .side-rail .picker-toggle:focus-visible .picker-toggle-text {
         opacity: 1;
         transform: translate(0, -50%);
         transition: opacity var(--motion-fast) var(--ease-soft),
@@ -2842,7 +2827,7 @@ mark.changed {
     }
 
     /* У открытой кнопки подсказки нет вовсе (D37): её имя — заголовок колонки рядом. */
-    .shell.has-panel .side-rail .picker-toggle[aria-expanded="true"] .picker-toggle-text {
+    .side-rail .picker-toggle[aria-expanded="true"] .picker-toggle-text {
         opacity: 0;
         transition: none;
     }
