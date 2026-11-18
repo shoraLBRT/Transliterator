@@ -864,12 +864,14 @@ namespace Transliterator.Tests.DocsTests
             Assert.True(wide.Success, "the wide-screen layout is not found");
             var rules = wide.Groups[1].Value;
 
-            Assert.Contains(".surah-picker { position: relative; }", rules);
+            // Отсчёт — от карточки поля (D36): список шириной поля, от края до края рамки.
+            Assert.Contains(".surah-picker { position: static; }", rules);
+            Assert.Contains(".composer { position: relative;", css);
             var dropdown = Regex.Match(rules, @"\.picker-panel\.surah-panel \{([^}]*)\}");
             Assert.True(dropdown.Success, "the surah dropdown rule is not found");
             foreach (var declaration in new[]
             {
-                "position: absolute;", "top: calc(100% + var(--space-2));", "left: 0;",
+                "position: absolute;", "top: calc(100% + var(--space-2));", "right: -1px;", "left: -1px;", "width: auto;",
                 "max-height: 60dvh;", "box-shadow: var(--shadow-lg);", "--panel-shift-x: 0rem;",
             })
                 Assert.Contains(declaration, dropdown.Groups[1].Value);
@@ -898,10 +900,10 @@ namespace Transliterator.Tests.DocsTests
             var picker = Regex.Replace(Web("Components", "SurahPicker.razor"), @"\s+", " ");
 
             Assert.Matches(@"<input type=""search"" class=""surah-search-input"" role=""combobox"" aria-label=""@L\[""Surah\.SearchLabel""\]""(?:(?!/>).)*aria-controls=""surah-list""(?:(?!/>).)*aria-activedescendant=""@ActiveId""", picker);
-            Assert.Contains("<ul id=\"surah-list\" class=\"picker-list\" role=\"listbox\"", picker);
+            Assert.Contains("<ul id=\"surah-list\" class=\"picker-list surah-grid\" role=\"listbox\"", picker);
             Assert.Matches(@"<li id=""@OptionId\(surah\)"" role=""option"" aria-selected=""@\(current \? ""true"" : ""false""\)""", picker);
             Assert.Contains("SurahSearch.Filter(Surahs, _query)", picker);
-            Assert.Contains("<p class=\"surah-empty\" role=\"status\">@L[\"Surah.NothingFound\"]</p>", picker);
+            Assert.Contains("<p class=\"surah-empty\" role=\"status\">@(Found.Count == 0 ? L[\"Surah.NothingFound\"].Value : null)</p>", picker);
             foreach (var key in new[] { "case \"ArrowDown\":", "case \"ArrowUp\":", "case \"Enter\":" })
                 Assert.Contains(key, picker);
             Assert.Contains("@L.Count(\"Surah.AyahCount\", surah.Ayahs.Count)", picker);
@@ -913,6 +915,57 @@ namespace Transliterator.Tests.DocsTests
 
             var app = Regex.Replace(Web("App.razor"), @"\s+", " ");
             Assert.Contains("<SurahPicker Surahs=\"_surahs\" Chosen=\"ChooseAsync\" Current=\"CurrentSurah\" />", app);
+        }
+
+        /// <summary>
+        /// D36: суры — сеткой auto-fill (столбец не уже 14rem в листе, 12rem на ширине
+        /// поля), строки плотные, но не ниже цели нажатия. Строка «Ничего не найдено»
+        /// стоит в списке всегда, вне сетки — во всю ширину, и диктор читает её, когда
+        /// в ней появляется текст. Стрелки идут по сурам по порядку, как прежде.
+        /// </summary>
+        [Fact]
+        public void TheSurahList_IsADenseGrid_WithAStatusLineForNothingFound()
+        {
+            var picker = Regex.Replace(Web("Components", "SurahPicker.razor"), @"\s+", " ");
+            Assert.Contains("<ul id=\"surah-list\" class=\"picker-list surah-grid\" role=\"listbox\"", picker);
+            var status = picker.IndexOf("<p class=\"surah-empty\" role=\"status\">", StringComparison.Ordinal);
+            var list = picker.IndexOf("@if (Found.Count > 0) { <ul id=\"surah-list\"", StringComparison.Ordinal);
+            Assert.True(status >= 0 && list > status, "the status line must stand outside the list, before it");
+            Assert.Contains("_active = Math.Min(_active + 1, found.Count - 1);", picker);
+            Assert.Contains("_active = Math.Max(_active - 1, 0);", picker);
+
+            var css = Regex.Replace(Web("wwwroot", "css", "app.css"), @"\s+", " ");
+            Assert.Contains(".surah-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 14rem), 1fr));", css);
+            Assert.DoesNotContain("repeat(auto-fit", css);
+            Assert.Contains(".surah-empty { margin: 0;", css);
+            Assert.Contains(".surah-empty:not(:empty) { margin:", css);
+            Assert.Matches(@"\.surah-panel \.picker-item \{[^}]*min-height: var\(--target-min\);", css);
+
+            var wide = Regex.Match(css, @"@media \(min-width: 64rem\) \{(.*?)\} /\* ---- Загрузка");
+            Assert.True(wide.Success, "the wide-screen layout is not found");
+            Assert.Contains(".surah-grid { grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr)); }", wide.Groups[1].Value);
+            // Поиск липнет к верху списка и не уезжает при прокрутке.
+            Assert.Matches(@"\.surah-search \{ position: sticky;", css);
+        }
+
+        /// <summary>
+        /// D36: кнопки под полем и сбоку на ступень меньше на вид, а цель нажатия —
+        /// прежние 44px через ::after (D25). В капсуле сбоку зазор между значками
+        /// вырос, чтобы цели соседних кнопок не заходили друг на друга.
+        /// </summary>
+        [Fact]
+        public void TheButtonsUnderTheFieldAndAtTheSide_AreAStepSmaller_TheirTargetsStay44px()
+        {
+            var css = Regex.Replace(Web("wwwroot", "css", "app.css"), @"\s+", " ");
+            Assert.Matches(@"\.picker-toggle \{ display: inline-flex;[^}]*padding: 0\.35rem 0\.75rem;[^}]*font-size: var\(--text-sm\);", css);
+            Assert.Contains(".composer-bar .icon-button { width: 2rem; height: 2rem; }", css);
+            Assert.Matches(@"\.side-rail \.picker-toggle svg \{ box-sizing: content-box; padding: var\(--space-2\);", css);
+            Assert.Matches(@"\.picker-toggle::after,[^{]*\{ content: """"; position: absolute;[^}]*width: max\(100%, var\(--target-min\)\); height: max\(100%, var\(--target-min\)\);", css);
+            Assert.Contains(".icon-button::after,", css);
+
+            var wide = Regex.Match(css, @"@media \(min-width: 64rem\) \{(.*?)\} /\* ---- Загрузка");
+            Assert.True(wide.Success, "the wide-screen layout is not found");
+            Assert.Matches(@"\.side-rail \{ position: fixed;[^}]*gap: var\(--space-2\);", wide.Groups[1].Value);
         }
 
         /// <summary>

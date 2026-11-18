@@ -469,12 +469,12 @@ svg {
     display: inline-flex;
     align-items: center;
     gap: var(--space-2);
-    padding: 0.45rem 0.9rem;
+    padding: 0.35rem 0.75rem;
     border: 1px solid var(--line);
     border-radius: var(--radius-pill);
     background: var(--paper);
     color: var(--foam-700);
-    font-size: var(--text-md);
+    font-size: var(--text-sm);
     font-weight: 500;
     cursor: pointer;
 }
@@ -679,13 +679,16 @@ svg {
     border: 0;
     background: transparent;
     color: var(--ink-muted);
-    font-size: 0.85rem;
+    font-size: var(--text-sm);
     font-weight: 400;
 }
 
+/* Кнопки под полем и сбоку на ступень меньше на вид (D36): «Выбрать суру» —
+   мельче кегль и поля, круг значка сбоку — 0.5rem вокруг значка вместо 0.6rem.
+   Цель нажатия — прежние 44px через ::after (D25, «Цели нажатия»). */
 .side-rail .picker-toggle svg {
     box-sizing: content-box;
-    padding: 0.6rem;
+    padding: var(--space-2);
     border: 1px solid var(--line);
     border-radius: 50%;
     background: var(--paper);
@@ -867,15 +870,48 @@ html.is-sheet-open {
     box-shadow: 0 0 0 3px var(--foam-50);
 }
 
-/* «Ничего не найдено» — тихой строкой на месте списка, не окном. */
+/* «Ничего не найдено» — тихой строкой на месте сетки, во всю ширину списка, не
+   окном. Строка состояния стоит всегда (D36); пустая — без отступов. */
 .surah-empty {
-    margin: var(--space-3) var(--space-3) var(--space-4);
+    margin: 0;
     font-size: var(--text-sm);
     color: var(--ink-muted);
 }
 
+.surah-empty:not(:empty) {
+    margin: var(--space-3) var(--space-3) var(--space-4);
+}
+
+/* Суры — сеткой (D36): столбцы не уже 14rem, сколько их помещается. В листе на
+   телефоне это один столбец, а от ~30rem ширины экрана — два. auto-fill, а не
+   auto-fit: одна найденная сура не растягивается на всю ширину. Высота — по
+   содержимому, длинный список прокручивается в самой панели. */
+.surah-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 14rem), 1fr));
+    gap: var(--space-1);
+}
+
+/* Строка суры плотная (D36): номер, имя над числом аятов, арабское имя и
+   галочка — в одну строку, поля меньше. Ниже цели нажатия (44px) она не бывает. */
 .surah-panel .picker-item {
-    grid-template-columns: 2.25rem minmax(0, 1fr) auto 1.15rem;
+    grid-template-columns: 1.6rem minmax(0, 1fr) auto 1rem;
+    min-height: var(--target-min);
+    padding: var(--space-1) var(--space-2);
+}
+
+.surah-panel .picker-number {
+    width: 1.6rem;
+    height: 1.6rem;
+}
+
+.surah-panel .picker-name {
+    font-size: var(--text-md);
+    line-height: 1.25;
+}
+
+.surah-panel .picker-arabic {
+    font-size: var(--text-base);
 }
 
 .surah-names {
@@ -886,6 +922,7 @@ html.is-sheet-open {
 
 .surah-ayahs {
     font-size: var(--text-xs);
+    line-height: 1.25;
     color: var(--ink-muted);
 }
 
@@ -898,6 +935,8 @@ html.is-sheet-open {
 
 /* Сура, чей текст сейчас в поле, — с галочкой и залитым номером. */
 .surah-check {
+    width: 1rem;
+    height: 1rem;
     color: var(--foam-700);
     stroke-width: 2.2;
     opacity: 0;
@@ -2722,7 +2761,7 @@ mark.changed {
         flex-direction: column;
         flex-wrap: nowrap;
         align-items: stretch;
-        gap: var(--space-1);
+        gap: var(--space-2); /* значки меньше (D36): цели по 44px не заходят друг на друга */
         margin: 0;
         padding: var(--space-2) var(--space-4) var(--space-2) var(--space-2);
         border: 1px solid var(--line);
@@ -2842,17 +2881,26 @@ mark.changed {
     /* Список сур (D15) — выпадающий под кнопкой «Выбрать суру»: на ней взгляд,
        туда и список. Он ложится поверх вывода, ничего не сдвигая (в has-panel
        его нет — App.razor), выезжает сверху вниз, до 60% высоты экрана со своей
-       прокруткой. Щелчок мимо закрывает его — по прозрачной подложке под ним. */
+       прокруткой. Щелчок мимо закрывает его — по прозрачной подложке под ним.
+       Шириной он с поле ввода, от края до края его рамки (D36): отсчёт — от
+       карточки поля (.composer), а не от кнопки, и подсказка кнопки (D28) встаёт
+       под карточкой у её левого края, против кнопки. */
     .surah-picker {
-        position: relative;
+        position: static;
+    }
+
+    .surah-tip {
+        top: calc(100% + var(--space-1));
+        left: var(--space-3);
     }
 
     .picker-panel.surah-panel {
         position: absolute;
         top: calc(100% + var(--space-2));
-        left: 0;
+        right: -1px;
+        left: -1px;
         z-index: 13;
-        width: 23rem;
+        width: auto;
         max-height: 60vh;
         max-height: 60dvh;
         box-shadow: var(--shadow-lg);
@@ -2864,6 +2912,11 @@ mark.changed {
         display: block;
         background: transparent;
         animation: none;
+    }
+
+    /* На ширине поля — три столбца сур (D36), столбец не уже 12rem. */
+    .surah-grid {
+        grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr));
     }
 
     /* Шапка выпадающего не липнет — поиск липнет к верху списка за его отступом. */
@@ -3141,6 +3194,12 @@ mark.changed {
     padding: var(--space-3) 0 var(--space-3) var(--space-4);
 }
 
+/* Крестик под полем (D20) — на ступень меньше, как «Выбрать суру» (D36). */
+.composer-bar .icon-button {
+    width: 2rem;
+    height: 2rem;
+}
+
 /* Подписи кнопок под полем не переносятся (D25): «Выбрать суру» на узком
    телефоне ломалась в две строки. Кнопки «Вставить» рядом больше нет (D34). */
 .composer-bar .picker-toggle,
@@ -3183,10 +3242,6 @@ mark.changed {
     .side-rail {
         gap: var(--space-2) var(--space-4);
         padding-inline: 0;
-    }
-
-    .side-rail .picker-toggle svg {
-        padding: var(--space-2);
     }
 
     .result {
