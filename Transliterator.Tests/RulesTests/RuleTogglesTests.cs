@@ -168,7 +168,7 @@ namespace Transliterator.Tests.RulesTests
         public void OnTheCorpus_EveryRuleIsExercised(string ruleId)
         {
             // Проверка выше ничего не стоит, если правило в корпусе не срабатывает.
-            // Икляба в корпусе нет (суры 1 и 109–114) — его держат примеры выше.
+            // Икляба в корпусе нет (суры 1, 103 и 105–114) — его держат примеры выше.
             var changed = CorpusCases.Ayahs.Select(a => CorpusCases.Ayah((string)a[0]).Arabic)
                 .Count(arabic => !TransliterationPipeline.Parse(arabic).Select(Snapshot)
                     .SequenceEqual(TransliterationPipeline.Parse(arabic, Without(ruleId)).Select(Snapshot)));
