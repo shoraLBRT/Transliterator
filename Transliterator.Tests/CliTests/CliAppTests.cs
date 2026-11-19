@@ -129,7 +129,7 @@ namespace Transliterator.Tests.CliTests
 
             Assert.Equal(CliApp.UsageError, run.ExitCode);
             Assert.Equal(string.Empty, run.Out);
-            Assert.Contains("1, 109, 110, 111, 112, 113, 114", run.Error);
+            Assert.Contains("1, 103, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114", run.Error);
         }
 
         [Theory]
