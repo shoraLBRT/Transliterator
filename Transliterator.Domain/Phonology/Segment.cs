@@ -75,6 +75,13 @@ namespace Transliterator.Domain.Phonology
 
         public bool StartsWord { get; set; }
 
+        /// <summary>
+        /// Буква слова, написанного без огласовок (D45): ни у одной его буквы нет
+        /// огласовки, сукуна, шадды или мадды. Ставится по разбору до правил — они
+        /// сами ставят сукун на паузе. Чтение такого слова — догадка конвейера.
+        /// </summary>
+        public bool Unvowelled { get; set; }
+
         /// <summary>Знак вакфа, написанный на этой границе слов. Только для <see cref="SegmentKind.Break"/>.</summary>
         public WaqfMark Waqf { get; set; } = WaqfMark.None;
 

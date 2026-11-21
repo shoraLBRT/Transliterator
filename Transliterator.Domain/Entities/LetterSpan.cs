@@ -9,5 +9,6 @@ namespace Transliterator.Domain.Entities
     /// <param name="Start">Начало куска в выводе.</param>
     /// <param name="Length">Длина куска; пустая графема куском не становится.</param>
     /// <param name="Letter">Арабская буква.</param>
-    public sealed record LetterSpan(int Start, int Length, string Letter);
+    /// <param name="Unvowelled">Буква слова без огласовок (D45): страница подсвечивает такое слово.</param>
+    public sealed record LetterSpan(int Start, int Length, string Letter, bool Unvowelled = false);
 }

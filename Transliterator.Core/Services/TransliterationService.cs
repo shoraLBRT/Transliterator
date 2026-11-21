@@ -70,18 +70,31 @@ public class TransliterationService : ITransliterationService
         ValidateProfile(profile);
 
         var letters = new List<LetterSpan>();
-        var text = Run(arabicText, profile, reading, letters);
-        return new TransliterationResult(arabicText ?? string.Empty, text, profile.Name) { Letters = letters };
+        var text = Run(arabicText, profile, reading, letters, out var coverage);
+        return new TransliterationResult(arabicText ?? string.Empty, text, profile.Name)
+        {
+            Letters = letters,
+            Words = coverage.Words,
+            UnvowelledWords = coverage.Unvowelled,
+        };
     }
 
     private string Run(string? arabicText, TransliterationProfile profile, ReadingOptions? reading = null,
                        IList<LetterSpan>? letters = null)
+        => Run(arabicText, profile, reading, letters, out _);
+
+    private string Run(string? arabicText, TransliterationProfile profile, ReadingOptions? reading,
+                       IList<LetterSpan>? letters, out VowelCoverage coverage)
     {
+        coverage = default;
         if (string.IsNullOrWhiteSpace(arabicText))
             return string.Empty;
 
         var normalized = _normalizer.Normalize(arabicText);
         var segments = _parser.Parse(normalized);
+
+        // Слова без огласовок (D45) — по разбору, до правил: вакф сам ставит сукун.
+        coverage = VowelCheck.Mark(normalized, segments);
 
         _rulesService.ApplyTajweedRules(segments, reading);
 

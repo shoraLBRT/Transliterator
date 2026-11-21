@@ -122,6 +122,68 @@ namespace Transliterator.Tests.ServiceTests
                 pieces);
         }
 
+        /// <summary>D45: слово без огласовок — ни у одной буквы нет знака чтения.</summary>
+        [Theory]
+        [InlineData("قل هو الله أحد", 4, 4)]
+        [InlineData("قُلْ هو اللَّهُ أحد", 4, 2)]
+        [InlineData("قُلْ هُوَ اللَّهُ أَحَدٌ", 4, 0)]
+        [InlineData("و قُلْ", 1, 0)] // однобуквенное слово не считается
+        public void VowelCheck_CountsWordsWithoutMarks(string arabic, int words, int unvowelled)
+        {
+            var segments = TransliterationPipeline.ParseWithoutRules(arabic);
+
+            var coverage = VowelCheck.Mark(new ArabicNormalizer().Normalize(arabic), segments);
+
+            Assert.Equal(new VowelCoverage(words, unvowelled), coverage);
+        }
+
+        /// <summary>D45: в корпусе огласовано всё — ни одного слова без огласовок, ни в одном написании.</summary>
+        [Theory]
+        [MemberData(nameof(CorpusTests.CorpusCases.Ayahs), MemberType = typeof(CorpusTests.CorpusCases))]
+        public void Corpus_HasNoUnvowelledWords(string id)
+        {
+            var arabic = CorpusTests.CorpusCases.Ayah(id).Arabic;
+            var coverage = VowelCheck.Mark(new ArabicNormalizer().Normalize(arabic), TransliterationPipeline.ParseWithoutRules(arabic));
+
+            Assert.True(coverage.Words > 0, $"{id}: no words");
+            Assert.Equal(0, coverage.Unvowelled);
+        }
+
+        [Fact]
+        public void UnvowelledWord_IsMarkedAsAWholeOutputWord()
+        {
+            var segments = TransliterationPipeline.ParseWithoutRules("قُلْ هو اللَّهُ");
+            VowelCheck.Mark(new ArabicNormalizer().Normalize("قُلْ هو اللَّهُ"), segments);
+            var letters = new List<LetterSpan>();
+            var text = new CyrillicRenderer().Render(segments, TestProfiles.Cyrillic, null, letters);
+
+            var hints = OutputLetters.Build(text, letters, _ => false);
+            var word = Assert.Single(hints.Unvowelled(0));
+            var marked = text.Substring(word.Start, word.Length);
+
+            Assert.DoesNotContain(' ', marked);
+            Assert.Equal(text.Split(' ')[1], marked);
+            Assert.Equal(text, string.Concat(hints.Split(0, 0, new[] { new DiffSegment(text, false) }).Select(p => p.Text)));
+            Assert.Contains(hints.Split(0, 0, new[] { new DiffSegment(text, false) }), p => p.Unvowelled && p.Text == marked);
+        }
+
+        [Fact]
+        public void ServiceResult_SaysWhenTheTextIsMostlyUnvowelled()
+        {
+            var service = new TransliterationService(
+                null!, new ArabicNormalizer(), new ArabicParser(),
+                new RulesService(new WaqfRule(), new WaslRule(), new ArticleRule(),
+                                 new AssimilationRule(), new NasalRule(),
+                                 new EmphasisRule(), new MaddRule(), new QalqalahRule()),
+                new CyrillicRenderer());
+
+            Assert.True(service.Transliterate("قل هو الله أحد", TestProfiles.Cyrillic).MostlyUnvowelled);
+            var partly = service.Transliterate("قُلْ هُوَ اللَّهُ أحد", TestProfiles.Cyrillic);
+            Assert.False(partly.MostlyUnvowelled);
+            Assert.Equal(1, partly.UnvowelledWords);
+            Assert.False(service.Transliterate("قُلْ هُوَ اللَّهُ أَحَدٌ", TestProfiles.Cyrillic).MostlyUnvowelled);
+        }
+
         [Fact]
         public void None_HasNoLetters()
         {

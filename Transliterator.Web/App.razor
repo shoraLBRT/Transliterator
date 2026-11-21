@@ -93,7 +93,7 @@
                 <div class="composer-tools">
                     @if (_surahs.Count > 0)
                     {
-                        <SurahPicker Surahs="_surahs" Chosen="ChooseAsync" Current="CurrentSurah" />
+                        <SurahPicker Surahs="_surahs" Chosen="ChooseAsync" Current="CurrentSurah" @ref="_surahPicker" />
                     }
                 </div>
 
@@ -112,6 +112,21 @@
         @if (_error is not null)
         {
             <p class="error" role="alert">@_error</p>
+        }
+        else if (_mostlyUnvowelled)
+        {
+            @* Текст без огласовок (D45, вариант Б): вывода нет — он был бы неверным,
+               хотя выглядел бы правдоподобно. На его месте — что за текст нужен и
+               кнопка, открывающая список сур. Живая область: при вставке текста
+               карточка появляется без перехода фокуса. *@
+            <section class="unvowelled-card" role="status" aria-labelledby="unvowelled-title">
+                <h2 id="unvowelled-title" class="unvowelled-title">@L["Unvowelled.Title"]</h2>
+                <p class="unvowelled-text">@L["Unvowelled.Text"]</p>
+                @if (_surahs.Count > 0)
+                {
+                    <button type="button" class="unvowelled-choose" @onclick="OpenSurahsAsync">@L["Unvowelled.Choose"]</button>
+                }
+            </section>
         }
         else if (_result.Length > 0)
         {
@@ -222,6 +237,13 @@
                         }
                     }
                 </div>
+
+                @* Слова без огласовок (D45, вариант В) подсвечены в строках; подпись под
+                   выводом говорит, сколько их и что их чтение может быть неверным. *@
+                @if (_unvowelledWords > 0)
+                {
+                    <p class="unvowelled-note">@L["Unvowelled.Note", _unvowelledWords]</p>
+                }
 
                 @* Имена букв с подсказкой для диктора (D41): aria-describedby буквы
                    ссылается сюда, а сама строка читается как прежде. *@
@@ -335,6 +357,14 @@
     private bool _letterHintsOn = true;
     private IReadOnlyDictionary<string, ArabicSound> _hinted = new Dictionary<string, ArabicSound>();
     private IReadOnlyList<LetterSpan> _letters = Array.Empty<LetterSpan>();
+
+    // Текст без огласовок (D45): почти весь — карточка вместо вывода (Б),
+    // отдельные слова — подсветка в выводе и подпись с их числом (В).
+    private bool _mostlyUnvowelled;
+    private int _unvowelledWords;
+    private SurahPicker? _surahPicker;
+
+    private Task OpenSurahsAsync() => _surahPicker?.OpenAsync() ?? Task.CompletedTask;
     private OutputLetters? _lettersByLine;
     private LetterHintAt? _letterHint;
     private ElementReference _resultText;
@@ -613,27 +643,31 @@
     }
 
     /// <summary>
-    /// Куски вывода с подсказкой по строкам (D41). Считаются раз на вывод: строки
-    /// рисуются на каждое нажатие, а разбивка от нажатия не меняется.
+    /// Разметка строк вывода (D41, D45): буквы с подсказкой — пока тумблер включён,
+    /// слова без огласовок — всегда. Считается раз на вывод и положение тумблера:
+    /// строки рисуются на каждое нажатие, а разбивка от нажатия не меняется.
     /// </summary>
     private OutputLetters LetterHints
     {
         get
         {
-            if (!_letterHintsOn || _hinted.Count == 0)
-                return OutputLetters.None(_result);
-
-            if (_lettersByLine?.Text != _result)
-                _lettersByLine = OutputLetters.Build(_result, _letters, _hinted.ContainsKey);
+            var hints = _letterHintsOn && _hinted.Count > 0;
+            if (_lettersByLine?.Text != _result || _lettersByLineHints != hints)
+            {
+                _lettersByLine = OutputLetters.Build(_result, _letters, hints ? _hinted.ContainsKey : _ => false);
+                _lettersByLineHints = hints;
+            }
 
             return _lettersByLine;
         }
     }
 
+    private bool _lettersByLineHints;
+
     /// <summary>
-    /// Кусок строки вывода: изменённое сменой настройки — в mark (D19), буквы
-    /// с подсказкой — span role="button" (D41). Узлы без пробелов между ними:
-    /// пробелы попали бы в вывод.
+    /// Кусок строки вывода: изменённое сменой настройки — в mark (D19), слово без
+    /// огласовок — span.unvowelled (D45), буквы с подсказкой — span role="button"
+    /// (D41). Узлы без пробелов между ними: пробелы попали бы в вывод.
     /// </summary>
     private RenderFragment LineText(OutputLetters hints, int line, int start, string text) => builder =>
     {
@@ -652,14 +686,27 @@
 
             while (index < pieces.Count && pieces[index].Changed == changed)
             {
-                var piece = pieces[index];
-                if (piece.Letter is { } letter)
-                    AddHintLetter(builder, line, offset, letter, piece.Text);
-                else
-                    builder.AddContent(2, piece.Text);
+                var unvowelled = pieces[index].Unvowelled;
+                if (unvowelled)
+                {
+                    builder.OpenElement(3, "span");
+                    builder.AddAttribute(4, "class", "unvowelled");
+                }
 
-                offset += piece.Text.Length;
-                index++;
+                while (index < pieces.Count && pieces[index].Changed == changed && pieces[index].Unvowelled == unvowelled)
+                {
+                    var piece = pieces[index];
+                    if (piece.Letter is { } letter)
+                        AddHintLetter(builder, line, offset, letter, piece.Text);
+                    else
+                        builder.AddContent(2, piece.Text);
+
+                    offset += piece.Text.Length;
+                    index++;
+                }
+
+                if (unvowelled)
+                    builder.CloseElement();
             }
 
             if (changed)
@@ -1121,6 +1168,8 @@
             _letters = output.Letters;
             _lettersByLine = null;
             _letterHint = null;
+            _mostlyUnvowelled = output.MostlyUnvowelled;
+            _unvowelledWords = output.MostlyUnvowelled ? 0 : output.UnvowelledWords;
             _error = null;
         }
         catch (Exception ex)
@@ -1133,6 +1182,8 @@
             _letters = Array.Empty<LetterSpan>();
             _lettersByLine = null;
             _letterHint = null;
+            _mostlyUnvowelled = false;
+            _unvowelledWords = 0;
             _error = ex.Message;
         }
     }
