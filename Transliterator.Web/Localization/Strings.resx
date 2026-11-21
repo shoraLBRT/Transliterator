@@ -90,6 +90,18 @@
   <data name="Result.HintLetter" xml:space="preserve">
     <value>{0} — как читать</value>
   </data>
+  <data name="Unvowelled.Title" xml:space="preserve">
+    <value>Нужен текст с огласовками</value>
+  </data>
+  <data name="Unvowelled.Text" xml:space="preserve">
+    <value>Огласовки — фатха, дамма, кясра, сукун и шадда — показывают, как читать слово. В этом тексте их почти нет, и транслитерация была бы неверной. Вставьте текст из мусхафа с огласовками или выберите суру.</value>
+  </data>
+  <data name="Unvowelled.Choose" xml:space="preserve">
+    <value>Выбрать суру</value>
+  </data>
+  <data name="Unvowelled.Note" xml:space="preserve">
+    <value>Без огласовок слов: {0} — их чтение может быть неверным</value>
+  </data>
   <data name="Result.ReadingChip" xml:space="preserve">
     <value>Чтение: {0}. Изменить</value>
   </data>

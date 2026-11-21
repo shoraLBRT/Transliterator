@@ -925,7 +925,7 @@ namespace Transliterator.Tests.DocsTests
             Assert.Contains("return window.matchMedia(\"(min-width: 64rem)\").matches;", script);
 
             var app = Regex.Replace(Web("App.razor"), @"\s+", " ");
-            Assert.Contains("<SurahPicker Surahs=\"_surahs\" Chosen=\"ChooseAsync\" Current=\"CurrentSurah\" />", app);
+            Assert.Contains("<SurahPicker Surahs=\"_surahs\" Chosen=\"ChooseAsync\" Current=\"CurrentSurah\" @ref=\"_surahPicker\" />", app);
         }
 
         /// <summary>
@@ -1376,7 +1376,7 @@ namespace Transliterator.Tests.DocsTests
 
             // Буквы — по происхождению из ядра, только NotInRussian.
             Assert.Contains("_hinted = _sounds?.Sounds.Where(s => s.NotInRussian)", app);
-            Assert.Contains("_lettersByLine = OutputLetters.Build(_result, _letters, _hinted.ContainsKey);", app);
+            Assert.Contains("_lettersByLine = OutputLetters.Build(_result, _letters, hints ? _hinted.ContainsKey : _ => false);", app);
             Assert.Contains("_letters = output.Letters;", app);
 
             // Буква — span role="button" в тексте, одна в порядке Tab; подсказка — role="tooltip".
@@ -1406,6 +1406,32 @@ namespace Transliterator.Tests.DocsTests
 
             Assert.Equal("Подсказки букв", PageStrings.Web("ru")["Result.Hints"]);
             Assert.Equal("Letter hints", PageStrings.Web("en")["Result.Hints"]);
+        }
+
+        /// <summary>
+        /// D45: текст без огласовок. Почти весь без огласовок — вместо вывода карточка
+        /// с объяснением и кнопкой списка сур (Б); отдельные слова — волнистая черта
+        /// под ними в выводе и подпись с их числом (В). Копируется прежний вывод.
+        /// </summary>
+        [Fact]
+        public void UnvowelledText_ShowsACardInsteadOfTheOutput_OrMarksTheWords()
+        {
+            var app = Regex.Replace(Web("App.razor"), @"\s+", " ");
+            var css = Regex.Replace(Web("wwwroot", "css", "app.css"), @"\s+", " ");
+
+            Assert.Matches(@"else if \(_mostlyUnvowelled\) \{ .*<section class=""unvowelled-card"" role=""status"" aria-labelledby=""unvowelled-title"">.*<button type=""button"" class=""unvowelled-choose"" @onclick=""OpenSurahsAsync"">@L\[""Unvowelled\.Choose""\]</button>.*</section> \} else if \(_result\.Length > 0\)", app);
+            Assert.Contains("private Task OpenSurahsAsync() => _surahPicker?.OpenAsync() ?? Task.CompletedTask;", app);
+            Assert.Contains("_mostlyUnvowelled = output.MostlyUnvowelled;", app);
+            Assert.Contains("_unvowelledWords = output.MostlyUnvowelled ? 0 : output.UnvowelledWords;", app);
+
+            Assert.Contains("builder.AddAttribute(4, \"class\", \"unvowelled\");", app);
+            Assert.Contains("<p class=\"unvowelled-note\">@L[\"Unvowelled.Note\", _unvowelledWords]</p>", app);
+            Assert.Matches(@"\.unvowelled \{ text-decoration: underline wavy var\(--warn-ink\);", css);
+            Assert.Contains(".unvowelled-choose::after,", css);
+            Assert.Contains("copied = await JS.InvokeAsync<bool>(\"page.copy\", _result);", app);
+
+            Assert.Equal("Нужен текст с огласовками", PageStrings.Web("ru")["Unvowelled.Title"]);
+            Assert.Equal("This text needs vowel marks", PageStrings.Web("en")["Unvowelled.Title"]);
         }
     }
 }

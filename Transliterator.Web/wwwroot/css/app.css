@@ -2417,6 +2417,63 @@ mark.changed {
     font-size: 0.95rem;
 }
 
+/* Текст без огласовок (D45, вариант Б) — карточка на месте вывода: тёплый фон
+   предупреждения, короткое объяснение и кнопка списка сур видом «Выбрать суру». */
+.unvowelled-card {
+    margin-top: var(--space-4);
+    padding: var(--space-4) var(--space-5);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-2xl);
+    background: var(--warn-bg);
+    color: var(--warn-ink);
+    animation: panel-in var(--motion-duration) var(--motion-ease);
+}
+
+.unvowelled-title {
+    margin: 0 0 var(--space-1);
+    font-size: var(--text-base);
+    font-weight: 600;
+}
+
+.unvowelled-text {
+    margin: 0;
+    font-size: var(--text-sm);
+    line-height: 1.5;
+}
+
+.unvowelled-choose {
+    margin-top: var(--space-3);
+    padding: var(--space-1) var(--space-3);
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius-pill);
+    background: var(--paper);
+    color: var(--foam-700);
+    font: inherit;
+    font-size: var(--text-sm);
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.unvowelled-choose:hover {
+    background: var(--foam-50);
+    border-color: var(--foam-300);
+}
+
+/* Слово без огласовок в выводе (D45, вариант В) — волнистая черта под словом,
+   как у проверки правописания: не фон изменённого (D19) и не цвет буквы с
+   подсказкой (D41). Подпись под выводом говорит, сколько таких слов. */
+.unvowelled {
+    text-decoration: underline wavy var(--warn-ink);
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.25em;
+}
+
+.unvowelled-note {
+    margin: var(--space-2) 0 0;
+    font-size: var(--text-xs);
+    color: var(--warn-ink);
+}
+
 /* ---- Подвал ---- */
 
 .footer {
@@ -3116,6 +3173,7 @@ mark.changed {
 .settings-toggle,
 .settings-tab,
 .about-toggle,
+.unvowelled-choose,
 .feedback-toggle {
     position: relative;
 }
@@ -3141,6 +3199,7 @@ mark.changed {
 .settings-toggle::after,
 .settings-tab::after,
 .about-toggle::after,
+.unvowelled-choose::after,
 .feedback-toggle::after {
     content: "";
     position: absolute;

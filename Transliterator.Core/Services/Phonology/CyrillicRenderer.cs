@@ -109,7 +109,7 @@ namespace Transliterator.Core.Services.Phonology
                     if (segment.Shadda)
                         result.Append(consonant);
                     if (result.Length > start)
-                        letters?.Add(new LetterSpan(start, result.Length - start, segment.Letter));
+                        letters?.Add(new LetterSpan(start, result.Length - start, segment.Letter, segment.Unvowelled));
 
                     // Отзвук кальканя идёт после согласного целиком, а не вместо него:
                     // удвоенная буква размыкается один раз, и отзвук у неё тоже один.

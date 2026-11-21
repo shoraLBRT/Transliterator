@@ -87,6 +87,18 @@
   <data name="Result.HintLetter" xml:space="preserve">
     <value>{0}: how to say it</value>
   </data>
+  <data name="Unvowelled.Title" xml:space="preserve">
+    <value>This text needs vowel marks</value>
+  </data>
+  <data name="Unvowelled.Text" xml:space="preserve">
+    <value>Vowel marks (fatha, damma, kasra, sukun and shadda) show how to read a word. This text has almost none, so the transliteration would be wrong. Paste text from a mushaf with vowel marks or choose a surah.</value>
+  </data>
+  <data name="Unvowelled.Choose" xml:space="preserve">
+    <value>Choose a surah</value>
+  </data>
+  <data name="Unvowelled.Note" xml:space="preserve">
+    <value>Words without vowel marks: {0}. Their reading may be wrong</value>
+  </data>
   <data name="Result.ReadingChip" xml:space="preserve">
     <value>Reading: {0}. Change</value>
   </data>
