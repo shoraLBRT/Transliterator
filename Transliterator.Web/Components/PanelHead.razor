@@ -5,7 +5,10 @@
 <div class="panel-head">
     @* Ручка нижнего листа на телефоне (D14) — только знак, с 64rem скрыта. *@
     <span class="sheet-handle" aria-hidden="true"></span>
-    <h2 id="@Id" class="panel-title">@Title</h2>
+    @* С вкладками (D44) имя панели остаётся именем диалога для диктора, а на
+       экране его место занимают вкладки «Таджвид» и «Профиль». *@
+    <h2 id="@Id" class="panel-title @(Tabs is null ? null : "visually-hidden")">@Title</h2>
+    @Tabs
     @* Подпись «Вывод не изменился» (D19): шапка листа липнет к его верху, и подпись
        видна на любой глубине прокрутки — у переключателя правила внизу «Как читать» тоже.
        Живая область в разметке всегда; с 64rem подпись стоит в шапке вывода. *@
@@ -29,4 +32,8 @@
     /// <summary>Короткая подпись рядом с именем панели (D19); <c>null</c> — подписи нет.</summary>
     [Parameter]
     public string? Note { get; set; }
+
+    /// <summary>Вкладки на месте имени панели (D44); <c>null</c> — видно имя.</summary>
+    [Parameter]
+    public RenderFragment? Tabs { get; set; }
 }

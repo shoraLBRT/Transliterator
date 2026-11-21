@@ -90,27 +90,19 @@ namespace Transliterator.Tests.DocsTests
         [Fact]
         public void ProfileButton_SaysWhatItChooses_AndKeepsTheCaptionVisible()
         {
-            // Решение владельца к E6: на кнопке профиля подпись перед именем —
-            // «Профиль: Cyrillic», свой профиль — своим именем («Профиль: Мой»).
-            // Подпись — часть текста кнопки (а значит, и её имени для диктора),
-            // и длинное имя обрезается с конца, не съедая подпись. aria-label нет
-            // нарочно: отдельная строка для диктора разошлась бы с видимой.
+            // Решение владельца к E6: у выбора профиля подпись перед именем —
+            // «Профиль: Cyrillic», свой профиль — своим именем. Кнопки профиля сбоку
+            // больше нет (D44: шестерёнка), и подпись держит метка над выводом (D17):
+            // подпись и значение — текст метки, длинное имя обрезается с конца,
+            // не съедая подпись.
             var root = ReadmeTests.RepositoryRoot();
-            var picker = Regex.Replace(File.ReadAllText(Path.Combine(root, "Transliterator.Web", "Components", "ProfilePicker.razor")), @"\s+", " ");
+            var app = Regex.Replace(File.ReadAllText(Path.Combine(root, "Transliterator.Web", "App.razor")), @"\s+", " ");
 
-            Assert.Contains("ToggleText => L[\"Profile.Toggle\", Profile.Name]", picker);
-            Assert.Equal("Профиль: {0}", PageStrings.Web("ru")["Profile.Toggle"]);
-            Assert.Equal("Profile: {0}", PageStrings.Web("en")["Profile.Toggle"]);
-
-            var toggle = Regex.Match(picker, "<button [^>]*aria-controls=\"@\\(IsShown \\? \"profile-menu\" : null\\)\"[^>]*>(.*?)</button>");
-            Assert.True(toggle.Success, "the profile button is not found");
-            Assert.Contains("<span class=\"picker-toggle-text\">@ToggleText</span>", toggle.Groups[1].Value);
-            Assert.DoesNotContain("@Profile.Name", toggle.Groups[1].Value);
-            Assert.DoesNotContain("aria-label", toggle.Value);
+            Assert.Contains("<span class=\"result-chip-label\">@L[\"Result.ProfileChipLabel\"]</span><span class=\"result-chip-text\">@_profile.Name</span>", app);
 
             var css = Regex.Replace(File.ReadAllText(Path.Combine(root, "Transliterator.Web", "wwwroot", "css", "app.css")), @"\s+", " ");
-            var text = Regex.Match(css, @"\.picker-toggle-text \{([^}]*)\}");
-            Assert.True(text.Success, "the button text has no style");
+            var text = Regex.Match(css, @"\.result-chip-text \{([^}]*)\}");
+            Assert.True(text.Success, "the chip text has no style");
             Assert.Contains("text-overflow: ellipsis", text.Groups[1].Value);
             Assert.Contains("white-space: nowrap", text.Groups[1].Value);
         }

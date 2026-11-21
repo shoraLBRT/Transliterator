@@ -11,15 +11,11 @@
    страница» считает конвейер текущим профилем и ступенью, число стадий — константа
    конвейера (её сверяет тест), имена кнопок профиля — те же строки, что на кнопках. *@
 
-<div class="picker">
-    <button type="button" class="picker-toggle about-toggle" aria-expanded="@(IsOpen ? "true" : "false")"
-            aria-controls="@(IsShown ? "about-menu" : null)" @onclick="ToggleAsync" @ref="ToggleButton">
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M9.25 9.25a2.75 2.75 0 1 1 3.9 2.5c-.7.33-1.15 1-1.15 1.78v.72" />
-            <path d="M12 17.25v.01" />
-        </svg>
-        <span class="picker-toggle-text">@L["About.Toggle"]</span>
-    </button>
+@* В подвале (D44) — ссылкой-текстом без значка рядом с «Обратной связью»:
+   кнопок сбоку больше нет. Панель — та же. *@
+<div class="picker about-picker">
+    <button type="button" class="about-toggle" aria-expanded="@(IsOpen ? "true" : "false")"
+            aria-controls="@(IsShown ? "about-menu" : null)" @onclick="ToggleAsync" @ref="ToggleButton">@L["About.Toggle"]</button>
 
     @if (IsShown)
     {

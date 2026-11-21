@@ -63,8 +63,14 @@
   <data name="Toast.UndoLabel" xml:space="preserve">
     <value>Вернуть очищенный текст</value>
   </data>
-  <data name="Rail.Label" xml:space="preserve">
-    <value>Как читать и писать</value>
+  <data name="Settings.Label" xml:space="preserve">
+    <value>Настройки</value>
+  </data>
+  <data name="Settings.ReadingTab" xml:space="preserve">
+    <value>Таджвид</value>
+  </data>
+  <data name="Settings.ProfileTab" xml:space="preserve">
+    <value>Профиль</value>
   </data>
   <data name="Result.Title" xml:space="preserve">
     <value>Транслитерация</value>
@@ -226,10 +232,6 @@
   </data>
   <data name="Group.Base" xml:space="preserve">
     <value>Правила чтения на арабском</value>
-  </data>
-  <data name="Profile.Toggle" xml:space="preserve">
-    <value>Профиль: {0}</value>
-    <comment>Text of the side button (E6); {0} — profile name</comment>
   </data>
   <data name="Profile.Title" xml:space="preserve">
     <value>Профиль записи</value>

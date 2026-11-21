@@ -230,6 +230,112 @@ button {
     letter-spacing: -0.005em;
 }
 
+/* Справа в шапке (D44) — шестерёнка настроек и язык. Панели настроек в разметке
+   рядом с шестерёнкой, но стоят сами (fixed): обёртка вёрстке не видна. */
+.topbar-tools {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: var(--space-3);
+}
+
+.settings-picker {
+    display: contents;
+}
+
+/* Шестерёнка — круглая кнопка видом прежних кнопок сбоку (D23): открытая залита
+   акцентом. Имя для диктора — «Настройки». */
+.settings-toggle {
+    display: inline-grid;
+    place-items: center;
+    position: relative;
+    width: 2.25rem;
+    height: 2.25rem;
+    padding: 0;
+    border: 1px solid var(--line);
+    border-radius: 50%;
+    background: var(--paper);
+    color: var(--foam-700);
+    cursor: pointer;
+}
+
+.settings-toggle svg {
+    width: 1.15rem;
+    height: 1.15rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.settings-toggle:hover {
+    background: var(--foam-50);
+    border-color: var(--foam-300);
+}
+
+.settings-toggle[aria-expanded="true"] {
+    background: var(--foam-700);
+    border-color: var(--foam-700);
+    color: var(--paper);
+}
+
+/* Вкладки «Таджвид» и «Профиль» (D44) на месте имени панели: переключатель
+   из двух половин, выбранная — на подложке. */
+.settings-tabs {
+    display: inline-flex;
+    gap: 0.15rem;
+    padding: 0.15rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-pill);
+    background: var(--variant-bg);
+}
+
+.settings-tab {
+    position: relative;
+    padding: 0.3rem 0.9rem;
+    border: 0;
+    border-radius: var(--radius-pill);
+    background: transparent;
+    color: var(--ink-muted);
+    font: inherit;
+    font-size: var(--text-sm);
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.settings-tab:hover {
+    color: var(--foam-700);
+}
+
+.settings-tab[aria-selected="true"] {
+    background: var(--paper);
+    color: var(--foam-700);
+    box-shadow: var(--shadow-sm);
+}
+
+/* «О чём проект?» в подвале (D44) — текстом, как ссылки подвала. */
+.about-picker {
+    display: inline;
+}
+
+.about-toggle {
+    position: relative;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+    cursor: pointer;
+}
+
+.about-toggle:hover,
+.about-toggle[aria-expanded="true"] {
+    color: var(--foam-700);
+}
+
 /* ---- Язык интерфейса (D7) ----
    В шапке справа (D13): видно сразу, ничего не закрывает — ни поле, ни колонку
    панели слева, ни кнопку обратной связи внизу справа. */
@@ -670,72 +776,6 @@ svg {
     }
 }
 
-/* ---- Кнопки сбоку: ступень чтения, профиль и «?» (D6, D8) ---- */
-
-/* Круглый значок и подпись рядом — что выбрано сейчас («Полный таджвид»,
-   «Профиль: Standard», E6). Подпись — текст самой кнопки: по ней же кнопку
-   называет экранный диктор. На телефоне кнопки стоят строкой под полем,
-   и панель открывается нижним листом поверх страницы (D14). */
-.side-rail {
-    position: relative;
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: var(--space-2) var(--space-5);
-    margin-top: var(--space-2);
-    padding-inline: var(--space-2);
-}
-
-.side-rail .picker-toggle {
-    gap: 0.55rem;
-    padding: 0;
-    border: 0;
-    background: transparent;
-    color: var(--ink-muted);
-    font-size: var(--text-sm);
-    font-weight: 400;
-}
-
-/* Кнопки под полем и сбоку на ступень меньше на вид (D36): «Выбрать суру» —
-   мельче кегль и поля, круг значка сбоку — 0.5rem вокруг значка вместо 0.6rem.
-   Цель нажатия — прежние 44px через ::after (D25, «Цели нажатия»). */
-.side-rail .picker-toggle svg {
-    box-sizing: content-box;
-    padding: var(--space-2);
-    border: 1px solid var(--line);
-    border-radius: 50%;
-    background: var(--paper);
-    box-shadow: var(--shadow-md);
-    color: var(--foam-700);
-}
-
-.side-rail .picker-toggle:hover,
-.side-rail .picker-toggle[aria-expanded="true"] {
-    background: transparent;
-    color: var(--ink);
-}
-
-.side-rail .picker-toggle:hover svg {
-    background: var(--foam-50);
-    border-color: var(--foam-300);
-}
-
-/* Открытая кнопка (D23) видна с первого взгляда: значок залит акцентом,
-   подпись — основным цветом и плотнее. */
-.side-rail .picker-toggle[aria-expanded="true"] svg {
-    background: var(--foam-700);
-    border-color: var(--foam-700);
-    color: var(--paper);
-}
-
-.side-rail .picker-toggle[aria-expanded="true"] .picker-toggle-text {
-    font-weight: 600;
-}
-
-.side-rail .picker-toggle:focus-visible {
-    outline-offset: 4px;
-}
-
 /* Появление и уход панели (D10) — прозрачность и небольшой сдвиг, туда и обратно.
    Уходящая панель (.is-closing) ещё миг на месте, но уже inert: нажатия её
    не достают, диктор её не читает. На широком экране колонка выезжает сбоку. */
@@ -745,29 +785,6 @@ svg {
 
 @keyframes panel-out {
     to { opacity: 0; transform: translate(calc(var(--panel-shift-x, 0rem) * var(--motion-travel)), calc(var(--panel-shift-y, -0.4rem) * var(--motion-travel))); }
-}
-
-/* Колонка с 64rem (D37) раскрывается от своей кнопки слева направо: правый
-   край среза идёт от левого края колонки к правому. --motion-travel 0
-   (prefers-reduced-motion) оставляет срез открытым — только проявление. */
-@keyframes column-in {
-    from {
-        opacity: 0;
-        clip-path: inset(var(--panel-clip-room) calc(var(--panel-clip-room) + (100% - var(--panel-clip-room)) * var(--motion-travel)) var(--panel-clip-room) var(--panel-clip-room));
-    }
-    to {
-        clip-path: inset(var(--panel-clip-room));
-    }
-}
-
-@keyframes column-out {
-    from {
-        clip-path: inset(var(--panel-clip-room));
-    }
-    to {
-        opacity: 0;
-        clip-path: inset(var(--panel-clip-room) calc(var(--panel-clip-room) + (100% - var(--panel-clip-room)) * var(--motion-travel)) var(--panel-clip-room) var(--panel-clip-room));
-    }
 }
 
 .picker-panel.is-closing,
@@ -2661,7 +2678,7 @@ mark.changed {
    списка — меньше. Выключенная кнопка не откликается ни на что. */
 .icon-button,
 .picker-toggle,
-.side-rail .picker-toggle svg,
+.settings-toggle,
 .copy-button,
 .arabic-toggle,
 .hints-toggle,
@@ -2767,184 +2784,52 @@ mark.changed {
     }
 
     .shell {
-        --panel-left: 4.75rem;
         --panel-width: 25rem;
-        --rail-space: 6rem; /* столбик значков сбоку (D40) и зазор до шапки */
-        --rail-left: 1.25rem; /* левый край капсулы кнопок сбоку */
     }
 
+    /* Кнопок сбоку нет (D44): шапка, поле, вывод и подвал — по центру. */
     .topbar,
     .stage,
     .footer {
-        width: min(46rem, 100% - var(--rail-space));
+        width: min(46rem, 100%);
         max-width: none;
-        margin-right: 0;
-        margin-left: max(var(--rail-space), (100% - 46rem) / 2);
-        transition: margin-left var(--motion-move) var(--motion-ease), width var(--motion-move) var(--motion-ease);
+        margin-inline: auto;
     }
 
-    /* Шапка ещё и опускает поле (см. .topbar) — её отступ снизу едет как прежде. */
-    .topbar {
-        transition: margin-left var(--motion-move) var(--motion-ease), width var(--motion-move) var(--motion-ease),
-                    margin-bottom var(--motion-move-slow) var(--ease-soft);
-    }
-
-    /* Кнопки сбоку — одна капсула (D23) вровень с верхом поля: верх страницы,
-       шапка и её отступ — те же числа, что у .topbar, у пустой страницы ещё
-       подсказка (.hint: две строки и отступ), и капсула едет вместе с полем,
-       когда в нём появляется текст и подсказка схлопывается. Она закреплена (fixed): при прокрутке
-       длинного вывода кнопки остаются под рукой. Шапка начинается правее
-       --rail-space, колонка панели — правее --panel-left, и капсула не задевает
-       ни ту, ни другую. */
-    .side-rail {
-        position: fixed;
-        top: calc(max(var(--space-3) + var(--topbar-height) + var(--space-6), 24vh) + 2.8 * var(--hint-size) + var(--space-5));
-        left: var(--rail-left);
-        z-index: 11;
-        flex-direction: column;
-        flex-wrap: nowrap;
-        align-items: stretch;
-        gap: var(--space-2); /* значки меньше (D36): цели по 44px не заходят друг на друга */
-        margin: 0;
-        padding: var(--space-1);
-        border: 1px solid var(--line);
-        border-radius: var(--radius-pill);
-        background: var(--paper);
-        box-shadow: var(--shadow-md);
-        transition: top var(--motion-move-slow) var(--ease-soft);
-    }
-
-    .shell.is-active .side-rail {
-        top: max(var(--space-3) + var(--topbar-height) + var(--space-4), 7vh);
-    }
-
-    .side-rail .picker-toggle {
-        position: relative;
-        width: 100%;
-    }
-
-    /* Значки уже в карточке со своей тенью — своя им не нужна. */
-    .side-rail .picker-toggle svg {
-        box-shadow: none;
-    }
-
-    /* Индикатор открытой кнопки (D23) — черта у левого края капсулы. */
-    .side-rail .picker-toggle[aria-expanded="true"]::before {
-        content: "";
-        position: absolute;
-        top: 50%;
-        left: calc(-1 * var(--space-1));
-        width: 3px;
-        height: 1.25rem;
-        border-radius: var(--radius-pill);
-        background: var(--foam-700);
-        transform: translateY(-50%);
-    }
-
-    /* Кнопки сбоку — всегда столбик значков (D40), с колонкой и без: подписи
-       спрятаны с экрана, но остаются именем кнопки для диктора (opacity, не
-       visibility — иначе имя пропадёт). Наведение или фокус с клавиатуры
-       показывают ту же подпись подсказкой справа от значка (D23) — поверх
-       колонки: она в той же капсуле, и z-index подсказки выше, чем у колонки.
-       Появляется с задержкой, уходит сразу. */
-    .side-rail .picker-toggle-text {
-        position: absolute;
-        top: 50%;
-        left: calc(100% + var(--space-3));
-        z-index: 12;
-        max-width: 18rem;
-        padding: var(--space-1) var(--space-3);
-        font-size: var(--text-sm);
-        border-radius: var(--radius-sm);
-        background: var(--ink);
-        box-shadow: var(--shadow-md);
-        color: var(--paper);
-        font-weight: 500;
-        opacity: 0;
-        pointer-events: none;
-        transform: translate(calc(-1 * var(--space-1)), -50%);
-        transition: none; /* при открытии колонки подпись уходит сразу, не гаснет поверх неё (D37) */
-    }
-
-    .side-rail .picker-toggle:hover .picker-toggle-text,
-    .side-rail .picker-toggle:focus-visible .picker-toggle-text {
-        opacity: 1;
-        transform: translate(0, -50%);
-        transition: opacity var(--motion-fast) var(--ease-soft),
-                    transform var(--motion-move-fast) var(--motion-ease);
-        transition-delay: var(--motion-hint-delay);
-    }
-
-    /* У открытой кнопки подсказки нет вовсе (D37): её имя — заголовок колонки рядом. */
-    .side-rail .picker-toggle[aria-expanded="true"] .picker-toggle-text {
-        opacity: 0;
-        transition: none;
-    }
-
-    /* Кнопка и её колонка — одно целое, как вкладка (D37). Пока колонка открыта,
-       значок открытой кнопки — на фоне колонки, скруглён только слева, а мост
-       (::before, черта D23 здесь не нужна) того же фона и с той же рамкой сверху
-       и снизу тянется от него до колонки и накрывает край капсулы и левую рамку
-       колонки — зазора нет. Мост выше колонки (z 12 > 11) в слое капсулы.
-       Его правый край — --panel-left от края экрана: right отсчитывается от правого
-       края кнопки, а её левый край — --rail-left, рамка и отступ капсулы. Колонка
-       во всю высоту экрана: она всегда стоит против своей кнопки. */
-    .shell.has-panel .side-rail .picker-toggle[aria-expanded="true"] svg {
-        border-color: var(--line);
-        border-right-color: transparent;
-        border-radius: var(--radius-pill) 0 0 var(--radius-pill);
-        background: var(--paper);
-        color: var(--foam-700);
-    }
-
-    .shell.has-panel .side-rail .picker-toggle[aria-expanded="true"]::before {
-        top: 0;
-        right: calc(var(--rail-left) + 1px + var(--space-1) + 100% - var(--panel-left) - 1px);
-        bottom: 0;
-        left: 100%;
-        z-index: 12;
-        width: auto;
-        height: auto;
-        border-block: 1px solid var(--line);
-        border-radius: 0;
-        background: var(--paper);
-        transform: none;
-    }
-
-    /* Колонка вытекает из своей кнопки (D37): открывается от левого края —
-       от кнопки — к правому и тем же путём уходит обратно в кнопку. Срез
-       (clip-path) с запасом --panel-clip-room вокруг, чтобы не резать тень;
-       ширина среза умножена на --motion-travel, и с prefers-reduced-motion
-       остаётся только проявление (D30). */
-    .side-rail .picker-panel {
-        --panel-clip-room: -2rem;
-        min-height: calc(100vh - 2.5rem);
-        min-height: calc(100dvh - 2.5rem);
-        animation-name: column-in;
-    }
-
-    .side-rail .picker-panel.is-closing {
-        animation-name: column-out;
-    }
-
+    /* Колонка настроек и «О приложении» (D44) — у правого края экрана, под
+       шестерёнкой, во всю высоту, со своей прокруткой; выезжает справа. Поле и
+       вывод не сдвигаются (D32). */
     .picker-panel,
     .reading-panel,
     .profile-panel {
         position: fixed;
         top: 1.25rem;
-        left: var(--panel-left);
+        right: 1.25rem;
+        left: auto;
         width: var(--panel-width);
         max-height: calc(100vh - 2.5rem);
         max-height: calc(100dvh - 2.5rem);
-        --panel-shift-x: -0.75rem; /* колонка выезжает из-под кнопок */
+        --panel-shift-x: 0.75rem;
         --panel-shift-y: 0rem; /* с единицей: сдвиг умножается в calc (D30) */
+    }
+
+    /* Настройки (D44) выпадают под шестерёнкой: правый край — край шапки, верх —
+       под ней; шестерёнка и язык остаются видны. Панель ложится поверх поля и
+       вывода, ничего не сдвигая, и щелчок мимо закрывает её (подложка ниже). */
+    .reading-panel,
+    .profile-panel {
+        top: calc(var(--space-3) + var(--topbar-height) + var(--space-2));
+        right: max(1.25rem, (100% - 46rem) / 2);
+        max-height: calc(100vh - var(--space-3) - var(--topbar-height) - var(--space-2) - 1.25rem);
+        max-height: calc(100dvh - var(--space-3) - var(--topbar-height) - var(--space-2) - 1.25rem);
+        --panel-shift-x: 0rem;
+        --panel-shift-y: -0.4rem;
     }
 
     /* Колонка, не лист (D14): скругление со всех сторон, отступ вокруг, движение
        сбоку, шапка без ручки и не липнет — заголовки внутри липнут к верху
        колонки за её отступом. Страницу рядом с колонкой можно прокручивать. */
     .picker-panel {
-        right: auto;
         bottom: auto;
         z-index: 11;
         margin-inline: 0;
@@ -3033,14 +2918,20 @@ mark.changed {
     }
 }
 
-/* Колонка поверх страницы (D32): уже 110rem она не помещается слева от поля
-   (край колонки — 29.75rem от края экрана, поле шириной 46rem по центру) и
-   накрывает поле и вывод. Тогда под ней, как под списком сур (D15), прозрачная
-   подложка: щелчок мимо закрывает колонку и возвращает фокус на кнопку
-   (CloseToToggleAsync), Escape — как всегда. Подложка ниже колонки (z 11) и
-   капсулы кнопок сбоку (z 11): соседняя кнопка по-прежнему переключает панель.
-   У панелей из капсулы подложка внутри неё (fixed — свой слой), и z-index: -1
-   кладёт её под кнопки и колонку этого слоя — подсказки кнопок (D23) видны. */
+/* Панель поверх страницы (D32, D44): настройки выпадают под шестерёнкой поверх
+   поля и вывода на любой ширине, «О приложении» уже 110rem накрывает их у
+   правого края. Под ними, как под списком сур (D15), прозрачная подложка: щелчок
+   мимо закрывает панель и возвращает фокус на её кнопку (CloseToToggleAsync),
+   Escape — как всегда. Подложка ниже панели (z 11). */
+@media (min-width: 64rem) {
+    .shell.has-panel .settings-picker .picker-backdrop {
+        display: block;
+        z-index: 10;
+        background: transparent;
+        animation: none;
+    }
+}
+
 @media (min-width: 64rem) and (max-width: 109.99rem) {
     .shell.has-panel .picker-backdrop {
         display: block;
@@ -3048,16 +2939,12 @@ mark.changed {
         background: transparent;
         animation: none;
     }
-
-    .shell.has-panel .side-rail .picker-backdrop {
-        z-index: -1;
-    }
 }
 
 /* ---- Загрузка и сбой среды ---- */
 
 /* Экран загрузки (D22) — скелет страницы: каркас (.shell, .topbar, .hint,
-   .composer, .side-rail) берёт размеры у настоящих правил выше, здесь только
+   .composer, шестерёнка) берёт размеры у настоящих правил выше, здесь только
    заглушки вместо содержимого. Нажимать на скелете нечего. */
 .boot {
     pointer-events: none;
@@ -3094,6 +2981,11 @@ mark.changed {
     flex: none;
     width: calc(5.3rem + 2px);
     height: calc(2.3rem + 2px);
+}
+
+/* Шестерёнка (D44) — пустой круг той же рамки, залитый как заглушка. */
+.boot-settings {
+    background: var(--line);
 }
 
 /* Подсказка — две строки бруском; высоту держит сам .hint (2.8em). */
@@ -3138,11 +3030,6 @@ mark.changed {
 
 .boot-toggle .boot-label {
     width: 4.5rem;
-}
-
-/* Значки кнопок сбоку — пустые круги той же рамки, залитые как заглушка. */
-.boot .side-rail svg {
-    background: var(--line);
 }
 
 /* Строка загрузки под полем — мелко и по центру. Быстрого старта под полем
@@ -3226,6 +3113,9 @@ mark.changed {
 .profile-button,
 .profile-settings-toggle,
 .footer a,
+.settings-toggle,
+.settings-tab,
+.about-toggle,
 .feedback-toggle {
     position: relative;
 }
@@ -3248,6 +3138,9 @@ mark.changed {
 .profile-button::after,
 .profile-settings-toggle::after,
 .footer a::after,
+.settings-toggle::after,
+.settings-tab::after,
+.about-toggle::after,
 .feedback-toggle::after {
     content: "";
     position: absolute;
@@ -3323,14 +3216,6 @@ mark.changed {
     .composer-input {
         padding: var(--space-3) 1.1rem var(--space-1);
         font-size: 1.4rem;
-    }
-
-    /* Ступень и профиль — в одну строку под полем на экране в 375px. Кнопка «?»
-       с подписью «О чём проект?» (D8, D9) рядом с ними не помещается и переносится
-       под них строкой ниже. */
-    .side-rail {
-        gap: var(--space-2) var(--space-4);
-        padding-inline: 0;
     }
 
     .result {

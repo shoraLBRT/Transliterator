@@ -16,21 +16,25 @@ namespace Transliterator.Tests.DocsTests
             File.ReadAllText(Path.Combine(new[] { ReadmeTests.RepositoryRoot(), "Transliterator.Web" }.Concat(path).ToArray()));
 
         [Fact]
-        public void UnderTheField_OnlyTheSurahPicker_TheOtherSettingsStandAtTheSide()
+        public void UnderTheField_OnlyTheSurahPicker_TheSettingsAreInTheHeader_AboutInTheFooter()
         {
             var app = Web("App.razor");
 
             var composer = app.IndexOf("<div class=\"composer\">", StringComparison.Ordinal);
-            var rail = app.IndexOf("<aside class=\"side-rail\"", StringComparison.Ordinal);
-            var railEnd = app.IndexOf("</aside>", StringComparison.Ordinal);
+            var composerEnd = app.IndexOf("@if (_error is not null)", StringComparison.Ordinal);
+            var header = Regex.Match(app, "<header class=\"topbar\">(.*?)</header>", RegexOptions.Singleline);
+            var footer = Regex.Match(app, "<footer class=\"footer\">(.*?)</footer>", RegexOptions.Singleline);
 
-            Assert.True(composer >= 0, "the field is not found");
-            Assert.True(rail > composer, "the side rail is not found after the field");
-            Assert.True(railEnd > rail, "the side rail is not closed");
+            Assert.True(composer >= 0 && composerEnd > composer, "the field is not found");
+            Assert.True(header.Success, "the header is not found");
+            Assert.True(footer.Success, "the footer is not found");
 
-            var field = app[composer..rail];
-            var side = app[rail..railEnd];
+            var field = app[composer..composerEnd];
+            var side = header.Groups[1].Value;
 
+            // D44: кнопок сбоку нет; ступень и профиль — за шестерёнкой в шапке,
+            // «О чём проект?» — в подвале.
+            Assert.DoesNotContain("side-rail", app);
             Assert.Contains("<SurahPicker", field);
 
             // D28: быстрого старта D24 под полем больше нет — ни чипов, ни подписи,
@@ -42,7 +46,7 @@ namespace Transliterator.Tests.DocsTests
 
             Assert.Contains("<ReadingPicker", side);
             Assert.Contains("<ProfilePicker", side);
-            Assert.Contains("<AboutPicker", side);
+            Assert.Contains("<AboutPicker", footer.Groups[1].Value);
             Assert.DoesNotContain("<SurahPicker", side);
 
             Assert.Single(Regex.Matches(app, "<SurahPicker"));
@@ -67,8 +71,9 @@ namespace Transliterator.Tests.DocsTests
             var boot = app.Groups[1].Value;
 
             Assert.Contains("<div class=\"shell boot\" aria-busy=\"true\">", boot);
-            foreach (var part in new[] { "class=\"topbar\"", "class=\"stage\"", "class=\"hint\"", "class=\"composer\"", "class=\"composer-input\"", "class=\"composer-bar\"", "class=\"side-rail\"" })
+            foreach (var part in new[] { "class=\"topbar\"", "class=\"stage\"", "class=\"hint\"", "class=\"composer\"", "class=\"composer-input\"", "class=\"composer-bar\"", "class=\"settings-toggle boot-settings\"" })
                 Assert.Contains(part, boot);
+            Assert.DoesNotContain("side-rail", boot);
             Assert.True(boot.IndexOf("class=\"topbar\"", StringComparison.Ordinal) < boot.IndexOf("class=\"hint\"", StringComparison.Ordinal)
                         && boot.IndexOf("class=\"hint\"", StringComparison.Ordinal) < boot.IndexOf("class=\"composer\"", StringComparison.Ordinal),
                         "the skeleton is not in the order of the page");
@@ -161,80 +166,63 @@ namespace Transliterator.Tests.DocsTests
             Assert.Contains($"aria-labelledby=\"{panel}-title\"", picker);
             Assert.Contains($"<PanelHead Id=\"{panel}-title\"", picker);
             // aria-controls — только пока панель в разметке (D25): ссылка на id,
-            // которого нет, — ошибка ARIA.
-            Assert.Contains($"aria-controls=\"@(IsShown ? \"{panel}\" : null)\"", picker);
+            // которого нет, — ошибка ARIA. У ступени и профиля кнопка — шестерёнка (D44).
+            if (panel is "reading-menu" or "profile-menu")
+            {
+                Assert.DoesNotContain("<button type=\"button\" class=\"picker-toggle\"", picker);
+                Assert.Contains("Tabs=\"Tabs\"", picker);
+                Assert.Contains("aria-controls=\"@SettingsControls\"", Regex.Replace(Web("App.razor"), @"\s+", " "));
+            }
+            else
+                Assert.Contains($"aria-controls=\"@(IsShown ? \"{panel}\" : null)\"", picker);
             Assert.Contains("@onkeydown=\"OnPanelKeyDownAsync\"", picker);
         }
 
-        [Fact]
-        public void RailButtons_ShowTheCurrentChoice()
-        {
-            // Условие E6 в новой раскладке: у круглой кнопки видно, что выбрано.
-            var reading = Regex.Replace(Web("Components", "ReadingPicker.razor"), @"\s+", " ");
-            var toggle = Regex.Match(reading, "<button [^>]*aria-controls=\"@\\(IsShown \\? \"reading-menu\" : null\\)\"[^>]*>(.*?)</button>");
-
-            Assert.True(toggle.Success, "the reading button is not found");
-            Assert.Contains("<span class=\"picker-toggle-text\">@ModeName(Choice.Mode)</span>", toggle.Groups[1].Value);
-        }
-
         /// <summary>
-        /// D23: с 64rem кнопки сбоку — одна капсула на высоте поля, открытая кнопка
-        /// залита акцентом и отмечена чертой. D40: капсула всегда столбик значков —
-        /// с колонкой и без, has-panel её не меняет; подпись — подсказка справа от
-        /// значка при наведении и фокусе: с задержкой, на токенах движения, поверх
-        /// колонки и по-прежнему имя кнопки для диктора (opacity, не visibility).
-        /// Нативного title у кнопок нет — подсказка не двоится.
+        /// D44: ступень чтения и профиль — за шестерёнкой в шапке слева от языка.
+        /// Шестерёнка открывает панель на последней вкладке, вкладки «Таджвид» и
+        /// «Профиль» — tablist в шапке панели; Escape и крестик возвращают фокус
+        /// на шестерёнку. С 64rem панель выпадает под шестерёнкой поверх страницы,
+        /// и щелчок мимо закрывает её. «О чём проект?» — текстом в подвале.
         /// </summary>
         [Fact]
-        public void RailIcons_AlwaysShowTheirNameAsATooltip()
+        public void Settings_AreAGearWithTwoTabs_AndAboutIsAFooterLink()
         {
+            var app = Regex.Replace(Web("App.razor"), @"\s+", " ");
             var css = Regex.Replace(Web("wwwroot", "css", "app.css"), @"\s+", " ");
-            var wide = Regex.Match(css, @"@media \(min-width: 64rem\) \{(.*?)\} /\* ---- Загрузка");
-            Assert.True(wide.Success, "the wide-screen layout is not found");
-            var rules = wide.Groups[1].Value;
+            var head = Regex.Replace(Web("Components", "PanelHead.razor"), @"\s+", " ");
+            var about = Regex.Replace(Web("Components", "AboutPicker.razor"), @"\s+", " ");
+            var panels = Web("Components", "PanelPicker.cs");
 
-            var rail = Regex.Match(rules, @"\.side-rail \{([^}]*)\}");
-            Assert.True(rail.Success, "the rail rule is not found");
-            foreach (var declaration in new[]
-            {
-                "position: fixed;", "top: calc(max(var(--space-3) + var(--topbar-height) + var(--space-6), 24vh) + 2.8 * var(--hint-size) + var(--space-5));",
-                "background: var(--paper);", "border: 1px solid var(--line);", "box-shadow: var(--shadow-md);",
-                "padding: var(--space-1);", "border-radius: var(--radius-pill);",
-            })
-                Assert.Contains(declaration, rail.Groups[1].Value);
-            // Вид капсулы и подписей один, открыта колонка или нет (D40).
-            Assert.DoesNotContain(".shell.has-panel .side-rail {", css);
-            Assert.DoesNotMatch(@"has-panel[^{]*\.picker-toggle-text", css);
-            Assert.DoesNotContain("justify-content: center", rail.Groups[1].Value);
-            Assert.Contains(".shell.is-active .side-rail { top: max(var(--space-3) + var(--topbar-height) + var(--space-4), 7vh); }", rules);
+            // Шестерёнка — в шапке перед языком.
+            Assert.Matches(@"<div class=""topbar-tools""> .*<button type=""button"" class=""settings-toggle"" aria-label=""@L\[""Settings\.Label""\]"" aria-expanded=""@\(SettingsOpen \? ""true"" : ""false""\)"" aria-controls=""@SettingsControls"" @onclick=""ToggleSettingsAsync"" @ref=""_settingsToggle"">.*<LanguagePicker", app);
+            Assert.Contains("return OpenTabAsync(_settingsTab);", app);
+            Assert.Contains("if (Panels.Current is ReadingTab or ProfileTab) _settingsTab = Panels.Current;", app);
+            Assert.Contains("ReturnFocus=\"FocusSettingsToggle\" Tabs=\"@SettingsTabs(ReadingTab)\"", app);
+            Assert.Contains("ReturnFocus=\"FocusSettingsToggle\" Tabs=\"@SettingsTabs(ProfileTab)\"", app);
+            Assert.Contains("protected Task FocusToggleAsync() => ReturnFocus?.Invoke() ?? ToggleButton.FocusAsync().AsTask();", panels);
 
-            Assert.Contains(".side-rail .picker-toggle[aria-expanded=\"true\"] svg { background: var(--foam-700); border-color: var(--foam-700); color: var(--paper); }", css);
-            Assert.Matches(@"\.side-rail \.picker-toggle\[aria-expanded=""true""\]::before \{[^}]*background: var\(--foam-700\);", rules);
+            // Вкладки — tablist; выбранная в порядке Tab, стрелки переключают.
+            Assert.Contains("<div class=\"settings-tabs\" role=\"tablist\"", app);
+            Assert.Contains("role=\"tab\" aria-selected=\"true\" tabindex=\"0\"", app);
+            Assert.Contains("role=\"tab\" aria-selected=\"false\" tabindex=\"-1\"", app);
+            Assert.Contains("if (e.Key is not (\"ArrowLeft\" or \"ArrowRight\" or \"Home\" or \"End\")) return;", app);
+            Assert.Contains("<h2 id=\"@Id\" class=\"panel-title @(Tabs is null ? null : \"visually-hidden\")\">@Title</h2> @Tabs", head);
 
-            var tip = Regex.Match(rules, @"(?<![\w-]) \.side-rail \.picker-toggle-text \{([^}]*)\}");
-            Assert.True(tip.Success, "the tooltip rule is not found");
-            foreach (var declaration in new[]
-            {
-                "position: absolute;", "left: calc(100% + var(--space-3));", "z-index: 12;", "opacity: 0;", "pointer-events: none;",
-            })
-                Assert.Contains(declaration, tip.Groups[1].Value);
-            Assert.DoesNotContain("visibility", tip.Groups[1].Value);
-            Assert.DoesNotContain("clip", tip.Groups[1].Value);
-            // Поверх колонки: подсказка выше её z-index.
-            Assert.Matches(@"\.picker-panel \{ right: auto; bottom: auto; z-index: 11;", rules);
-            Assert.Contains(" .side-rail .picker-toggle:hover .picker-toggle-text, "
-                            + ".side-rail .picker-toggle:focus-visible .picker-toggle-text "
-                            + "{ opacity: 1; transform: translate(0, -50%); transition: opacity var(--motion-fast) var(--ease-soft), "
-                            + "transform var(--motion-move-fast) var(--motion-ease); transition-delay: var(--motion-hint-delay); }", rules);
-            Assert.Matches(@":root \{[^}]*--motion-hint-delay: 0\.3s;", css);
+            // С 64rem — под шестерёнкой, поверх страницы; щелчок мимо закрывает.
+            Assert.Matches(@"\.reading-panel, \.profile-panel \{ top: calc\(var\(--space-3\) \+ var\(--topbar-height\) \+ var\(--space-2\)\); right: max\(1\.25rem, \(100% - 46rem\) / 2\);", css);
+            Assert.Contains("@media (min-width: 64rem) { .shell.has-panel .settings-picker .picker-backdrop { display: block;", css);
+            Assert.Contains(".settings-toggle::after,", css);
+            Assert.DoesNotContain("side-rail", css);
+            Assert.DoesNotContain("rail-space", css);
 
-            foreach (var (file, panel) in new[] { ("ReadingPicker.razor", "reading-menu"), ("ProfilePicker.razor", "profile-menu"), ("AboutPicker.razor", "about-menu") })
-            {
-                var picker = Regex.Replace(Web("Components", file), @"\s+", " ");
-                var button = Regex.Match(picker, $"<button [^>]*aria-controls=\"@\\(IsShown \\? \"{panel}\" : null\\)\"[^>]*>");
-                Assert.True(button.Success, $"the {panel} button is not found");
-                Assert.DoesNotContain("title=", button.Value);
-            }
+            // «О чём проект?» — текстом в подвале, без значка.
+            Assert.Contains("<button type=\"button\" class=\"about-toggle\"", about);
+            Assert.DoesNotContain("<svg", Regex.Match(about, "<button type=\"button\" class=\"about-toggle\".*?</button>").Value);
+
+            Assert.Equal("Настройки", PageStrings.Web("ru")["Settings.Label"]);
+            Assert.Equal("Таджвид", PageStrings.Web("ru")["Settings.ReadingTab"]);
+            Assert.Equal("Профиль", PageStrings.Web("ru")["Settings.ProfileTab"]);
         }
 
         [Fact]
@@ -429,10 +417,9 @@ namespace Transliterator.Tests.DocsTests
 
             var toggle = Regex.Match(about, "<button [^>]*aria-controls=\"@\\(IsShown \\? \"about-menu\" : null\\)\"[^>]*>(.*?)</button>");
             Assert.True(toggle.Success, "the about button is not found");
-            // D23: имя у значка показывает подсказка, title её бы двоил.
+            // D44: текстом в подвале, без значка и без title.
             Assert.DoesNotContain("title=", toggle.Value);
-            Assert.Contains("<span class=\"picker-toggle-text\">@L[\"About.Toggle\"]</span>", toggle.Groups[1].Value);
-            Assert.DoesNotContain("visually-hidden", toggle.Groups[1].Value);
+            Assert.Equal("@L[\"About.Toggle\"]", toggle.Groups[1].Value);
             Assert.Contains("class=\"picker-panel about-panel @Closing.CssClass\"", about);
 
             foreach (var heading in new[] { "WhyTitle", "ExampleTitle" })
@@ -500,7 +487,7 @@ namespace Transliterator.Tests.DocsTests
                          "the separate sound panel is still there");
 
             var app = Regex.Replace(Web("App.razor"), @"\s+", " ");
-            Assert.Matches(@"<ProfilePicker [^>]*Sounds=""_sounds"" @ref=""_profilePicker"" />", app);
+            Assert.Matches(@"<ProfilePicker [^>]*Sounds=""_sounds"" @ref=""_profilePicker""", app);
             Assert.DoesNotContain("SoundsPicker", app);
 
             // Столбцы — без прокрутки вбок: ширина фиксирована у узких, звучание — остаток.
@@ -622,8 +609,8 @@ namespace Transliterator.Tests.DocsTests
             Assert.Contains("private string ReadingName => ReadingPicker.ModeName(L, _reading.Mode);", app);
             Assert.Contains("private Task OpenReadingAsync() => _readingPicker?.OpenAsync() ?? Task.CompletedTask;", app);
             Assert.Contains("private Task OpenProfileAsync() => _profilePicker?.OpenAsync() ?? Task.CompletedTask;", app);
-            Assert.Matches(@"<ReadingPicker [^>]*@ref=""_readingPicker"" />", app);
-            Assert.Matches(@"<ProfilePicker [^>]*@ref=""_profilePicker"" />", app);
+            Assert.Matches(@"<ReadingPicker [^>]*@ref=""_readingPicker""", app);
+            Assert.Matches(@"<ProfilePicker [^>]*@ref=""_profilePicker""", app);
 
             // Номер аята — знак с цифрой текстом, пробел перед ним — в тексте строки.
             // Текст строки — через ChangedText (D19): изменённые сменой настройки слова в mark.
@@ -822,7 +809,7 @@ namespace Transliterator.Tests.DocsTests
             var rules = wide.Groups[1].Value;
 
             Assert.Matches(@"\.picker-panel, \.reading-panel, \.profile-panel \{[^}]*position: fixed", rules);
-            Assert.Matches(@"\.stage, \.footer \{[^}]*margin-left: max\(var\(--rail-space\)", rules);
+            Assert.Contains(".topbar, .stage, .footer { width: min(46rem, 100%); max-width: none; margin-inline: auto; }", rules);
 
             // Ни подложки, которая закрыла бы панель щелчком по полю, ни повтора вывода
             // в панелях профиля (E4) и «Как читать» (I10): вывод и так рядом. Ни ручки
@@ -831,55 +818,6 @@ namespace Transliterator.Tests.DocsTests
             Assert.Contains("html.is-sheet-open { overflow: visible;", rules);
             Assert.Contains(".picker-panel.is-closing { animation-name: panel-out; }", rules);
             Assert.Matches(@"\.picker-panel \{[^}]*border-radius: var\(--radius-xl\);[^}]*animation-name: panel-in;", rules);
-        }
-
-        /// <summary>
-        /// D37: с 64rem открытая кнопка сбоку — часть своей колонки, как вкладка:
-        /// значок на фоне колонки, мост того же фона с той же рамкой тянется до
-        /// колонки и накрывает её левую рамку. Колонка во всю высоту экрана и
-        /// раскрывается срезом от кнопки, уходит в неё обратно; при reduce срез
-        /// открыт (--motion-travel 0) — только проявление. Подпись кнопки при
-        /// открытии уходит сразу, у открытой кнопки подсказки нет. Лист D14 уже
-        /// 64rem прежний.
-        /// </summary>
-        [Fact]
-        public void OnAWideScreen_TheOpenRailButtonIsATabOfItsColumn_AndTheColumnFlowsOutOfIt()
-        {
-            var css = Regex.Replace(Web("wwwroot", "css", "app.css"), @"\s+", " ");
-            var wide = Regex.Match(css, @"@media \(min-width: 64rem\) \{(.*?)\} /\* ---- Загрузка");
-            Assert.True(wide.Success, "the wide-screen layout is not found");
-            var rules = wide.Groups[1].Value;
-
-            Assert.Matches(@"\.shell \{[^}]*--rail-left: 1\.25rem;", rules);
-            Assert.Matches(@"\.side-rail \{ position: fixed;[^}]*left: var\(--rail-left\);", rules);
-
-            var icon = Regex.Match(rules, @"\.shell\.has-panel \.side-rail \.picker-toggle\[aria-expanded=""true""\] svg \{([^}]*)\}");
-            Assert.True(icon.Success, "the open tab icon rule is not found");
-            foreach (var declaration in new[] { "border-right-color: transparent;", "background: var(--paper);" })
-                Assert.Contains(declaration, icon.Groups[1].Value);
-
-            var bridge = Regex.Match(rules, @"\.shell\.has-panel \.side-rail \.picker-toggle\[aria-expanded=""true""\]::before \{ top: 0;([^}]*)\}");
-            Assert.True(bridge.Success, "the tab bridge rule is not found");
-            foreach (var declaration in new[]
-            {
-                "right: calc(var(--rail-left) + 1px + var(--space-1) + 100% - var(--panel-left) - 1px);", "left: 100%;",
-                "z-index: 12;", "border-block: 1px solid var(--line);", "background: var(--paper);",
-            })
-                Assert.Contains(declaration, bridge.Groups[1].Value);
-
-            var column = Regex.Match(rules, @"\.side-rail \.picker-panel \{([^}]*)\}");
-            Assert.True(column.Success, "the rail column rule is not found");
-            foreach (var declaration in new[] { "min-height: calc(100dvh - 2.5rem);", "animation-name: column-in;" })
-                Assert.Contains(declaration, column.Groups[1].Value);
-            Assert.Contains(".side-rail .picker-panel.is-closing { animation-name: column-out; }", rules);
-            foreach (var name in new[] { "column-in", "column-out" })
-                Assert.Matches($@"@keyframes {name} \{{[^@]*clip-path: inset\(var\(--panel-clip-room\) calc\(var\(--panel-clip-room\) \+ \(100% - var\(--panel-clip-room\)\) \* var\(--motion-travel\)\)", css);
-
-            Assert.Matches(@"(?<![\w-]) \.side-rail \.picker-toggle-text \{[^}]*transition: none;", rules);
-            Assert.Contains(" .side-rail .picker-toggle[aria-expanded=\"true\"] .picker-toggle-text { opacity: 0; transition: none; }", rules);
-
-            // Лист уже 64rem не тронут: срез только в широкой раскладке.
-            Assert.DoesNotContain("animation-name: column-in", css.Replace(wide.Value, ""));
         }
 
         /// <summary>
@@ -897,19 +835,22 @@ namespace Transliterator.Tests.DocsTests
             Assert.True(wide.Success, "the wide-screen layout is not found");
             var rules = wide.Groups[1].Value;
 
-            // Отступ контента — от --rail-space, и has-panel его не меняет нигде.
-            Assert.Matches(@"\.shell \{ --panel-left: 4\.75rem; --panel-width: 25rem; --rail-space: 6rem;", rules);
-            Assert.Matches(@"\.topbar, \.stage, \.footer \{[^}]*margin-left: max\(var\(--rail-space\), \(100% - 46rem\) / 2\);", rules);
-            Assert.DoesNotMatch(@"has-panel[^{]*\{[^}]*--rail-space", css);
+            // Контент по центру (D44), и has-panel его не меняет нигде.
+            Assert.Matches(@"\.shell \{ --panel-width: 25rem; \}", rules);
+            Assert.Contains(".topbar, .stage, .footer { width: min(46rem, 100%); max-width: none; margin-inline: auto; }", rules);
             Assert.DoesNotMatch(@"has-panel[^{]*(\.topbar|\.stage|\.footer)[^{]*\{", css);
 
-            // Где колонка не помещается слева (край 4.75 + 25 = 29.75rem, поле 46rem
-            // по центру — нужно не меньше ~108.6rem с полосой прокрутки) — подложка.
-            // Подложка ниже колонки и капсулы кнопок: соседняя кнопка переключает панель.
-            var overlay = Regex.Match(css, @"@media \(min-width: 64rem\) and \(max-width: 109\.99rem\) \{ \.shell\.has-panel \.picker-backdrop \{([^}]*)\} \.shell\.has-panel \.side-rail \.picker-backdrop \{ z-index: -1; \} \}");
+            // Настройки выпадают поверх страницы на любой ширине (D44), «О приложении»
+            // у правого края — уже 110rem: под ними прозрачная подложка ниже панели.
+            var settings = Regex.Match(css, @"@media \(min-width: 64rem\) \{ \.shell\.has-panel \.settings-picker \.picker-backdrop \{([^}]*)\} \}");
+            var overlay = Regex.Match(css, @"@media \(min-width: 64rem\) and \(max-width: 109\.99rem\) \{ \.shell\.has-panel \.picker-backdrop \{([^}]*)\} \}");
+            Assert.True(settings.Success, "the settings backdrop is not found");
             Assert.True(overlay.Success, "the overlay backdrop for a column that does not fit is not found");
             foreach (var declaration in new[] { "display: block;", "z-index: 10;", "background: transparent;", "animation: none;" })
+            {
+                Assert.Contains(declaration, settings.Groups[1].Value);
                 Assert.Contains(declaration, overlay.Groups[1].Value);
+            }
 
             // Подложка — в каждой колонке, и щелчок по ней закрывает её к кнопке.
             foreach (var picker in new[] { "ReadingPicker.razor", "ProfilePicker.razor", "AboutPicker.razor" })
@@ -1030,13 +971,10 @@ namespace Transliterator.Tests.DocsTests
             Assert.Matches(@"\.picker-toggle \{ display: inline-flex;[^}]*padding: var\(--space-1\) var\(--space-3\);[^}]*font-size: var\(--text-xs\);", css);
             Assert.Matches(@":root \{[^}]*--bar-icon-size: 1\.75rem;", css);
             Assert.Contains(".composer-bar .icon-button { width: var(--bar-icon-size); height: var(--bar-icon-size); }", css);
-            Assert.Matches(@"\.side-rail \.picker-toggle svg \{ box-sizing: content-box; padding: var\(--space-2\);", css);
+            Assert.Matches(@"\.settings-toggle \{[^}]*width: 2\.25rem; height: 2\.25rem;", css);
+            Assert.Contains(".settings-toggle::after,", css);
             Assert.Matches(@"\.picker-toggle::after,[^{]*\{ content: """"; position: absolute;[^}]*width: max\(100%, var\(--target-min\)\); height: max\(100%, var\(--target-min\)\);", css);
             Assert.Contains(".icon-button::after,", css);
-
-            var wide = Regex.Match(css, @"@media \(min-width: 64rem\) \{(.*?)\} /\* ---- Загрузка");
-            Assert.True(wide.Success, "the wide-screen layout is not found");
-            Assert.Matches(@"\.side-rail \{ position: fixed;[^}]*gap: var\(--space-2\);", wide.Groups[1].Value);
         }
 
         /// <summary>
@@ -1297,7 +1235,7 @@ namespace Transliterator.Tests.DocsTests
             {
                 var picker = Regex.Replace(Web("Components", file), @"\s+", " ");
                 Assert.Contains("<span class=\"panel-preview-text\" @key=\"ChangeKey\">", picker);
-                Assert.Matches(@"<PanelHead Id=""[a-z]+-menu-title"" Title=""@L\[""[A-Za-z]+\.Title""\]"" Close=""CloseToToggleAsync"" Note=""@\(Unchanged \? L\[""Output\.Unchanged""\]\.Value : null\)"" />", picker);
+                Assert.Matches(@"<PanelHead Id=""[a-z]+-menu-title"" Title=""@L\[""[A-Za-z]+\.Title""\]"" Close=""CloseToToggleAsync"" Note=""@\(Unchanged \? L\[""Output\.Unchanged""\]\.Value : null\)"" Tabs=""Tabs"" />", picker);
                 Assert.DoesNotContain("panel-preview-note", picker);
             }
 
@@ -1314,7 +1252,7 @@ namespace Transliterator.Tests.DocsTests
 
             // Уже 64rem подпись — в липкой шапке листа: видна на любой глубине прокрутки.
             var panelHead = Regex.Replace(Web("Components", "PanelHead.razor"), @"\s+", " ");
-            Assert.Contains("<h2 id=\"@Id\" class=\"panel-title\">@Title</h2> @*", panelHead);
+            Assert.Contains("<h2 id=\"@Id\" class=\"panel-title @(Tabs is null ? null : \"visually-hidden\")\">@Title</h2> @Tabs @*", panelHead);
             Assert.Contains("<p class=\"panel-head-note\" role=\"status\">@Note</p>", panelHead);
             Assert.Matches(@"\.panel-head-note \{[^}]*-webkit-line-clamp: 2;", css);
             Assert.Matches(@"@media \(min-width: 64rem\) \{.*?\.panel-head-note \{ display: none; \}", css);

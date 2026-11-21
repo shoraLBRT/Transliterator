@@ -18,7 +18,7 @@
     <!-- ?v= — первые 8 знаков SHA-256 файла (переводы строк как LF). Браузер не берёт
          из кеша прежний page.js или app.css к новой сборке: файл изменился — изменился
          и адрес. Сверяет PageAssetVersionTests и подсказывает новое значение. -->
-    <link rel="stylesheet" href="css/app.css?v=3a4b6a24" />
+    <link rel="stylesheet" href="css/app.css?v=221e1b3e" />
 </head>
 
 <body>
@@ -43,7 +43,7 @@
                     </svg>
                     <span class="topbar-name" data-shell="heading">Транслитерация Корана</span>
                 </div>
-                <span class="boot-block boot-language"></span>
+                <div class="topbar-tools"><span class="settings-toggle boot-settings"></span><span class="boot-block boot-language"></span></div>
             </div>
 
             <div class="stage">
@@ -61,14 +61,6 @@
                 <p class="boot-status" role="status">
                     <span id="boot-loading" data-shell="loading">Загрузка…</span><span class="boot-percent"></span>
                 </p>
-
-                <!-- Кнопки в обёртке .picker, как в компонентах: высоту строки рейла
-                     даёт она. -->
-                <div class="side-rail" aria-hidden="true">
-                    <div class="picker"><span class="picker-toggle"><svg viewBox="0 0 24 24"></svg><span class="picker-toggle-text boot-block boot-label"></span></span></div>
-                    <div class="picker"><span class="picker-toggle"><svg viewBox="0 0 24 24"></svg><span class="picker-toggle-text boot-block boot-label"></span></span></div>
-                    <div class="picker"><span class="picker-toggle"><svg viewBox="0 0 24 24"></svg><span class="picker-toggle-text boot-block boot-label"></span></span></div>
-                </div>
             </div>
         </div>
     </div>
