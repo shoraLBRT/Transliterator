@@ -3333,13 +3333,13 @@ mark.changed {
    резкой. Мигание курсора подсказки как было: оно ничего не двигает. */
 /* Веб-приложение с экрана «Домой» (D46): iOS кладёт под статус-бар размытие,
    и оно заходит на страницу ниже самого статус-бара — шапка выходила размытой.
-   Только в этом режиме каркас отступает сверху на вырез экрана и ещё 2rem;
+   Только в этом режиме каркас отступает сверху на вырез экрана и ещё 1.25rem;
    в браузере раскладка прежняя. Режим определяет скрипт в <head> index.html
    (navigator.standalone на iOS: без manifest `display-mode: standalone` там не
    срабатывает) и ставит класс is-standalone на <html>. Стоит после правил
    телефона, чтобы их перекрыть. */
 html.is-standalone .shell {
-    padding-top: calc(var(--space-2) + env(safe-area-inset-top, 0px) + 2rem);
+    padding-top: calc(var(--space-2) + env(safe-area-inset-top, 0px) + 1.25rem);
 }
 
 @media (prefers-reduced-motion: reduce) {
