@@ -75,6 +75,15 @@
   <data name="Result.ArabicTitle" xml:space="preserve">
     <value>Показать над каждой строкой транслитерации её арабскую строку</value>
   </data>
+  <data name="Result.Hints" xml:space="preserve">
+    <value>Подсказки букв</value>
+  </data>
+  <data name="Result.HintsTitle" xml:space="preserve">
+    <value>Подсветить буквы, звука которых нет в русском: нажмите на букву, чтобы узнать, как её читать</value>
+  </data>
+  <data name="Result.HintLetter" xml:space="preserve">
+    <value>{0} — как читать</value>
+  </data>
   <data name="Result.ReadingChip" xml:space="preserve">
     <value>Чтение: {0}. Изменить</value>
   </data>

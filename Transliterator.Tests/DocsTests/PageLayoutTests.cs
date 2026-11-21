@@ -606,7 +606,7 @@ namespace Transliterator.Tests.DocsTests
 
             var card = Regex.Match(app, @"<section class=""result"" aria-labelledby=""result-title"">(.*?)</section>");
             Assert.True(card.Success, "the output card is not found");
-            var head = Regex.Match(card.Groups[1].Value, @"<div class=""result-head"">(.*?)</div> (?:@\*(?:(?!\*@).)*\*@ )?<div class=""result-text"" @key=""_changeKey"">");
+            var head = Regex.Match(card.Groups[1].Value, @"<div class=""result-head"">(.*?)</div> (?:@\*(?:(?!\*@).)*\*@ )*<div class=""result-text"" @key=""_changeKey"" @ref=""_resultText"">");
             Assert.True(head.Success, "the card head is not found before the lines");
 
             Assert.Contains("<h2 id=\"result-title\" class=\"result-title\">@L[\"Result.Title\"]</h2>", head.Groups[1].Value);
@@ -624,10 +624,10 @@ namespace Transliterator.Tests.DocsTests
 
             // Номер аята — знак с цифрой текстом, пробел перед ним — в тексте строки.
             // Текст строки — через ChangedText (D19): изменённые сменой настройки слова в mark.
-            Assert.Contains("@{ var lines = ResultLine.Split(_result); var sources = ResultLine.Sources(_arabic, lines.Count); } @for (var i = 0; i < lines.Count; i++)", card.Groups[1].Value);
-            Assert.Contains("<div class=\"result-line\"><ChangedText Segments=\"Part(i, 0, line.Lead)\" /><span class=\"ayah-tail\"><ChangedText Segments=\"Part(i, line.Lead.Length, line.Word)\" />@(line.Gap)<span class=\"ayah-mark\">@line.Ayah</span></span></div>", card.Groups[1].Value);
+            Assert.Contains("@{ var lines = ResultLine.Split(_result); var sources = ResultLine.Sources(_arabic, lines.Count); var hints = LetterHints; } @for (var i = 0; i < lines.Count; i++)", card.Groups[1].Value);
+            Assert.Contains("<div class=\"result-line\">@LineText(hints, i, 0, line.Lead)<span class=\"ayah-tail\">@LineText(hints, i, line.Lead.Length, line.Word)@(line.Gap)<span class=\"ayah-mark\">@line.Ayah</span></span>@LetterHint(i)</div>", card.Groups[1].Value);
             Assert.Matches(@"\.ayah-tail \{ white-space: nowrap; \}", css);
-            Assert.Contains("<div class=\"result-line\"><ChangedText Segments=\"Part(i, 0, line.Text)\" /></div>", card.Groups[1].Value);
+            Assert.Contains("<div class=\"result-line\">@LineText(hints, i, 0, line.Text)@LetterHint(i)</div>", card.Groups[1].Value);
             Assert.DoesNotMatch(@"\.ayah-mark[^{]*\{[^}]*(?<![\w-])content:", css);
 
             // Кнопка копирует весь вывод, как и прежде.
@@ -743,7 +743,7 @@ namespace Transliterator.Tests.DocsTests
             Assert.Matches(@"\.result-text \{[^}]*animation: text-in var\(--motion-duration\) var\(--ease-soft\);", css);
             Assert.Contains("@keyframes text-in { from { opacity: 0.35; } }", css);
             var app = Regex.Replace(Web("App.razor"), @"\s+", " ");
-            Assert.Contains("<div class=\"result-text\" @key=\"_changeKey\">", app);
+            Assert.Contains("<div class=\"result-text\" @key=\"_changeKey\" @ref=\"_resultText\">", app);
         }
 
         /// <summary>
@@ -1287,7 +1287,7 @@ namespace Transliterator.Tests.DocsTests
             Assert.Matches(@"if \(diff\.HasChanges\) \{ _changes = diff; _ = ExpireChangesAsync\(\+\+_changeKey\); AnnounceOutput\(\); \} else if \(before == _result\) \{ _ = ShowUnchangedNoteAsync\(\); \}", app);
 
             // Подсветка проигрывается заново: новый ключ пересоздаёт строки и повтор в панелях.
-            Assert.Contains("<div class=\"result-text\" @key=\"_changeKey\">", app);
+            Assert.Contains("<div class=\"result-text\" @key=\"_changeKey\" @ref=\"_resultText\">", app);
             Assert.Matches(@"<ReadingPicker [^>]*Changes=""_changes"" ChangeKey=""_changeKey"" Unchanged=""_unchangedNote""", app);
             Assert.Matches(@"<ProfilePicker [^>]*Changes=""_changes"" ChangeKey=""_changeKey"" Unchanged=""_unchangedNote""", app);
             foreach (var file in new[] { "ReadingPicker.razor", "ProfilePicker.razor" })
@@ -1404,7 +1404,7 @@ namespace Transliterator.Tests.DocsTests
             var app = Regex.Replace(Web("App.razor"), @"\s+", " ");
             var css = Regex.Replace(Web("wwwroot", "css", "app.css"), @"\s+", " ");
 
-            Assert.Matches(@"<div class=""result-tools""> .*class=""sounds-toggle"".*class=""arabic-toggle"".*</button> </div> .*<button type=""button"" class=""copy-button", app);
+            Assert.Matches(@"<div class=""result-tools""> .*class=""sounds-toggle"".*class=""arabic-toggle"".*</button> (?:} )?</div> .*<button type=""button"" class=""copy-button", app);
 
             Assert.Contains(".result-tools { display: contents; }", css);
             Assert.Contains(".result-tools + .copy-button { margin-left: 0; }", css);
@@ -1412,6 +1412,59 @@ namespace Transliterator.Tests.DocsTests
             Assert.Matches(@"@media \(max-width: 36rem\) \{.*\.result-tools \{ display: flex; flex-wrap: wrap; order: 2; flex: 1 1 100%;", css);
             Assert.Matches(@"@media \(max-width: 36rem\) \{.*\.result-tools \+ \.copy-button \{ margin-left: auto; \}", css);
             Assert.DoesNotContain("-toggle-label { position: absolute;", css);
+        }
+
+        /// <summary>
+        /// D41: тумблер «Подсказки букв» в шапке вывода подсвечивает буквы, звука
+        /// которых нет в русском, — по происхождению куска вывода из ядра, — только
+        /// цветом, без подчёркивания. Нажатие на букву открывает подсказку с текстами
+        /// таблицы звуков; Escape и щелчок мимо закрывают её. Копируется прежний вывод.
+        /// </summary>
+        [Fact]
+        public void LetterHints_HighlightSoundsRussianLacks_AndExplainThemOnTap()
+        {
+            var app = Regex.Replace(Web("App.razor"), @"\s+", " ");
+            var css = Regex.Replace(Web("wwwroot", "css", "app.css"), @"\s+", " ");
+            var script = Regex.Replace(Web("wwwroot", "js", "page.js"), @"\s+", " ");
+
+            // Тумблер — в обёртке кнопок шапки (D42), с aria-pressed; выбор помнится, по умолчанию включён.
+            Assert.Matches(@"<div class=""result-tools"">.*<button type=""button"" class=""hints-toggle"" aria-pressed=""@\(_letterHintsOn \? ""true"" : ""false""\)"" title=""@L\[""Result\.HintsTitle""\]"" @onclick=""ToggleLetterHintsAsync"">.*<span class=""hints-toggle-label"">@L\[""Result\.Hints""\]</span> </button> } </div>", app);
+            Assert.Contains("private const string LetterHintsKey = \"transliterator.letterHints\";", app);
+            Assert.Contains("private bool _letterHintsOn = true;", app);
+            Assert.Contains("await JS.InvokeVoidAsync(\"page.save\", LetterHintsKey, _letterHintsOn ? string.Empty : \"0\");", app);
+
+            // Буквы — по происхождению из ядра, только NotInRussian.
+            Assert.Contains("_hinted = _sounds?.Sounds.Where(s => s.NotInRussian)", app);
+            Assert.Contains("_lettersByLine = OutputLetters.Build(_result, _letters, _hinted.ContainsKey);", app);
+            Assert.Contains("_letters = output.Letters;", app);
+
+            // Буква — span role="button" в тексте, одна в порядке Tab; подсказка — role="tooltip".
+            Assert.Contains("builder.AddAttribute(12, \"role\", \"button\");", app);
+            Assert.Contains("builder.AddAttribute(13, \"tabindex\", \"-1\");", app);
+            Assert.Contains("<span class=\"letter-hint\" id=\"@LetterHintId\" role=\"tooltip\">", app);
+            Assert.Contains("@L[\"Profile.NotInRussian\"]", app);
+            Assert.Contains("<span id=\"@HintDescriptionId(sound.Letter)\" hidden>@L[\"Result.HintLetter\", sound.Name.Current]</span>", app);
+
+            // Только цвет и фон: без подчёркивания и знаков у буквы.
+            Assert.Matches(@"\.hint-letter \{ color: var\(--hint-ink\);", css);
+            var letterRules = string.Join(" ", Regex.Matches(css, @"\.hint-letter[^{]*\{[^}]*\}").Select(m => m.Value));
+            Assert.DoesNotContain("text-decoration", letterRules);
+            Assert.DoesNotContain("border-bottom", letterRules);
+            Assert.DoesNotContain("font-weight", letterRules);
+            Assert.Matches(@"\.letter-hint \{ position: absolute;[^}]*max-width: min\(20rem, 100%\);[^}]*user-select: none;", css);
+
+            // Клавиатура, щелчок мимо и место подсказки — скрипт страницы.
+            Assert.Contains("function letterHints(owner)", script);
+            Assert.Contains("owner.invokeMethodAsync(\"CloseLetterHint\")", script);
+            Assert.Contains("if (event.key === \"Enter\" || event.key === \" \")", script);
+            Assert.Contains("function letterHintsUpdate(container)", script);
+            Assert.Contains("[JSInvokable] public void CloseLetterHint()", app);
+
+            // Копируется прежний вывод.
+            Assert.Contains("copied = await JS.InvokeAsync<bool>(\"page.copy\", _result);", app);
+
+            Assert.Equal("Подсказки букв", PageStrings.Web("ru")["Result.Hints"]);
+            Assert.Equal("Letter hints", PageStrings.Web("en")["Result.Hints"]);
         }
     }
 }

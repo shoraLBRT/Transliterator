@@ -66,8 +66,12 @@ namespace Transliterator.Core.Services.Phonology
         /// никогда: у него есть откат на базовый. Цифры тоже: незаданная цифра
         /// пишется как есть, и это не потеря.
         /// </param>
+        /// <param name="letters">
+        /// Куда сложить куски вывода с их арабской буквой (D41): графема согласного
+        /// с удвоением, без отзвука и гласной. Пустая графема куска не даёт.
+        /// </param>
         public string Render(IReadOnlyList<Segment> segments, TransliterationProfile profile,
-                             ISet<string>? missingKeys = null)
+                             ISet<string>? missingKeys = null, IList<LetterSpan>? letters = null)
         {
             var result = new StringBuilder();
 
@@ -100,9 +104,12 @@ namespace Transliterator.Core.Services.Phonology
                 {
                     var consonant = RenderConsonant(segment, previous, EndsWord(segments, index), profile, missingKeys);
                     previous = segment;
+                    var start = result.Length;
                     result.Append(Repeat(consonant, GlideCount(segment)));
                     if (segment.Shadda)
                         result.Append(consonant);
+                    if (result.Length > start)
+                        letters?.Add(new LetterSpan(start, result.Length - start, segment.Letter));
 
                     // Отзвук кальканя идёт после согласного целиком, а не вместо него:
                     // удвоенная буква размыкается один раз, и отзвук у неё тоже один.

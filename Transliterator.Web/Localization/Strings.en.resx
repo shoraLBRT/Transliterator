@@ -72,6 +72,15 @@
   <data name="Result.ArabicTitle" xml:space="preserve">
     <value>Show the Arabic line above each line of the transliteration</value>
   </data>
+  <data name="Result.Hints" xml:space="preserve">
+    <value>Letter hints</value>
+  </data>
+  <data name="Result.HintsTitle" xml:space="preserve">
+    <value>Highlight letters whose sounds Russian lacks: tap a letter to see how to say it</value>
+  </data>
+  <data name="Result.HintLetter" xml:space="preserve">
+    <value>{0}: how to say it</value>
+  </data>
   <data name="Result.ReadingChip" xml:space="preserve">
     <value>Reading: {0}. Change</value>
   </data>
