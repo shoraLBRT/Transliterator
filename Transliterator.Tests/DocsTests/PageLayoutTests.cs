@@ -1439,7 +1439,7 @@ namespace Transliterator.Tests.DocsTests
         {
             // D46: в режиме веб-приложения iOS размывает полосу под статус-баром,
             // и она заходит на страницу — только там каркас отступает сверху на
-            // вырез экрана и ещё 2rem; в браузере отступ прежний. Без manifest
+            // вырез экрана и ещё 1.25rem; в браузере отступ прежний. Без manifest
             // `display-mode: standalone` на iOS не срабатывает, поэтому режим
             // определяет скрипт в <head> по navigator.standalone до стилей.
             var css = Regex.Replace(Web("wwwroot", "css", "app.css"), @"\s+", " ");
@@ -1457,7 +1457,7 @@ namespace Transliterator.Tests.DocsTests
             Assert.True(standalone > phone, "the home-screen app rule must follow the phone rules to override them");
 
             Assert.Matches(
-                @"^html\.is-standalone \.shell \{ padding-top: calc\(var\(--space-2\) \+ env\(safe-area-inset-top, 0px\) \+ 2rem\); \}",
+                @"^html\.is-standalone \.shell \{ padding-top: calc\(var\(--space-2\) \+ env\(safe-area-inset-top, 0px\) \+ 1\.25rem\); \}",
                 css[standalone..]);
 
             Assert.Matches(@"\.shell \{ position: relative;[^}]*padding: var\(--space-3\) 1\.25rem 1\.25rem;", css);
