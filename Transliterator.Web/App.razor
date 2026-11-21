@@ -140,21 +140,11 @@
                        уже 64rem метки выше скрыты, а на телефоне кнопки с подписями стоят
                        своей строкой под подписью и «Копировать». *@
                     <div class="result-tools">
-                    @* «Как читать буквы» (D11): звучание букв — в таблице графем профиля (E11),
-                       кнопка открывает панель профиля с раскрытыми настройками. *@
-                    @if (SoundsOpener is not null)
-                    {
-                        <button type="button" class="sounds-toggle" title="@L["Sounds.ToggleTitle"]" @onclick="OpenSoundsAsync">
-                            <svg class="sounds-toggle-icon" viewBox="0 0 24 24" aria-hidden="true">
-                                <path d="M4 5.5h7v13H4zM13 5.5h7v13h-7z" />
-                                <path d="M6.5 9h2M15.5 9h2M15.5 12.5h2" />
-                            </svg>
-                            <span class="sounds-toggle-label">@L["Sounds.Toggle"]</span>
-                        </button>
-                    }
+                    @* «Как читать буквы» (D11) здесь больше нет (D43): букву объясняют подсказки
+                       в самом выводе (D41), а таблица звуков открывается из «О чём проект?». *@
 
                     @* «С арабским» (D18): над каждой строкой вывода — её арабская строка
-                       поля. Тумблер — aria-pressed. *@
+                       поля. Тумблер — aria-pressed, по умолчанию включён (D43). *@
                     <button type="button" class="arabic-toggle" aria-pressed="@(_arabicLines ? "true" : "false")"
                             title="@L["Result.ArabicTitle"]" @onclick="ToggleArabicLinesAsync">
                         <svg class="arabic-toggle-icon" viewBox="0 0 24 24" aria-hidden="true">
@@ -321,7 +311,7 @@
     private const string ArabicLinesKey = "transliterator.arabicLines";
 
     /// <summary>Показывать ли над строками вывода их арабские строки (D18).</summary>
-    private bool _arabicLines;
+    private bool _arabicLines = true;
 
     /// <summary>Ключ хранилища для тумблера «Подсказки букв» (D41): «0» — выключен.</summary>
     private const string LetterHintsKey = "transliterator.letterHints";
@@ -553,14 +543,15 @@
 
     /// <summary>
     /// Тумблер «С арабским» помнится в браузере (D18) и, как ступень чтения,
-    /// читается после первой отрисовки.
+    /// читается после первой отрисовки. По умолчанию включён (D43): выключенный
+    /// помнится как «0», а пустое значение — выключенный до D43, он и остаётся выключенным.
     /// </summary>
     private async Task RestoreArabicLinesAsync()
     {
-        if (await JS.InvokeAsync<string?>("page.load", ArabicLinesKey) != "1" || _arabicLines)
+        if (await JS.InvokeAsync<string?>("page.load", ArabicLinesKey) is not ("0" or "") || !_arabicLines)
             return;
 
-        _arabicLines = true;
+        _arabicLines = false;
         StateHasChanged();
     }
 
@@ -570,7 +561,7 @@
 
         try
         {
-            await JS.InvokeVoidAsync("page.save", ArabicLinesKey, _arabicLines ? "1" : string.Empty);
+            await JS.InvokeVoidAsync("page.save", ArabicLinesKey, _arabicLines ? "1" : "0");
         }
         catch (JSException ex)
         {

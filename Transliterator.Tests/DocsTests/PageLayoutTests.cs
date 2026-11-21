@@ -516,10 +516,10 @@ namespace Transliterator.Tests.DocsTests
         }
 
         /// <summary>
-        /// E11 (пересмотр D29): «Как читать буквы» в шапке вывода — перед «С арабским»,
-        /// на телефоне одной иконкой с подписью для диктора, — и в «О чём проект?»
-        /// открывают панель профиля с раскрытыми «Настройками профиля». Фокус — на их
-        /// заголовок; Escape возвращает его на кнопку панели, как у меток над выводом.
+        /// E11 (пересмотр D29): «Как читать буквы» в «О чём проект?» открывает панель
+        /// профиля с раскрытыми «Настройками профиля». Фокус — на их заголовок; Escape
+        /// возвращает его на кнопку панели. Из шапки вывода кнопка убрана (D43):
+        /// букву объясняют подсказки в выводе (D41).
         /// </summary>
         [Fact]
         public void HowToSayTheLetters_OpensTheProfileSettings()
@@ -527,7 +527,8 @@ namespace Transliterator.Tests.DocsTests
             var app = Regex.Replace(Web("App.razor"), @"\s+", " ");
             var head = Regex.Match(app, "<div class=\"result-head\">(.*?)<div class=\"result-text\"");
             Assert.True(head.Success, "the result head is not found");
-            Assert.Matches("<button type=\"button\" class=\"sounds-toggle\" title=\"@L\\[\"Sounds.ToggleTitle\"\\]\" @onclick=\"OpenSoundsAsync\">.*<span class=\"sounds-toggle-label\">@L\\[\"Sounds.Toggle\"\\]</span> </button> } .*<button type=\"button\" class=\"arabic-toggle\"", head.Groups[1].Value);
+            Assert.DoesNotContain("sounds-toggle", head.Groups[1].Value);
+            Assert.DoesNotContain("OpenSoundsAsync", head.Groups[1].Value);
             Assert.Contains("private Func<Task>? SoundsOpener => _sounds is null || _profile is null ? null : OpenSoundsAsync;", app);
             Assert.Contains("private Task OpenSoundsAsync() => _profilePicker?.OpenSettingsAsync() ?? Task.CompletedTask;", app);
 
@@ -539,10 +540,9 @@ namespace Transliterator.Tests.DocsTests
             Assert.Contains("@onclick=\"ToggleSettings\" @ref=\"_settingsToggle\">", profile);
             Assert.Contains("if (_focusSettings) { _focusSettings = false; await _settingsToggle.FocusAsync(); return; } await base.FocusOpenedAsync();", profile);
 
-            // Подпись видна и на телефоне (D42), цель нажатия — 44px.
+            // Стилей кнопки в шапке вывода больше нет (D43).
             var css = Regex.Replace(Web("wwwroot", "css", "app.css"), @"\s+", " ");
-            Assert.DoesNotContain(".sounds-toggle-label { position: absolute;", css);
-            Assert.Contains(".sounds-toggle::after,", css);
+            Assert.DoesNotContain(".sounds-toggle", css);
 
             Assert.Equal("Как читать буквы", PageStrings.Web("ru")["Sounds.Toggle"]);
         }
@@ -583,7 +583,10 @@ namespace Transliterator.Tests.DocsTests
             // Выбор помнится; копирование — только вывод.
             Assert.Contains("private const string ArabicLinesKey = \"transliterator.arabicLines\";", app);
             Assert.Contains("await JS.InvokeAsync<string?>(\"page.load\", ArabicLinesKey)", app);
-            Assert.Contains("await JS.InvokeVoidAsync(\"page.save\", ArabicLinesKey, _arabicLines ? \"1\" : string.Empty);", app);
+            Assert.Contains("await JS.InvokeVoidAsync(\"page.save\", ArabicLinesKey, _arabicLines ? \"1\" : \"0\");", app);
+            // По умолчанию включён (D43); пустое значение — выключенный до D43.
+            Assert.Contains("private bool _arabicLines = true;", app);
+            Assert.Contains("is not (\"0\" or \"\") || !_arabicLines) return; _arabicLines = false;", app);
             Assert.Matches(@"if \(firstRender\) \{.*await RestoreArabicLinesAsync\(\);", app);
             Assert.Contains("copied = await JS.InvokeAsync<bool>(\"page.copy\", _result);", app);
 
@@ -1404,7 +1407,7 @@ namespace Transliterator.Tests.DocsTests
             var app = Regex.Replace(Web("App.razor"), @"\s+", " ");
             var css = Regex.Replace(Web("wwwroot", "css", "app.css"), @"\s+", " ");
 
-            Assert.Matches(@"<div class=""result-tools""> .*class=""sounds-toggle"".*class=""arabic-toggle"".*</button> (?:} )?</div> .*<button type=""button"" class=""copy-button", app);
+            Assert.Matches(@"<div class=""result-tools""> .*class=""arabic-toggle"".*class=""hints-toggle"".*</button> (?:} )?</div> .*<button type=""button"" class=""copy-button", app);
 
             Assert.Contains(".result-tools { display: contents; }", css);
             Assert.Contains(".result-tools + .copy-button { margin-left: 0; }", css);
