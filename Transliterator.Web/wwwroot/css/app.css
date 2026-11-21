@@ -24,6 +24,11 @@
     --error-bg: #fbeeea;
     --warn-bg: #fbf1dc;
     --warn-ink: #7a4f06;
+    /* Буква с подсказкой (D41): тёплый цвет текста — не подчёркивание и не знак,
+       чтобы не читаться другой буквой; контраст на карточке вывода от 6:1. Фон —
+       у открытой буквы и под пальцем. */
+    --hint-ink: #9a4a12;
+    --hint-bg: #fbe8d4;
     /* Выключенный переключатель правила: дорожка и кругляш. */
     --switch-track: var(--line);
     --switch-knob: var(--paper);
@@ -2129,6 +2134,73 @@ mark.changed {
 
 /* Между строками — воздух; перед строкой может стоять свёрнутая арабская (D18),
    поэтому сосед — любой предыдущий, а не только соседний. */
+/* Буква с подсказкой (D41): только цвет текста — начертание, кегль и линия
+   прежние, у буквы нет подчёркивания и знаков, иначе она читалась бы другой
+   буквой. Под пальцем и открытая — мягкий фон, как у изменённого слова (D19). */
+.hint-letter {
+    color: var(--hint-ink);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: background-color var(--motion-fast) var(--ease-soft);
+}
+
+.hint-letter:hover,
+.hint-letter.is-open {
+    background-color: var(--hint-bg);
+    box-shadow: 0 0 0 0.08em var(--hint-bg);
+}
+
+.hint-letter:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 1px;
+}
+
+/* Подсказка (D41) — под строкой своей буквы, против неё (page.letterHintsUpdate
+   ставит left и top) и не шире строки. Текст — шрифтом интерфейса слева
+   направо: строка вывода выровнена вправо (D39). Мышью не выделяется: копируется
+   вывод, а не подсказка. */
+.result-line {
+    position: relative;
+}
+
+.letter-hint {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    z-index: 2;
+    display: grid;
+    gap: 0.15rem;
+    width: max-content;
+    max-width: min(20rem, 100%);
+    margin-top: var(--space-1);
+    padding: var(--space-2) var(--space-3);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-md);
+    background: var(--paper);
+    box-shadow: var(--shadow-md);
+    color: var(--ink);
+    font-family: var(--font-ui);
+    font-size: var(--text-sm);
+    line-height: 1.4;
+    text-align: left;
+    white-space: normal;
+    user-select: none;
+    animation: panel-in var(--motion-duration) var(--motion-ease);
+}
+
+.letter-hint-name {
+    font-weight: 600;
+}
+
+.letter-hint-mark {
+    font-size: var(--text-xs);
+    color: var(--hint-ink);
+}
+
+.letter-hint-how {
+    color: var(--ink-muted);
+}
+
 .result-line ~ .result-line {
     margin-top: var(--space-1);
 }
@@ -2199,7 +2271,8 @@ mark.changed {
 
 /* Тумблер «С арабским» (D18) — тихая кнопка рядом с «Копировать»: включённый
    стоит на подложке, как нажатый. Обе кнопки — у правого края шапки. */
-.arabic-toggle {
+.arabic-toggle,
+.hints-toggle {
     display: inline-flex;
     align-items: center;
     gap: 0.4rem;
@@ -2214,18 +2287,21 @@ mark.changed {
     cursor: pointer;
 }
 
-.arabic-toggle:hover {
+.arabic-toggle:hover,
+.hints-toggle:hover {
     background: var(--foam-100);
     color: var(--foam-700);
 }
 
-.arabic-toggle[aria-pressed="true"] {
+.arabic-toggle[aria-pressed="true"],
+.hints-toggle[aria-pressed="true"] {
     border-color: var(--foam-300);
     background: var(--foam-100);
     color: var(--foam-700);
 }
 
-.arabic-toggle-icon {
+.arabic-toggle-icon,
+.hints-toggle-icon {
     width: 1rem;
     height: 1rem;
     flex: none;
@@ -2267,7 +2343,8 @@ mark.changed {
     color: var(--foam-700);
 }
 
-.sounds-toggle + .arabic-toggle {
+.sounds-toggle + .arabic-toggle,
+.arabic-toggle + .hints-toggle {
     margin-left: 0;
 }
 
@@ -2621,6 +2698,7 @@ mark.changed {
 .side-rail .picker-toggle svg,
 .copy-button,
 .arabic-toggle,
+.hints-toggle,
 .sounds-toggle,
 .result-chip,
 .language-option,
@@ -2643,6 +2721,7 @@ mark.changed {
 .picker-toggle:active:not(:disabled),
 .copy-button:active:not(:disabled),
 .arabic-toggle:active,
+.hints-toggle:active,
 .sounds-toggle:active,
 .result-chip:active,
 .language-option:active:not([aria-pressed="true"]),
@@ -3175,6 +3254,7 @@ mark.changed {
 .toast-action,
 .result-chip,
 .arabic-toggle,
+.hints-toggle,
 .sounds-toggle,
 .copy-button,
 .picker-toggle,
@@ -3197,6 +3277,7 @@ mark.changed {
 .toast-action::after,
 .result-chip::after,
 .arabic-toggle::after,
+.hints-toggle::after,
 .sounds-toggle::after,
 .copy-button::after,
 .picker-toggle::after,
@@ -3324,7 +3405,8 @@ mark.changed {
 
     /* Кнопки с подписями — на подложке, чтобы читались кнопками, а не текстом. */
     .result-tools .sounds-toggle,
-    .result-tools .arabic-toggle:not([aria-pressed="true"]) {
+    .result-tools .arabic-toggle:not([aria-pressed="true"]),
+    .result-tools .hints-toggle:not([aria-pressed="true"]) {
         border-color: var(--foam-100);
     }
 

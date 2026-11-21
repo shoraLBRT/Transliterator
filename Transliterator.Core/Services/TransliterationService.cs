@@ -69,10 +69,13 @@ public class TransliterationService : ITransliterationService
 
         ValidateProfile(profile);
 
-        return new TransliterationResult(arabicText ?? string.Empty, Run(arabicText, profile, reading), profile.Name);
+        var letters = new List<LetterSpan>();
+        var text = Run(arabicText, profile, reading, letters);
+        return new TransliterationResult(arabicText ?? string.Empty, text, profile.Name) { Letters = letters };
     }
 
-    private string Run(string? arabicText, TransliterationProfile profile, ReadingOptions? reading = null)
+    private string Run(string? arabicText, TransliterationProfile profile, ReadingOptions? reading = null,
+                       IList<LetterSpan>? letters = null)
     {
         if (string.IsNullOrWhiteSpace(arabicText))
             return string.Empty;
@@ -83,7 +86,7 @@ public class TransliterationService : ITransliterationService
         _rulesService.ApplyTajweedRules(segments, reading);
 
         var missingKeys = new SortedSet<string>(StringComparer.Ordinal);
-        var text = _renderer.Render(segments, profile, missingKeys);
+        var text = _renderer.Render(segments, profile, missingKeys, letters);
 
         if (missingKeys.Count > 0)
             throw new TransliterationException(

@@ -1,3 +1,4 @@
+@using Microsoft.AspNetCore.Components.Rendering
 @using Transliterator.Core.Repositories
 @using Transliterator.Core.Services
 @inject UserProfileRepository Profiles
@@ -161,6 +162,20 @@
                         </svg>
                         <span class="arabic-toggle-label">@L["Result.Arabic"]</span>
                     </button>
+
+                    @* «Подсказки букв» (D41): подсветка в выводе букв, звука которых нет
+                       в русском; нажатие на букву — подсказка, как её читать. Тумблер —
+                       aria-pressed, выбор помнится; без таблицы звуков кнопки нет. *@
+                    @if (_sounds is not null)
+                    {
+                        <button type="button" class="hints-toggle" aria-pressed="@(_letterHintsOn ? "true" : "false")"
+                                title="@L["Result.HintsTitle"]" @onclick="ToggleLetterHintsAsync">
+                            <svg class="hints-toggle-icon" viewBox="0 0 24 24" aria-hidden="true">
+                                <path d="M5 19l5-14 5 14M7 14h6" /><path d="M18 4v4M16 6h4" />
+                            </svg>
+                            <span class="hints-toggle-label">@L["Result.Hints"]</span>
+                        </button>
+                    }
                     </div>
 
                     @* Значок и подпись — одни и те же узлы во всех состояниях: галочка
@@ -185,8 +200,12 @@
                    выключен: включение раскрывает её плавно (.fold, D21). Строке без пары в
                    поле арабской строки нет. Копирование кнопкой — только _result, а
                    мышью арабское не выделяется (user-select: none). *@
-                <div class="result-text" @key="_changeKey">
-                    @{ var lines = ResultLine.Split(_result); var sources = ResultLine.Sources(_arabic, lines.Count); }
+                @* Буквы с подсказкой (D41) — span role="button" внутри текста: кнопка
+                   выпала бы из выделения мышью, а копируется вывод целиком. В порядке Tab
+                   одна буква, стрелки ведут по остальным (page.letterKeys). Подсказка — под
+                   своей строкой, против буквы (page.placeLetterHint). *@
+                <div class="result-text" @key="_changeKey" @ref="_resultText">
+                    @{ var lines = ResultLine.Split(_result); var sources = ResultLine.Sources(_arabic, lines.Count); var hints = LetterHints; }
                     @for (var i = 0; i < lines.Count; i++)
                     {
                         var line = lines[i];
@@ -196,14 +215,24 @@
                         }
                         if (line.Ayah is null)
                         {
-                            <div class="result-line"><ChangedText Segments="Part(i, 0, line.Text)" /></div>
+                            <div class="result-line">@LineText(hints, i, 0, line.Text)@LetterHint(i)</div>
                         }
                         else
                         {
-                            <div class="result-line"><ChangedText Segments="Part(i, 0, line.Lead)" /><span class="ayah-tail"><ChangedText Segments="Part(i, line.Lead.Length, line.Word)" />@(line.Gap)<span class="ayah-mark">@line.Ayah</span></span></div>
+                            <div class="result-line">@LineText(hints, i, 0, line.Lead)<span class="ayah-tail">@LineText(hints, i, line.Lead.Length, line.Word)@(line.Gap)<span class="ayah-mark">@line.Ayah</span></span>@LetterHint(i)</div>
                         }
                     }
                 </div>
+
+                @* Имена букв с подсказкой для диктора (D41): aria-describedby буквы
+                   ссылается сюда, а сама строка читается как прежде. *@
+                @if (_letterHintsOn)
+                {
+                    @foreach (var sound in _hinted.Values)
+                    {
+                        <span id="@HintDescriptionId(sound.Letter)" hidden>@L["Result.HintLetter", sound.Name.Current]</span>
+                    }
+                }
             </section>
         }
     </main>
@@ -294,6 +323,22 @@
     /// <summary>Показывать ли над строками вывода их арабские строки (D18).</summary>
     private bool _arabicLines;
 
+    /// <summary>Ключ хранилища для тумблера «Подсказки букв» (D41): «0» — выключен.</summary>
+    private const string LetterHintsKey = "transliterator.letterHints";
+
+    // Подсказки букв (D41): тумблер (по умолчанию включён), буквы с подсказкой из
+    // таблицы звуков, куски вывода с их буквой, разбивка по строкам для текущего
+    // вывода и открытая подсказка — строка, начало куска в строке и буква.
+    private bool _letterHintsOn = true;
+    private IReadOnlyDictionary<string, ArabicSound> _hinted = new Dictionary<string, ArabicSound>();
+    private IReadOnlyList<LetterSpan> _letters = Array.Empty<LetterSpan>();
+    private OutputLetters? _lettersByLine;
+    private LetterHintAt? _letterHint;
+    private ElementReference _resultText;
+    private DotNetObjectReference<App>? _self;
+
+    private readonly record struct LetterHintAt(int Line, int Start, string Letter);
+
     private IReadOnlyList<CorpusSurah> _surahs = Array.Empty<CorpusSurah>();
     private TransliterationProfile? _profile;
     private TajweedRuleCatalog? _catalog;
@@ -365,7 +410,11 @@
         _ = JS.InvokeVoidAsync("page.sheetOpen", Panels.Current is not null).AsTask();
     }
 
-    public void Dispose() => Panels.Changed -= OnPanelsChanged;
+    public void Dispose()
+    {
+        Panels.Changed -= OnPanelsChanged;
+        _self?.Dispose();
+    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -380,6 +429,8 @@
 
         _catalog = LoadCatalog();
         _sounds = LoadSounds();
+        _hinted = _sounds?.Sounds.Where(s => s.NotInRussian).ToDictionary(s => s.Letter, StringComparer.Ordinal)
+                  ?? new Dictionary<string, ArabicSound>();
     }
 
     /// <summary>Таблица звуков (D11) — ресурс, как каталог; не прочиталась — страница без неё.</summary>
@@ -429,8 +480,16 @@
                 await JS.InvokeVoidAsync("page.autosize", _input);
                 await RestoreReadingAsync();
                 await RestoreArabicLinesAsync();
+                await RestoreLetterHintsAsync();
                 await RestoreProfileAsync();
+                _self = DotNetObjectReference.Create(this);
+                await JS.InvokeVoidAsync("page.letterHints", _self);
             }
+
+            // Одна буква с подсказкой — в порядке Tab, открытая подсказка — против
+            // своей буквы (D41). Вывод перерисовывается целиком на каждую правку.
+            if (_letterHintsOn && _result.Length > 0)
+                await JS.InvokeVoidAsync("page.letterHintsUpdate", _resultText);
 
             // Подсказка стоит, пока в поле есть текст (D16). Значение поля Blazor меняет
             // и сам (выбор суры, очистка) — событие input тогда не приходит, поэтому
@@ -517,6 +576,138 @@
         {
             Logger.LogWarning(ex, "Arabic lines choice could not be saved");
         }
+    }
+
+    /// <summary>Тумблер «Подсказки букв» помнится в браузере (D41); по умолчанию включён.</summary>
+    private async Task RestoreLetterHintsAsync()
+    {
+        if (await JS.InvokeAsync<string?>("page.load", LetterHintsKey) != "0" || !_letterHintsOn)
+            return;
+
+        _letterHintsOn = false;
+        StateHasChanged();
+    }
+
+    private async Task ToggleLetterHintsAsync()
+    {
+        _letterHintsOn = !_letterHintsOn;
+        _letterHint = null;
+
+        try
+        {
+            await JS.InvokeVoidAsync("page.save", LetterHintsKey, _letterHintsOn ? string.Empty : "0");
+        }
+        catch (JSException ex)
+        {
+            Logger.LogWarning(ex, "Letter hints choice could not be saved");
+        }
+    }
+
+    /// <summary>
+    /// Куски вывода с подсказкой по строкам (D41). Считаются раз на вывод: строки
+    /// рисуются на каждое нажатие, а разбивка от нажатия не меняется.
+    /// </summary>
+    private OutputLetters LetterHints
+    {
+        get
+        {
+            if (!_letterHintsOn || _hinted.Count == 0)
+                return OutputLetters.None(_result);
+
+            if (_lettersByLine?.Text != _result)
+                _lettersByLine = OutputLetters.Build(_result, _letters, _hinted.ContainsKey);
+
+            return _lettersByLine;
+        }
+    }
+
+    /// <summary>
+    /// Кусок строки вывода: изменённое сменой настройки — в mark (D19), буквы
+    /// с подсказкой — span role="button" (D41). Узлы без пробелов между ними:
+    /// пробелы попали бы в вывод.
+    /// </summary>
+    private RenderFragment LineText(OutputLetters hints, int line, int start, string text) => builder =>
+    {
+        var pieces = hints.Split(line, start, Part(line, start, text));
+        var offset = start;
+        var index = 0;
+
+        while (index < pieces.Count)
+        {
+            var changed = pieces[index].Changed;
+            if (changed)
+            {
+                builder.OpenElement(0, "mark");
+                builder.AddAttribute(1, "class", "changed");
+            }
+
+            while (index < pieces.Count && pieces[index].Changed == changed)
+            {
+                var piece = pieces[index];
+                if (piece.Letter is { } letter)
+                    AddHintLetter(builder, line, offset, letter, piece.Text);
+                else
+                    builder.AddContent(2, piece.Text);
+
+                offset += piece.Text.Length;
+                index++;
+            }
+
+            if (changed)
+                builder.CloseElement();
+        }
+    };
+
+    private void AddHintLetter(RenderTreeBuilder builder, int line, int start, string letter, string text)
+    {
+        var open = _letterHint is { } hint && hint.Line == line && hint.Start == start;
+
+        builder.OpenElement(10, "span");
+        builder.AddAttribute(11, "class", open ? "hint-letter is-open" : "hint-letter");
+        builder.AddAttribute(12, "role", "button");
+        builder.AddAttribute(13, "tabindex", "-1");
+        builder.AddAttribute(14, "aria-expanded", open ? "true" : "false");
+        builder.AddAttribute(15, "aria-describedby", open ? LetterHintId : HintDescriptionId(letter));
+        builder.AddAttribute(16, "onclick", EventCallback.Factory.Create(this, () => ToggleLetterHint(line, start, letter)));
+        builder.AddContent(17, text);
+        builder.CloseElement();
+    }
+
+    private const string LetterHintId = "letter-hint";
+
+    /// <summary>Скрытое описание буквы для диктора («Айн — как читать»), по коду буквы.</summary>
+    private static string HintDescriptionId(string letter) => $"hint-letter-{(int)letter[0]:x}";
+
+    private void ToggleLetterHint(int line, int start, string letter) =>
+        _letterHint = _letterHint is { } hint && hint.Line == line && hint.Start == start
+            ? null
+            : new LetterHintAt(line, start, letter);
+
+    /// <summary>
+    /// Щелчок мимо подсказки и Escape (page.letterHints) закрывают её; на Escape
+    /// фокус уже вернул на букву скрипт.
+    /// </summary>
+    [JSInvokable]
+    public void CloseLetterHint()
+    {
+        if (_letterHint is null)
+            return;
+
+        _letterHint = null;
+        StateHasChanged();
+    }
+
+    /// <summary>
+    /// Подсказка под строкой <paramref name="line"/>, если открыта у её буквы:
+    /// название, «нет в русском» и как произносить — те же тексты, что в таблице
+    /// графем профиля (E11). Скрипт ставит её против буквы.
+    /// </summary>
+    private RenderFragment? LetterHint(int line)
+    {
+        if (_letterHint is not { } hint || hint.Line != line || !_hinted.TryGetValue(hint.Letter, out var sound))
+            return null;
+
+        return @<span class="letter-hint" id="@LetterHintId" role="tooltip"><span class="letter-hint-name">@sound.Name.Current</span><span class="letter-hint-mark">@L["Profile.NotInRussian"]</span><span class="letter-hint-how"><MixedText Text="@sound.Pronunciation.Current" /></span></span>;
     }
 
     /// <summary>
@@ -830,7 +1021,11 @@
 
         try
         {
-            _result = Transliteration.Transliterate(_arabic, _profile, _reading.ToOptions()).TransliteratedText;
+            var output = Transliteration.Transliterate(_arabic, _profile, _reading.ToOptions());
+            _result = output.TransliteratedText;
+            _letters = output.Letters;
+            _lettersByLine = null;
+            _letterHint = null;
             _error = null;
         }
         catch (Exception ex)
@@ -840,6 +1035,9 @@
             // страницу целиком — до перезагрузки она больше не отвечает.
             Logger.LogError(ex, "Transliteration failed");
             _result = string.Empty;
+            _letters = Array.Empty<LetterSpan>();
+            _lettersByLine = null;
+            _letterHint = null;
             _error = ex.Message;
         }
     }

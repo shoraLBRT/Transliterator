@@ -603,7 +603,84 @@ window.page = (() => {
         document.getElementById(id)?.scrollIntoView({ block: "nearest" });
     }
 
+    /**
+     * Подсказки букв (D41), слушатели на весь документ — один раз: вывод
+     * перерисовывается на каждую правку, а документ остаётся. Буква с подсказкой —
+     * span role="button": Enter и пробел нажимают её, стрелки влево и вправо ведут
+     * по остальным (в порядке Tab одна буква). Escape закрывает подсказку и
+     * возвращает фокус на её букву, щелчок мимо подсказки и букв — закрывает.
+     * owner — DotNetObjectReference страницы, ему уходит CloseLetterHint.
+     */
+    function letterHints(owner) {
+        const close = () => owner.invokeMethodAsync("CloseLetterHint").catch(() => { });
+
+        document.addEventListener("keydown", event => {
+            const letter = event.target.closest?.(".hint-letter");
+
+            if (event.key === "Escape" && document.getElementById("letter-hint")) {
+                document.querySelector(".hint-letter.is-open")?.focus();
+                close();
+                return;
+            }
+
+            if (!letter)
+                return;
+
+            if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                letter.click();
+                return;
+            }
+
+            if (event.key === "ArrowRight" || event.key === "ArrowLeft") {
+                const all = [...document.querySelectorAll(".result-text .hint-letter")];
+                const next = all[all.indexOf(letter) + (event.key === "ArrowRight" ? 1 : -1)];
+                if (!next)
+                    return;
+
+                event.preventDefault();
+                letter.tabIndex = -1;
+                next.tabIndex = 0;
+                next.focus();
+            }
+        });
+
+        document.addEventListener("pointerdown", event => {
+            if (document.getElementById("letter-hint")
+                && !event.target.closest?.(".letter-hint, .hint-letter"))
+                close();
+        });
+    }
+
+    /**
+     * После отрисовки вывода (D41): у одной буквы с подсказкой tabindex 0 — первой,
+     * если фокус ещё ни на одной не был, — а открытая подсказка встаёт под своей
+     * буквой, по центру против неё и не шире строки.
+     */
+    function letterHintsUpdate(container) {
+        if (!container?.isConnected)
+            return;
+
+        const letters = container.querySelectorAll(".hint-letter");
+        if (letters.length && !container.querySelector(".hint-letter[tabindex='0']"))
+            letters[0].tabIndex = 0;
+
+        const hint = container.querySelector(".letter-hint");
+        const letter = container.querySelector(".hint-letter.is-open");
+        if (!hint || !letter)
+            return;
+
+        const line = hint.parentElement.getBoundingClientRect();
+        const box = letter.getBoundingClientRect();
+        const width = hint.offsetWidth;
+        const left = Math.min(Math.max(box.left + box.width / 2 - line.left - width / 2, 0), Math.max(line.width - width, 0));
+
+        hint.style.left = `${left}px`;
+        hint.style.top = `${box.bottom - line.top}px`;
+    }
+
     return {
+        letterHints, letterHintsUpdate,
         typewriter, hintPaused, autosize, resize, sheetOpen, wide, listKeys, reveal, copy, guard, guardToken, guardReset, guardRemove,
         load, save, storageSet, storageRemove, storageKeys,
         browserLanguages, sessionSave, sessionTake, reload, setDocument,
