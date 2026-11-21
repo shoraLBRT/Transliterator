@@ -23,7 +23,44 @@
             </svg>
             <h1 class="topbar-name">@L["Page.Heading"]</h1>
         </div>
-        <LanguagePicker Chosen="ChangeLanguageAsync" />
+        @* Настройки (D44): ступень чтения и профиль — одна шестерёнка слева от языка.
+           Она открывает панель на последней вкладке; вкладки «Таджвид» и «Профиль»
+           в шапке панели переключают одну на другую. Своих кнопок у панелей нет:
+           Escape и крестик возвращают фокус на шестерёнку. На телефоне панель —
+           нижний лист (D14), с 64rem — колонка у правого края под шестерёнкой. *@
+        <div class="topbar-tools">
+            @if (_catalog is not null || _profile is not null)
+            {
+                <button type="button" class="settings-toggle" aria-label="@L["Settings.Label"]"
+                        aria-expanded="@(SettingsOpen ? "true" : "false")" aria-controls="@SettingsControls"
+                        @onclick="ToggleSettingsAsync" @ref="_settingsToggle">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" />
+                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                    </svg>
+                </button>
+
+                @if (_catalog is not null)
+                {
+                    <ReadingPicker Catalog="_catalog" Choice="_reading" ChoiceChanged="ChangeReadingAsync"
+                                   Transliterate="TransliterateExample" Preview="@_result" Changes="_changes"
+                                   ChangeKey="_changeKey" Unchanged="_unchangedNote" @ref="_readingPicker"
+                                   ReturnFocus="FocusSettingsToggle" Tabs="@SettingsTabs(ReadingTab)"
+                                   FocusOnOpen="@(() => FocusTabAsync(ReadingTab))" />
+                }
+
+                @if (_profile is not null)
+                {
+                    <ProfilePicker Profile="_profile" DefaultProfile="@DefaultProfile" Preview="@_result"
+                                   Changes="_changes" ChangeKey="_changeKey" Unchanged="_unchangedNote"
+                                   ProfileChanged="ChangeProfileAsync" ProfileDeleted="ResetProfileAsync"
+                                   Sounds="_sounds" @ref="_profilePicker"
+                                   ReturnFocus="FocusSettingsToggle" Tabs="@SettingsTabs(ProfileTab)"
+                                   FocusOnOpen="@(() => FocusTabAsync(ProfileTab))" />
+                }
+            }
+            <LanguagePicker Chosen="ChangeLanguageAsync" />
+        </div>
     </header>
 
     <main class="stage">
@@ -71,34 +108,6 @@
             </div>
         </div>
 
-        @* Ступень чтения и профиль (D6). На широком экране — круглые кнопки у края
-           страницы, и панель открывается колонкой рядом с полем и выводом, отодвигая
-           их, а не закрывая. На телефоне двум колонкам нет места: кнопки стоят строкой
-           под полем, панель — нижним листом (D14). У каждой кнопки подписано, что
-           выбрано сейчас («Полный таджвид», «Профиль: Cyrillic»). *@
-        @if (_catalog is not null || _profile is not null)
-        {
-            <aside class="side-rail" aria-label="@L["Rail.Label"]">
-                @if (_catalog is not null)
-                {
-                    <ReadingPicker Catalog="_catalog" Choice="_reading" ChoiceChanged="ChangeReadingAsync"
-                                   Transliterate="TransliterateExample" Preview="@_result" Changes="_changes"
-                                   ChangeKey="_changeKey" Unchanged="_unchangedNote" @ref="_readingPicker" />
-                }
-
-                @if (_profile is not null)
-                {
-                    <ProfilePicker Profile="_profile" DefaultProfile="@DefaultProfile" Preview="@_result"
-                                   Changes="_changes" ChangeKey="_changeKey" Unchanged="_unchangedNote"
-                                   ProfileChanged="ChangeProfileAsync" ProfileDeleted="ResetProfileAsync"
-                                   Sounds="_sounds" @ref="_profilePicker" />
-                }
-
-                @* «?» — что это за страница (D8). Последней: она ничего не выбирает. *@
-                <AboutPicker Transliterate="TransliterateExample" OpenFeedback="OpenFeedbackAsync"
-                             OpenSounds="SoundsOpener" />
-            </aside>
-        }
 
         @if (_error is not null)
         {
@@ -233,6 +242,10 @@
         <a href="@FeedbackLink.RepositoryUrl" target="_blank" rel="noopener">GitHub</a>
         <span aria-hidden="true">·</span>
         <span class="footer-version" title="@BuildVersion">v@(ShortVersion)</span>
+        @* «О чём проект?» (D8, D44) — текстом в подвале рядом с обратной связью. *@
+        <span aria-hidden="true">·</span>
+        <AboutPicker Transliterate="TransliterateExample" OpenFeedback="OpenFeedbackAsync"
+                     OpenSounds="SoundsOpener" />
         <FeedbackButton Arabic="@_arabic" Transliteration="@_result" @ref="_feedback" />
     </footer>
 
@@ -396,6 +409,11 @@
     /// </summary>
     private void OnPanelsChanged()
     {
+        // Шестерёнка открывает последнюю вкладку (D44) — какой бы путь её ни открыл:
+        // вкладкой, меткой над выводом или ссылкой «Как читать буквы».
+        if (Panels.Current is ReadingTab or ProfileTab)
+            _settingsTab = Panels.Current;
+
         _ = InvokeAsync(StateHasChanged);
         _ = JS.InvokeVoidAsync("page.sheetOpen", Panels.Current is not null).AsTask();
     }
@@ -953,6 +971,92 @@
 
     private ReadingPicker? _readingPicker;
     private ProfilePicker? _profilePicker;
+
+    // Настройки (D44): шестерёнка, последняя открытая вкладка и сами вкладки.
+    // Имена вкладок — имена панелей в PagePanels.
+    private const string ReadingTab = "reading";
+    private const string ProfileTab = "profile";
+    private ElementReference _settingsToggle;
+    private string _settingsTab = ReadingTab;
+    private readonly Dictionary<string, ElementReference> _tabs = new();
+
+    private bool SettingsOpen => Panels.Current is ReadingTab or ProfileTab;
+
+    /// <summary>aria-controls шестерёнки — только у открытой панели: её id есть в разметке.</summary>
+    private string? SettingsControls => Panels.Current switch
+    {
+        ReadingTab => "reading-menu",
+        ProfileTab => "profile-menu",
+        _ => null
+    };
+
+    /// <summary>Шестерёнка: открытые настройки закрывает, закрытые открывает на последней вкладке.</summary>
+    private Task ToggleSettingsAsync()
+    {
+        if (Panels.Current is { } open && SettingsOpen)
+        {
+            Panels.Close(open);
+            return Task.CompletedTask;
+        }
+
+        return OpenTabAsync(_settingsTab);
+    }
+
+    private Task OpenTabAsync(string tab) => tab == ProfileTab
+        ? _profilePicker?.OpenAsync() ?? Task.CompletedTask
+        : _readingPicker?.OpenAsync() ?? Task.CompletedTask;
+
+    private Task FocusSettingsToggle() => _settingsToggle.FocusAsync().AsTask();
+
+    private Task FocusTabAsync(string tab) =>
+        _tabs.TryGetValue(tab, out var element) ? element.FocusAsync().AsTask() : Task.CompletedTask;
+
+    /// <summary>
+    /// Вкладки «Таджвид» и «Профиль» в шапке панели (D44): tablist, выбранная —
+    /// aria-selected и в порядке Tab, стрелки переключают на соседнюю. Вкладка —
+    /// панель в PagePanels: открыть другую — значит закрыть эту.
+    /// </summary>
+    private RenderFragment SettingsTabs(string current) =>
+        @<div class="settings-tabs" role="tablist" aria-label="@L["Settings.Label"]" @onkeydown="e => OnTabKeyAsync(e, current)">
+            @foreach (var tab in TabsShown)
+            {
+                var selected = tab == current;
+                if (selected)
+                {
+                    <button type="button" class="settings-tab" role="tab" aria-selected="true" tabindex="0"
+                            aria-controls="@(tab == ReadingTab ? "reading-menu" : "profile-menu")"
+                            @ref="_tabs[tab]">@TabName(tab)</button>
+                }
+                else
+                {
+                    <button type="button" class="settings-tab" role="tab" aria-selected="false" tabindex="-1"
+                            @onclick="() => OpenTabAsync(tab)">@TabName(tab)</button>
+                }
+            }
+        </div>;
+
+    private IEnumerable<string> TabsShown
+    {
+        get
+        {
+            if (_catalog is not null)
+                yield return ReadingTab;
+            if (_profile is not null)
+                yield return ProfileTab;
+        }
+    }
+
+    private string TabName(string tab) => tab == ProfileTab ? L["Settings.ProfileTab"] : L["Settings.ReadingTab"];
+
+    private async Task OnTabKeyAsync(KeyboardEventArgs e, string current)
+    {
+        if (e.Key is not ("ArrowLeft" or "ArrowRight" or "Home" or "End"))
+            return;
+
+        var other = TabsShown.FirstOrDefault(tab => tab != current);
+        if (other is not null)
+            await OpenTabAsync(other);
+    }
 
     /// <summary>Метка ступени над выводом (D17) — имя той же ступени, что у кнопки сбоку.</summary>
     private string ReadingName => ReadingPicker.ModeName(L, _reading.Mode);

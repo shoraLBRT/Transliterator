@@ -40,6 +40,24 @@ namespace Transliterator.Web.Components
         protected ElementReference ToggleButton;
         protected ElementReference PanelElement;
 
+        /// <summary>
+        /// Хозяйка панели снаружи (D44): ступень чтения и профиль своих кнопок не
+        /// имеют, их открывает шестерёнка в шапке — на неё и возвращается фокус.
+        /// </summary>
+        [Parameter]
+        public Func<Task>? ReturnFocus { get; set; }
+
+        /// <summary>
+        /// Вкладки в шапке панели (D44): «Таджвид» и «Профиль» — одна панель
+        /// настроек с двумя вкладками. При открытии фокус — на выбранную вкладку.
+        /// </summary>
+        [Parameter]
+        public RenderFragment? Tabs { get; set; }
+
+        /// <summary>Куда перевести фокус при открытии вместо самой панели (D44): выбранная вкладка.</summary>
+        [Parameter]
+        public Func<Task>? FocusOnOpen { get; set; }
+
         private bool _focusPanel;
         private bool _wasOpen;
 
@@ -115,7 +133,7 @@ namespace Transliterator.Web.Components
         }
 
         /// <summary>Вернуть фокус на кнопку панели.</summary>
-        protected Task FocusToggleAsync() => ToggleButton.FocusAsync().AsTask();
+        protected Task FocusToggleAsync() => ReturnFocus?.Invoke() ?? ToggleButton.FocusAsync().AsTask();
 
         protected async Task OnPanelKeyDownAsync(KeyboardEventArgs e)
         {
@@ -136,7 +154,7 @@ namespace Transliterator.Web.Components
         /// Куда перейти фокусу при открытии. По умолчанию — в саму панель; список
         /// сур на широком экране сразу отдаёт его полю поиска (D15).
         /// </summary>
-        protected virtual Task FocusOpenedAsync() => PanelElement.FocusAsync().AsTask();
+        protected virtual Task FocusOpenedAsync() => FocusOnOpen?.Invoke() ?? PanelElement.FocusAsync().AsTask();
 
         public void Dispose()
         {

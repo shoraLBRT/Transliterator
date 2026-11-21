@@ -12,16 +12,9 @@
    которые можно не читать (I4), — переключатель: какие именно, решает каталог
    (Counts, Switchable). *@
 
-<div class="picker">
-    @* Значок — звуковая волна: кнопка выбирает, как текст звучит. *@
-    <button type="button" class="picker-toggle" aria-expanded="@(IsOpen ? "true" : "false")"
-            aria-controls="@(IsShown ? "reading-menu" : null)" @onclick="ToggleAsync" @ref="ToggleButton">
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M4 10v4M8 7v10M12 4v16M16 8v8M20 11v2" />
-        </svg>
-        <span class="picker-toggle-text">@ModeName(Choice.Mode)</span>
-    </button>
-
+<div class="picker settings-picker">
+    @* Своей кнопки нет (D44): панель — вкладка «Таджвид» настроек, её открывает
+       шестерёнка в шапке страницы, на неё и возвращается фокус (ReturnFocus). *@
     @if (IsShown)
     {
         @* Подложка листа (D14) гаснет вместе с ним; щелчок по ней закрывает лист
@@ -31,7 +24,7 @@
         <div id="reading-menu" class="picker-panel reading-panel @Closing.CssClass" inert="@Closing.IsClosing" aria-hidden="@Closing.AriaHidden" role="dialog" aria-labelledby="reading-menu-title"
              tabindex="-1" @ref="PanelElement" @onkeydown="OnPanelKeyDownAsync">
             <PanelHead Id="reading-menu-title" Title="@L["Reading.Title"]" Close="CloseToToggleAsync"
-                       Note="@(Unchanged ? L["Output.Unchanged"].Value : null)" />
+                       Note="@(Unchanged ? L["Output.Unchanged"].Value : null)" Tabs="Tabs" />
 
             <div class="reading-modes" role="radiogroup" aria-label="@L["Reading.ModesLabel"]">
                 @foreach (var mode in Modes)

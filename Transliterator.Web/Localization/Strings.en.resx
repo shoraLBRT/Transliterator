@@ -60,8 +60,14 @@
   <data name="Toast.UndoLabel" xml:space="preserve">
     <value>Bring back the cleared text</value>
   </data>
-  <data name="Rail.Label" xml:space="preserve">
-    <value>How to read and write</value>
+  <data name="Settings.Label" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="Settings.ReadingTab" xml:space="preserve">
+    <value>Tajweed</value>
+  </data>
+  <data name="Settings.ProfileTab" xml:space="preserve">
+    <value>Profile</value>
   </data>
   <data name="Result.Title" xml:space="preserve">
     <value>Transliteration</value>
@@ -218,9 +224,6 @@
   </data>
   <data name="Group.Base" xml:space="preserve">
     <value>Rules of reading Arabic</value>
-  </data>
-  <data name="Profile.Toggle" xml:space="preserve">
-    <value>Profile: {0}</value>
   </data>
   <data name="Profile.Title" xml:space="preserve">
     <value>Writing profile</value>
