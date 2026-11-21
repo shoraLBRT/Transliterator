@@ -480,7 +480,4 @@
   <data name="Sounds.Toggle" xml:space="preserve">
     <value>Как читать буквы</value>
   </data>
-  <data name="Sounds.ToggleTitle" xml:space="preserve">
-    <value>Как звучит каждая буква и как она пишется — в настройках профиля</value>
-  </data>
 </root>

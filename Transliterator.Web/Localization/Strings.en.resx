@@ -458,7 +458,4 @@
   <data name="Sounds.Toggle" xml:space="preserve">
     <value>How to say the letters</value>
   </data>
-  <data name="Sounds.ToggleTitle" xml:space="preserve">
-    <value>How each letter sounds and how it is written — in the profile settings</value>
-  </data>
 </root>
