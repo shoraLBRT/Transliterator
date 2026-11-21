@@ -5,6 +5,9 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="Транслитерация Корана кириллицей по правилам таджвида — прямо в браузере." />
+    <!-- Открыта с экрана «Домой» (D46) — класс is-standalone на <html> до стилей,
+         чтобы шапка сразу встала ниже размытия у статус-бара; см. app.css. -->
+    <script>if (navigator.standalone === true || matchMedia('(display-mode: standalone)').matches) document.documentElement.classList.add('is-standalone');</script>
     <!-- Тема одна, светлая (D27): поля и полосы прокрутки светлые и до загрузки
          app.css; цвет полосы браузера — фон страницы, как --cream в app.css. -->
     <meta name="color-scheme" content="light" />
@@ -18,7 +21,7 @@
     <!-- ?v= — первые 8 знаков SHA-256 файла (переводы строк как LF). Браузер не берёт
          из кеша прежний page.js или app.css к новой сборке: файл изменился — изменился
          и адрес. Сверяет PageAssetVersionTests и подсказывает новое значение. -->
-    <link rel="stylesheet" href="css/app.css?v=ae525407" />
+    <link rel="stylesheet" href="css/app.css?v=ea85f381" />
 </head>
 
 <body>

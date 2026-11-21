@@ -1439,16 +1439,25 @@ namespace Transliterator.Tests.DocsTests
         {
             // D46: в режиме веб-приложения iOS размывает полосу под статус-баром,
             // и она заходит на страницу — только там каркас отступает сверху на
-            // вырез экрана и ещё 2rem; в браузере отступ прежний.
+            // вырез экрана и ещё 2rem; в браузере отступ прежний. Без manifest
+            // `display-mode: standalone` на iOS не срабатывает, поэтому режим
+            // определяет скрипт в <head> по navigator.standalone до стилей.
             var css = Regex.Replace(Web("wwwroot", "css", "app.css"), @"\s+", " ");
+            var index = Web("wwwroot", "index.html");
 
-            var standalone = css.IndexOf("@media (display-mode: standalone) {", StringComparison.Ordinal);
+            var detect = index.IndexOf("navigator.standalone === true || matchMedia('(display-mode: standalone)').matches", StringComparison.Ordinal);
+            var stylesheet = index.IndexOf("<link rel=\"stylesheet\"", StringComparison.Ordinal);
+            Assert.True(detect > 0, "the home-screen app detection is not found");
+            Assert.True(detect < stylesheet, "the home-screen app class must be set before the styles load");
+            Assert.Contains("document.documentElement.classList.add('is-standalone')", index);
+
+            var standalone = css.IndexOf("html.is-standalone .shell {", StringComparison.Ordinal);
             var phone = css.IndexOf("@media (max-width: 36rem) {", StringComparison.Ordinal);
             Assert.True(standalone > 0, "the home-screen app rule is not found");
             Assert.True(standalone > phone, "the home-screen app rule must follow the phone rules to override them");
 
             Assert.Matches(
-                @"^@media \(display-mode: standalone\) \{ \.shell \{ padding-top: calc\(var\(--space-2\) \+ env\(safe-area-inset-top, 0px\) \+ 2rem\); \} \}",
+                @"^html\.is-standalone \.shell \{ padding-top: calc\(var\(--space-2\) \+ env\(safe-area-inset-top, 0px\) \+ 2rem\); \}",
                 css[standalone..]);
 
             Assert.Matches(@"\.shell \{ position: relative;[^}]*padding: var\(--space-3\) 1\.25rem 1\.25rem;", css);
