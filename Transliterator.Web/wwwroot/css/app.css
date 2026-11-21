@@ -2235,7 +2235,13 @@ mark.changed {
     stroke-linecap: round;
 }
 
-.arabic-toggle + .copy-button {
+/* Обёртка кнопок шапки (D42) с 64rem вёрстке не видна: кнопки — прямые ячейки
+   шапки, как прежде. Строкой она становится только на телефоне. */
+.result-tools {
+    display: contents;
+}
+
+.result-tools + .copy-button {
     margin-left: 0;
 }
 
@@ -3240,6 +3246,16 @@ mark.changed {
 
 /* ---- Телефон ---- */
 
+/* Уже 64rem меток «Чтение» и «Профиль» в шапке вывода нет (D42): кнопки ступени
+   и профиля под полем подписаны тем же и открывают те же панели, а место в шапке
+   нужно кнопкам с подписями. Подпись «Вывод не изменился» здесь и так скрыта
+   (D19) — она в шапке панели. */
+@media (max-width: 63.99rem) {
+    .result-meta {
+        display: none;
+    }
+}
+
 @media (max-width: 36rem) {
     .shell {
         padding: var(--space-2) 1rem 1rem;
@@ -3279,33 +3295,37 @@ mark.changed {
         padding-bottom: 1rem;
     }
 
-    /* На телефоне метки не помещаются между подписью и кнопкой: подпись и
-       «Копировать» — первой строкой шапки, метки — второй (D17). Значки «Как читать
-       буквы» (D11) и «С арабским» (D18) — во второй строке справа от меток: в первой
-       рядом с «Копировать» им в 375px не хватает места. Основа меток (9rem) не даёт
-       им втиснуться в первую строку, а длинные метки обрезаются многоточием. */
-    .result-meta {
-        order: 1;
-        flex: 1 1 9rem;
-    }
-
-    .sounds-toggle,
-    .arabic-toggle {
+    /* На телефоне (D42) подпись и «Копировать» — первой строкой шапки, кнопки
+       «Как читать буквы» (D11) и «С арабским» (D18) с видимыми подписями — второй,
+       от левого края; не помещаются в одну строку — переносятся, прокрутки вбок нет.
+       Меток ступени и профиля уже 64rem нет. */
+    .result-tools {
+        display: flex;
+        flex-wrap: wrap;
         order: 2;
+        flex: 1 1 100%;
+        gap: var(--space-2);
+        min-width: 0;
     }
 
-    .arabic-toggle + .copy-button {
+    .result-tools .sounds-toggle {
+        margin-left: 0;
+    }
+
+    .result-tools + .copy-button {
         margin-left: auto;
     }
 
-    /* Метки под пальцем выше, а между строками шапки — 1rem (D25): области
-       нажатия «С арабским» сверху и меток снизу (по 44px) не заходят друг на друга. */
+    /* Между строками шапки — 1rem (D25): области нажатия кнопок сверху и снизу
+       (по 44px) не заходят друг на друга. */
     .result-head {
         row-gap: var(--space-4);
     }
 
-    .result-chip {
-        padding-block: 0.3rem;
+    /* Кнопки с подписями — на подложке, чтобы читались кнопками, а не текстом. */
+    .result-tools .sounds-toggle,
+    .result-tools .arabic-toggle:not([aria-pressed="true"]) {
+        border-color: var(--foam-100);
     }
 
     /* Поля поиска и имени под палец — не ниже цели нажатия (D25). Поля графем в
@@ -3315,34 +3335,6 @@ mark.changed {
         min-height: var(--target-min);
     }
 
-    /* Тумблер «С арабским» (D18) рядом с подписью и «Копировать» — одной иконкой:
-       подпись остаётся имени кнопки, диктору, и подсказкой title. */
-    .arabic-toggle {
-        padding-inline: 0.5rem;
-    }
-
-    .arabic-toggle-label {
-        position: absolute;
-        width: 1px;
-        height: 1px;
-        overflow: hidden;
-        clip: rect(0 0 0 0);
-        white-space: nowrap;
-    }
-
-    /* «Как читать буквы» (D11) — так же одной иконкой с подписью для диктора. */
-    .sounds-toggle {
-        padding-inline: 0.5rem;
-    }
-
-    .sounds-toggle-label {
-        position: absolute;
-        width: 1px;
-        height: 1px;
-        overflow: hidden;
-        clip: rect(0 0 0 0);
-        white-space: nowrap;
-    }
 }
 
 /* С prefers-reduced-motion снимается только движение (D30): сдвиги, выезды,
