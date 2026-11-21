@@ -1433,5 +1433,26 @@ namespace Transliterator.Tests.DocsTests
             Assert.Equal("Нужен текст с огласовками", PageStrings.Web("ru")["Unvowelled.Title"]);
             Assert.Equal("This text needs vowel marks", PageStrings.Web("en")["Unvowelled.Title"]);
         }
+
+        [Fact]
+        public void AsAHomeScreenApp_TheHeader_StaysBelowTheStatusBarBlur()
+        {
+            // D46: в режиме веб-приложения iOS размывает полосу под статус-баром,
+            // и она заходит на страницу — только там каркас отступает сверху на
+            // вырез экрана и ещё 2rem; в браузере отступ прежний.
+            var css = Regex.Replace(Web("wwwroot", "css", "app.css"), @"\s+", " ");
+
+            var standalone = css.IndexOf("@media (display-mode: standalone) {", StringComparison.Ordinal);
+            var phone = css.IndexOf("@media (max-width: 36rem) {", StringComparison.Ordinal);
+            Assert.True(standalone > 0, "the home-screen app rule is not found");
+            Assert.True(standalone > phone, "the home-screen app rule must follow the phone rules to override them");
+
+            Assert.Matches(
+                @"^@media \(display-mode: standalone\) \{ \.shell \{ padding-top: calc\(var\(--space-2\) \+ env\(safe-area-inset-top, 0px\) \+ 2rem\); \} \}",
+                css[standalone..]);
+
+            Assert.Matches(@"\.shell \{ position: relative;[^}]*padding: var\(--space-3\) 1\.25rem 1\.25rem;", css);
+            Assert.Matches(@"@media \(max-width: 36rem\) \{ \.shell \{ padding: var\(--space-2\) 1rem 1rem; \}", css);
+        }
     }
 }
