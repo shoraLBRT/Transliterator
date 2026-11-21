@@ -539,9 +539,9 @@ namespace Transliterator.Tests.DocsTests
             Assert.Contains("@onclick=\"ToggleSettings\" @ref=\"_settingsToggle\">", profile);
             Assert.Contains("if (_focusSettings) { _focusSettings = false; await _settingsToggle.FocusAsync(); return; } await base.FocusOpenedAsync();", profile);
 
-            // На телефоне — одна иконка, подпись остаётся имени кнопки (как «С арабским»).
+            // Подпись видна и на телефоне (D42), цель нажатия — 44px.
             var css = Regex.Replace(Web("wwwroot", "css", "app.css"), @"\s+", " ");
-            Assert.Contains(".sounds-toggle-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }", css);
+            Assert.DoesNotContain(".sounds-toggle-label { position: absolute;", css);
             Assert.Contains(".sounds-toggle::after,", css);
 
             Assert.Equal("Как читать буквы", PageStrings.Web("ru")["Sounds.Toggle"]);
@@ -577,8 +577,8 @@ namespace Transliterator.Tests.DocsTests
             Assert.Matches(@"\.result-source\.is-open \+ \.result-line \{ margin-top: 0; padding-top: 0; \}", css);
             Assert.Matches(@"\.result-source-text \{[^}]*line-height: var\(--leading-arabic-line\);", css);
 
-            // На телефоне — одна иконка, подпись остаётся имени кнопки.
-            Assert.Matches(@"@media \(max-width: 36rem\) \{.*\.arabic-toggle-label \{ position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect\(0 0 0 0\);", css);
+            // Подпись видна и на телефоне (D42).
+            Assert.DoesNotContain(".arabic-toggle-label { position: absolute;", css);
 
             // Выбор помнится; копирование — только вывод.
             Assert.Contains("private const string ArabicLinesKey = \"transliterator.arabicLines\";", app);
@@ -1391,6 +1391,27 @@ namespace Transliterator.Tests.DocsTests
             // Поле в фокусе — рамкой карточки цвета --focus-ring; Tab не прячет цель под липкими шапками.
             Assert.Matches(@"\.composer:focus-within \{ border-color: var\(--focus-ring\);", css);
             Assert.Contains("scroll-padding-top: calc(var(--panel-head-height) + var(--target-min));", css);
+        }
+
+        /// <summary>
+        /// D42: уже 64rem в шапке вывода нет меток «Чтение» и «Профиль» — их повторяют
+        /// кнопки под полем, — а кнопки шапки на телефоне подписаны и стоят своей
+        /// строкой под подписью и «Копировать». С 64rem обёртка кнопок вёрстке не видна.
+        /// </summary>
+        [Fact]
+        public void ResultHead_OnThePhone_HasLabelledButtonsInsteadOfChips()
+        {
+            var app = Regex.Replace(Web("App.razor"), @"\s+", " ");
+            var css = Regex.Replace(Web("wwwroot", "css", "app.css"), @"\s+", " ");
+
+            Assert.Matches(@"<div class=""result-tools""> .*class=""sounds-toggle"".*class=""arabic-toggle"".*</button> </div> .*<button type=""button"" class=""copy-button", app);
+
+            Assert.Contains(".result-tools { display: contents; }", css);
+            Assert.Contains(".result-tools + .copy-button { margin-left: 0; }", css);
+            Assert.Contains("@media (max-width: 63.99rem) { .result-meta { display: none; } }", css);
+            Assert.Matches(@"@media \(max-width: 36rem\) \{.*\.result-tools \{ display: flex; flex-wrap: wrap; order: 2; flex: 1 1 100%;", css);
+            Assert.Matches(@"@media \(max-width: 36rem\) \{.*\.result-tools \+ \.copy-button \{ margin-left: auto; \}", css);
+            Assert.DoesNotContain("-toggle-label { position: absolute;", css);
         }
     }
 }

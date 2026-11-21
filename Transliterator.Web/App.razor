@@ -135,10 +135,12 @@
                     <p class="result-note" role="status">@(_unchangedNote ? L["Output.Unchanged"].Value : null)</p>
                     </div>
 
+                    @* Кнопки шапки (D42): с 64rem обёртка не видна вёрстке (display: contents),
+                       уже 64rem метки выше скрыты, а на телефоне кнопки с подписями стоят
+                       своей строкой под подписью и «Копировать». *@
+                    <div class="result-tools">
                     @* «Как читать буквы» (D11): звучание букв — в таблице графем профиля (E11),
-                       кнопка открывает панель профиля с раскрытыми настройками. На телефоне
-                       видна только иконка (как у «С арабским», D18): подпись остаётся именем
-                       кнопки для диктора и подсказкой title. *@
+                       кнопка открывает панель профиля с раскрытыми настройками. *@
                     @if (SoundsOpener is not null)
                     {
                         <button type="button" class="sounds-toggle" title="@L["Sounds.ToggleTitle"]" @onclick="OpenSoundsAsync">
@@ -151,8 +153,7 @@
                     }
 
                     @* «С арабским» (D18): над каждой строкой вывода — её арабская строка
-                       поля. Тумблер — aria-pressed; на телефоне видна только иконка, подпись
-                       остаётся имени кнопки. *@
+                       поля. Тумблер — aria-pressed. *@
                     <button type="button" class="arabic-toggle" aria-pressed="@(_arabicLines ? "true" : "false")"
                             title="@L["Result.ArabicTitle"]" @onclick="ToggleArabicLinesAsync">
                         <svg class="arabic-toggle-icon" viewBox="0 0 24 24" aria-hidden="true">
@@ -160,6 +161,7 @@
                         </svg>
                         <span class="arabic-toggle-label">@L["Result.Arabic"]</span>
                     </button>
+                    </div>
 
                     @* Значок и подпись — одни и те же узлы во всех состояниях: галочка
                        дорисовывается поверх листов, а живая область объявляет новую
