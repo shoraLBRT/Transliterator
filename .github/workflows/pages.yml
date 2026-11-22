@@ -36,23 +36,15 @@ jobs:
       - name: Publish
         run: dotnet publish Transliterator.Web/Transliterator.Web.csproj --configuration Release --output publish
 
-      # Три правки, без которых Blazor на Pages не открывается:
-      # - сайт живёт в подкаталоге /<репозиторий>/, а не в корне домена, и base href
-      #   должен на него указывать. Строки для замены нет — падаем, а не выкладываем
-      #   страницу, которая не найдёт своих файлов;
+      # Сайт открывается на собственном домене qurantranslit.com (он задан в
+      # Settings → Pages), то есть в корне, и base href остаётся "/" из исходника.
+      # Две правки, без которых Blazor на Pages не открывается:
       # - .nojekyll: иначе Pages прячет папки с подчёркиванием, а среда Blazor — в _framework;
       # - 404.html — копия index.html: неизвестный путь открывает приложение,
       #   а не страницу ошибки GitHub.
       - name: Prepare for GitHub Pages
-        env:
-          BASE_PATH: /${{ github.event.repository.name }}/
         run: |
           site=publish/wwwroot
-          if ! grep -q '<base href="/" />' "$site/index.html"; then
-            echo "::error file=Transliterator.Web/wwwroot/index.html::<base href=\"/\" /> not found; cannot point the site at $BASE_PATH"
-            exit 1
-          fi
-          sed -i "s|<base href=\"/\" />|<base href=\"$BASE_PATH\" />|" "$site/index.html"
           touch "$site/.nojekyll"
           cp "$site/index.html" "$site/404.html"
 
