@@ -5,7 +5,7 @@ import { generateKeyPairSync } from "node:crypto";
 import { handle, defuse, MAX_BODY_LENGTH, MAX_TITLE_LENGTH } from "../src/feedback.js";
 import { resetTokenCache } from "../src/github.js";
 
-const PAGE = "https://shoralbrt.github.io";
+const PAGE = "https://qurantranslit.com";
 
 const { privateKey } = generateKeyPairSync("rsa", { modulusLength: 2048 });
 
