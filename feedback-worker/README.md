@@ -48,7 +48,7 @@ node --test
 ### 1. Turnstile — проверка «не робот»
 
 1. В панели Cloudflare: **Turnstile → Add widget**.
-2. Имя — любое, например `Transliterator`. Hostnames: `shoralbrt.github.io`
+2. Имя — любое, например `Transliterator`. Hostnames: `qurantranslit.com`
    и `localhost`. Режим — **Managed**.
 3. Сохранить. Появятся два ключа: **Site Key** (публичный, пойдёт на страницу)
    и **Secret Key** (секретный, пойдёт в функцию).
@@ -59,7 +59,7 @@ node --test
 2. Заполнить:
    - **GitHub App name** — например `Transliterator Feedback`; это имя будет
      автором issue (`transliterator-feedback[bot]`);
-   - **Homepage URL** — `https://shoralbrt.github.io/Transliterator/`;
+   - **Homepage URL** — `https://qurantranslit.com/`;
    - **Webhook** — снять галочку **Active**: события приложению не нужны;
    - **Repository permissions → Issues** — **Read and write**. Остальное
      не трогать (Metadata: Read-only выставится само);
@@ -130,6 +130,9 @@ issue потом закрыть.
 - Панель пишет «сервер ответил ошибкой» — функция не смогла завести issue.
   Чаще всего: приложение не установлено на репозиторий, у него нет права Issues,
   не тот App ID или ключ.
+- «Проверка „не робот“ не загрузилась», хотя блокировщиков нет, — в виджете
+  Turnstile не указан домен, с которого открыта страница: Turnstile отказывается
+  работать на чужом адресе. Так было после переезда на `qurantranslit.com` (#269).
 - «Проверка „не робот“ не прошла» — не тот `TURNSTILE_SECRET` или в виджете
   Turnstile не указан домен страницы.
 - «Нет связи с сервером» — неверный `Endpoint` на странице или страница открыта
