@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/shoraLBRT/Transliterator/compare/v0.2.0...v0.2.1) (2026-11-23)
+
+
+### Bug Fixes
+
+* **feedback:** accept messages from qurantranslit.com and count visits (H3) ([#270](https://github.com/shoraLBRT/Transliterator/issues/270)) ([62b98ba](https://github.com/shoraLBRT/Transliterator/commit/62b98badf0981685011d400d817d1124609e1dae)), closes [#269](https://github.com/shoraLBRT/Transliterator/issues/269)
+
 ## [0.2.0](https://github.com/shoraLBRT/Transliterator/compare/v0.1.0...v0.2.0) (2026-11-22)
 
 
